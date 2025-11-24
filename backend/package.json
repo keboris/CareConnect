@@ -32,6 +32,10 @@
     "#schemas": {
       "development": "./src/schemas/index.ts",
       "default": "./src/schemas/index.js"
+    },
+    "#utils": {
+      "development": "./src/utils/index.ts",
+      "default": "./src/utils/index.js"
     }
   },
   "scripts": {

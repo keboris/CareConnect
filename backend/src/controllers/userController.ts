@@ -1,12 +1,18 @@
 import { User } from "#models";
 import bcrypt from "bcrypt";
-import { changePasswordSchema, userInputSchema } from "#schemas";
+import {
+  changePasswordSchema,
+  userInputSchema,
+  userUpdateSchema,
+} from "#schemas";
 import type { RequestHandler } from "express";
+import { v2 as cloudinary } from "cloudinary";
 
 import type { z } from "zod/v4";
 
 type UserInputDTO = z.infer<typeof userInputSchema>;
-type UserDTO = UserInputDTO;
+type UserUpdateDTO = z.infer<typeof userUpdateSchema>;
+type UserDTO = UserUpdateDTO;
 type ChangePasswordDTO = z.infer<typeof changePasswordSchema>;
 
 export const getUsers: RequestHandler = async (req, res) => {
@@ -45,7 +51,7 @@ export const getUserById: RequestHandler = async (req, res) => {
 export const updateUser: RequestHandler<
   { id: string },
   UserDTO,
-  UserInputDTO
+  UserUpdateDTO
 > = async (req, res) => {
   const { id } = req.params;
   const {
@@ -53,13 +59,18 @@ export const updateUser: RequestHandler<
     lastName,
     email,
     phone,
-    profileImage,
     bio,
     skills,
+    languages,
     location,
     longitude,
     latitude,
   } = req.body;
+
+  const file = req.file as Express.Multer.File | undefined;
+
+  const profileImage = file?.path || "";
+  const profileImagePublicId = file?.filename || "";
 
   const updatedUser = await User.findByIdAndUpdate(
     id,
@@ -68,9 +79,11 @@ export const updateUser: RequestHandler<
       lastName,
       email,
       phone,
-      profileImage,
+      profileImage: profileImage,
+      profileImagePublicId: profileImagePublicId,
       bio,
       skills,
+      languages,
       location,
       longitude,
       latitude,
@@ -84,6 +97,40 @@ export const updateUser: RequestHandler<
   res.status(200).json(updatedUser);
 };
 
+export const deleteProfileImage: RequestHandler = async (req, res) => {
+  try {
+    const {
+      params: { id },
+    } = req;
+
+    const { publicId } = req.body;
+
+    if (!publicId) {
+      return res.status(400).json({ message: "publicId is required" });
+    }
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const result = await cloudinary.uploader.destroy(publicId);
+    if (result.result !== "ok") {
+      return res
+        .status(500)
+        .json({ message: "Failed to delete image from Cloudinary" });
+    }
+
+    user.profileImage = "";
+    user.profileImagePublicId = "";
+    await user.save();
+    res.json(user);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      res.status(500).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: "An unknown error occurred" });
+    }
+  }
+};
 export const deleteUser: RequestHandler = async (req, res) => {
   try {
     const { id } = req.params;

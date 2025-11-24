@@ -1,6 +1,5 @@
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
-// @ts-ignore: no type declarations for 'multer-storage-cloudinary'
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 cloudinary.config({
@@ -12,7 +11,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: "wdg24_posts",
+    folder: "CareConnect",
     resource_type: "image",
     allowedFormats: ["jpg", "jpeg", "png", "gif", "pdf"],
     public_id: () => `test-${Date.now().toString()}`,

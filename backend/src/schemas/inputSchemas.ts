@@ -32,10 +32,8 @@ export const userInputSchema = z
     phone: z
       .string({ error: "phone must be a string" })
       .min(10, { message: "phone must be at least 10 chars long" }),
-    profileImage: z
-      .string({ error: "profileImage must be a string" })
-      .url({ message: "profileImage must be a valid URL" })
-      .optional(),
+    profileImage: z.string().url().optional(),
+    profileImagePublicId: z.string().optional(),
     bio: z
       .string({ error: "bio must be a string" })
       .max(500, { message: "bio must be at most 500 characters long" })
@@ -58,10 +56,58 @@ export const userInputSchema = z
           error: "language must be one of the predefined options",
         })
       )
-      .min(1, { message: "at least one language must be selected" }),
+      .min(1, { message: "at least one language must be selected" })
+      .optional(),
   })
   .strict();
 
+export const userUpdateSchema = z
+  .object({
+    firstName: z
+      .string({ error: "firstName must be a string" })
+      .min(2, { message: "firstName must be at least 2 chars long" })
+      .optional(),
+    lastName: z
+      .string({ error: "lastName must be a string" })
+      .min(2, { message: "lastName must be at least 2 chars long" })
+      .optional(),
+    email: z
+      .string({ error: "email must be a string" })
+      .email({ message: "email must be a valid email address" })
+      .optional(),
+    phone: z
+      .string({ error: "phone must be a string" })
+      .min(10, { message: "phone must be at least 10 chars long" })
+      .optional(),
+    profileImage: z.string().url().optional(),
+    profileImagePublicId: z.string().optional(),
+    bio: z
+      .string({ error: "bio must be a string" })
+      .max(500, { message: "bio must be at most 500 characters long" })
+      .optional(),
+    skills: z
+      .array(
+        z.string({ error: "each skill must be a string" }).min(2, {
+          message: "each skill must be at least 2 characters long",
+        })
+      )
+      .optional(),
+    location: z
+      .string({ error: "location must be a string" })
+      .min(2, { message: "location must be at least 2 chars long" })
+      .optional(),
+    longitude: z.number({ error: "longitude must be a number" }).optional(),
+    latitude: z.number({ error: "latitude must be a number" }).optional(),
+    languages: z
+      .array(
+        z.enum(["English", "Spanish", "French", "German", "Chinese", "Other"], {
+          error: "language must be one of the predefined options",
+        })
+      )
+      .min(1, { message: "at least one language must be selected" })
+      .optional(),
+  })
+  .strict();
 // Login Schema
 export const authLoginSchema = z
   .object({

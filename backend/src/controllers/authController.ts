@@ -21,9 +21,9 @@ export const register: RequestHandler<
     email,
     password,
     phone,
-    profileImage,
     bio,
     skills,
+    languages,
     location,
     longitude,
     latitude,
@@ -37,15 +37,19 @@ export const register: RequestHandler<
 
   const hash = await bcrypt.hash(password, 10);
 
+  const file = req.file as Express.Multer.File | undefined;
+  const profileImage = file?.path || "";
+
   const user = await User.create({
     firstName,
     lastName,
     email,
     password: hash,
     phone,
-    profileImage,
+    profileImage: profileImage,
     bio,
     skills,
+    languages,
     location,
     longitude,
     latitude,
