@@ -1,14 +1,8 @@
-
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { API_BASE_URL, type User } from "../config/api";
 
-import { getCookie, setCookie, removeCookie } from '../lib/cookies';
+import { getCookie, setCookie, removeCookie } from "../lib/cookies";
 
 type AuthContextType = {
   user: User | null;
@@ -27,14 +21,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUser = async () => {
     try {
-      const token = getCookie('accessToken');
+      const token = getCookie("accessToken");
       if (!token) return null;
 
       const response = await fetch(`${API_BASE_URL}/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        credentials: 'include',
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -53,13 +47,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const userData = await fetchUser();
     if (userData) {
       setUser(userData);
-      setCookie('user', JSON.stringify(userData), 7);
+      setCookie("user", JSON.stringify(userData), 7);
     }
   };
 
   useEffect(() => {
-    const token = getCookie('accessToken');
-    const storedUser = getCookie('user');
+    const token = getCookie("accessToken");
+    const storedUser = getCookie("user");
 
     if (token && storedUser) {
       try {
@@ -70,8 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       } catch (error) {
         console.error("Error parsing user data:", error);
-        removeCookie('accessToken');
-        removeCookie('user');
+        removeCookie("accessToken");
+        removeCookie("user");
       }
     }
 
@@ -82,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: "POST",
       body: formData,
-      credentials: 'include',
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -92,9 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const data = await response.json();
 
-    setCookie('accessToken', data.token, 7);
-    setCookie('refreshToken', data.token, 7);
-    setCookie('user', JSON.stringify(data.user), 7);
+    setCookie("accessToken", data.token, 7);
+    setCookie("refreshToken", data.token, 7);
+    setCookie("user", JSON.stringify(data.user), 7);
 
     setUser(data.user);
   };
@@ -106,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ email, password }),
-      credentials: 'include',
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -116,30 +110,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const data = await response.json();
 
-    setCookie('accessToken', data.accessToken, 7);
-    setCookie('refreshToken', data.refreshToken, 7);
-    setCookie('user', JSON.stringify(data.user), 7);
+    setCookie("accessToken", data.accessToken, 7);
+    setCookie("refreshToken", data.refreshToken, 7);
+    setCookie("user", JSON.stringify(data.user), 7);
 
     setUser(data.user);
   };
 
   const signOut = async () => {
     try {
-      const token = getCookie('accessToken');
+      const token = getCookie("accessToken");
       await fetch(`${API_BASE_URL}/auth/logout`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        credentials: 'include',
+        credentials: "include",
       });
     } catch (error) {
       console.error("Logout error:", error);
     }
 
-    removeCookie('accessToken');
-    removeCookie('refreshToken');
-    removeCookie('user');
+    removeCookie("accessToken");
+    removeCookie("refreshToken");
+    removeCookie("user");
 
     setUser(null);
   };
