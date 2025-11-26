@@ -1,4 +1,4 @@
-import { MessageSquare, User, LogOut, Globe, AlertCircle, MapPin } from 'lucide-react';
+import { MessageSquare, LogOut, Globe, AlertCircle, MapPin } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useState } from 'react';

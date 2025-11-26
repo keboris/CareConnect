@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { Icon } from "leaflet";
 import type { Offer, Request } from "../../config/api";
 import { api } from "../../lib/api";
-import { X, MapPin, Search, Filter } from "lucide-react";
+import { X, MapPin, Search } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 
 type Props = {
@@ -25,13 +25,7 @@ export function MapModal({ onClose }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showOffers, setShowOffers] = useState(true);
   const [showRequests, setShowRequests] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-
-  useEffect(() => {
-    loadOffers();
-    loadRequests();
-    getUserLocation();
-  }, []);
+  const [selectedCategory] = useState<string>("all");
 
   const getUserLocation = () => {
     if (navigator.geolocation) {
@@ -64,6 +58,12 @@ export function MapModal({ onClose }: Props) {
     }
   };
 
+  useEffect(() => {
+    loadOffers();
+    loadRequests();
+    getUserLocation();
+  }, []);
+
   const filteredOffers = offers.filter((offer) => {
     const matchesSearch =
       !searchQuery ||
@@ -72,7 +72,8 @@ export function MapModal({ onClose }: Props) {
       offer.location.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCategory =
-      selectedCategory === "all" || offer.category?.name === selectedCategory;
+      selectedCategory === "all" ||
+      (typeof offer.category === 'string' ? offer.category === selectedCategory : offer.category?.name === selectedCategory);
 
     return matchesSearch && matchesCategory && showOffers;
   });

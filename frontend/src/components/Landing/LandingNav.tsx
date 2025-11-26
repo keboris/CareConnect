@@ -4,16 +4,20 @@ import { useLanguage } from "../../contexts/LanguageContext";
 type Props = {
   onLogin: () => void;
   onRegister: () => void;
+  onHome?: () => void;
 };
 
-export function LandingNav({ onLogin, onRegister }: Props) {
+export function LandingNav({ onLogin, onRegister, onHome }: Props) {
   const { language, setLanguage, t } = useLanguage();
 
   return (
     <nav className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          <div className="flex items-center space-x-3">
+          <div
+            onClick={onHome}
+            className={`flex items-center space-x-3 ${onHome ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+          >
             <img
               src="/logo.png"
               alt="CareConnect Logo"

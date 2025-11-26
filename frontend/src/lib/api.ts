@@ -11,10 +11,15 @@ import { getCookie } from './cookies';
 export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const token = getCookie('accessToken');
 
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
   };
+
+  if (options.headers) {
+    Object.entries(options.headers).forEach(([key, value]) => {
+      headers[key] = String(value);
+    });
+  }
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -39,7 +44,7 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
  */
 export const api = {
   get: (endpoint: string) => apiRequest(endpoint, { method: 'GET' }),
-  post: (endpoint: string, data: any) => apiRequest(endpoint, { method: 'POST', body: JSON.stringify(data) }),
-  put: (endpoint: string, data: any) => apiRequest(endpoint, { method: 'PUT', body: JSON.stringify(data) }),
+  post: (endpoint: string, data: unknown) => apiRequest(endpoint, { method: 'POST', body: JSON.stringify(data) }),
+  put: (endpoint: string, data: unknown) => apiRequest(endpoint, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (endpoint: string) => apiRequest(endpoint, { method: 'DELETE' }),
 };
