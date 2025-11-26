@@ -1,6 +1,5 @@
 import express from "express";
-//import "#db";
-import "./db/index";
+import "#db";
 import swaggerUI from "swagger-ui-express";
 import { errorHandler } from "#middlewares";
 import cookieParser from "cookie-parser";
