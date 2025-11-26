@@ -18,13 +18,13 @@ export function HeroSection({ onGetStarted, onOpenMap }: Props) {
   const { t } = useLanguage();
 
   return (
-    <div className="py-20 bg-gradient-to-br from-blue-600 to-blue-800 relative overflow-hidden">
+    <div className="pt-6 pb-20 bg-gradient-to-br from-blue-600 to-blue-800 relative overflow-hidden">
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.1),transparent)] opacity-50"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.1),transparent)] opacity-50"></div>
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="text-white space-y-8">
             <div className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/30">
@@ -129,12 +129,18 @@ export function HeroSection({ onGetStarted, onOpenMap }: Props) {
       </div>
 
       <div className="absolute bottom-0 left-0 right-0">
-        <svg viewBox="0 0 1440 120" fill="none" className="w-full">
-          <path
-            d="M0,64 C240,96 480,96 720,64 C960,32 1200,32 1440,64 L1440,120 L0,120 Z"
-            fill="white"
-          />
-        </svg>
+        <div className="absolute bottom-0 left-0 right-0 overflow-hidden leading-none">
+          <svg
+            viewBox="0 0 1440 150"
+            preserveAspectRatio="none"
+            className="w-full h-[120px] block"
+          >
+            <path
+              d="M0,80 C360,140 720,20 1440,100 L1440,150 L0,150 Z"
+              fill="white"
+            />
+          </svg>
+        </div>
       </div>
     </div>
   );

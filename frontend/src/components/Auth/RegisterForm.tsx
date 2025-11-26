@@ -1,49 +1,49 @@
-import { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useLanguage } from '../../contexts/LanguageContext';
-import { Mail, Lock, User, Phone, MapPin } from 'lucide-react';
+import { useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { Mail, Lock, User, Phone, MapPin } from "lucide-react";
 
 type Props = {
   onToggleForm: () => void;
 };
 
 export function RegisterForm({ onToggleForm }: Props) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [location, setLocation] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [location, setLocation] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
   const { t } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     if (password.length < 6) {
-      setError(t('auth.passwordError'));
+      setError(t("auth.passwordError"));
       setLoading(false);
       return;
     }
 
     try {
       const formData = new FormData();
-      formData.append('firstName', firstName);
-      formData.append('lastName', lastName);
-      formData.append('email', email);
-      formData.append('password', password);
-      formData.append('phone', phone);
-      formData.append('location', location);
-      formData.append('longitude', '0');
-      formData.append('latitude', '0');
+      formData.append("firstName", firstName);
+      formData.append("lastName", lastName);
+      formData.append("email", email);
+      formData.append("password", password);
+      formData.append("phone", phone);
+      formData.append("location", location);
+      formData.append("longitude", "0");
+      formData.append("latitude", "0");
 
       await signUp(formData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -53,14 +53,12 @@ export function RegisterForm({ onToggleForm }: Props) {
     <div className="w-full max-w-md mx-auto bg-white rounded-3xl shadow-2xl p-8 border-2 border-gray-100">
       <div className="text-center mb-8">
         <div className="inline-flex mb-4">
-          <img
-            src="/chatgpt_image_17_nov._2025__10_56_53.png"
-            alt="CareConnect Logo"
-            className="h-16 w-auto"
-          />
+          <img src="/logo.png" alt="CareConnect Logo" className="h-16 w-auto" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('auth.createAccount')}</h2>
-        <p className="text-gray-600">{t('auth.joinCommunity')}</p>
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+          {t("auth.createAccount")}
+        </h2>
+        <p className="text-gray-600">{t("auth.joinCommunity")}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -72,11 +70,17 @@ export function RegisterForm({ onToggleForm }: Props) {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-              {t('auth.firstName') || 'First Name'}
+            <label
+              htmlFor="firstName"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              {t("firstName") || "First Name"}
             </label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <User
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={20}
+              />
               <input
                 id="firstName"
                 type="text"
@@ -90,8 +94,11 @@ export function RegisterForm({ onToggleForm }: Props) {
           </div>
 
           <div>
-            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-              {t('auth.lastName') || 'Last Name'}
+            <label
+              htmlFor="lastName"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              {t("lastName") || "Last Name"}
             </label>
             <input
               id="lastName"
@@ -106,11 +113,17 @@ export function RegisterForm({ onToggleForm }: Props) {
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            {t('auth.email')}
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            {t("email")}
           </label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Mail
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={20}
+            />
             <input
               id="email"
               type="email"
@@ -124,11 +137,17 @@ export function RegisterForm({ onToggleForm }: Props) {
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            {t('auth.password')}
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            {t("password")}
           </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Lock
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={20}
+            />
             <input
               id="password"
               type="password"
@@ -139,15 +158,21 @@ export function RegisterForm({ onToggleForm }: Props) {
               required
             />
           </div>
-          <p className="mt-1 text-xs text-gray-500">{t('auth.passwordMin')}</p>
+          <p className="mt-1 text-xs text-gray-500">{t("auth.passwordMin")}</p>
         </div>
 
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-            {t('auth.phone') || 'Phone Number'}
+          <label
+            htmlFor="phone"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            {t("phone") || "Phone Number"}
           </label>
           <div className="relative">
-            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Phone
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={20}
+            />
             <input
               id="phone"
               type="tel"
@@ -161,11 +186,17 @@ export function RegisterForm({ onToggleForm }: Props) {
         </div>
 
         <div>
-          <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-            {t('auth.location') || 'Location'}
+          <label
+            htmlFor="location"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            {t("location") || "Location"}
           </label>
           <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <MapPin
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={20}
+            />
             <input
               id="location"
               type="text"
@@ -183,17 +214,17 @@ export function RegisterForm({ onToggleForm }: Props) {
           disabled={loading}
           className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg shadow-lg hover:shadow-xl hover:scale-105 duration-300"
         >
-          {loading ? t('auth.signingUp') : t('auth.signUp')}
+          {loading ? t("auth.signingUp") : t("auth.signUp")}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-gray-600">
-        {t('auth.haveAccount')}{' '}
+        {t("haveAccount")}{" "}
         <button
           onClick={onToggleForm}
           className="text-blue-600 hover:text-blue-700 font-bold"
         >
-          {t('auth.loginNow')}
+          {t("loginNow")}
         </button>
       </p>
     </div>
