@@ -1,29 +1,29 @@
-import { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useLanguage } from '../../contexts/LanguageContext';
-import { Mail, Lock } from 'lucide-react';
+import { useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { Mail, Lock } from "lucide-react";
 
 type Props = {
   onToggleForm: () => void;
 };
 
 export function LoginForm({ onToggleForm }: Props) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
   const { t } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       await signIn(email, password);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      setError(err instanceof Error ? err.message : "Login failed");
     } finally {
       setLoading(false);
     }
@@ -33,14 +33,12 @@ export function LoginForm({ onToggleForm }: Props) {
     <div className="w-full max-w-md mx-auto bg-white rounded-3xl shadow-2xl p-8 border-2 border-gray-100">
       <div className="text-center mb-8">
         <div className="inline-flex mb-4">
-          <img
-            src="/chatgpt_image_17_nov._2025__10_56_53.png"
-            alt="CareConnect Logo"
-            className="h-16 w-auto"
-          />
+          <img src="/logo.png" alt="CareConnect Logo" className="h-16 w-auto" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('auth.welcomeBack')}</h2>
-        <p className="text-gray-600">{t('auth.signInAccount')}</p>
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+          {t("welcomeBack")}
+        </h2>
+        <p className="text-gray-600">{t("signInAccount")}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -51,11 +49,17 @@ export function LoginForm({ onToggleForm }: Props) {
         )}
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            {t('auth.email')}
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            {t("email")}
           </label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Mail
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={20}
+            />
             <input
               id="email"
               type="email"
@@ -69,11 +73,17 @@ export function LoginForm({ onToggleForm }: Props) {
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            {t('auth.password')}
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            {t("password")}
           </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Lock
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={20}
+            />
             <input
               id="password"
               type="password"
@@ -91,17 +101,17 @@ export function LoginForm({ onToggleForm }: Props) {
           disabled={loading}
           className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg shadow-lg hover:shadow-xl hover:scale-105 duration-300"
         >
-          {loading ? t('auth.signingIn') : t('auth.signIn')}
+          {loading ? t("signingIn") : t("signIn")}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-gray-600">
-        {t('auth.noAccount')}{' '}
+        {t("noAccount")}{" "}
         <button
           onClick={onToggleForm}
           className="text-blue-600 hover:text-blue-700 font-bold"
         >
-          {t('auth.registerNow')}
+          {t("registerNow")}
         </button>
       </p>
     </div>
