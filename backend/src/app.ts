@@ -11,6 +11,8 @@ import {
   userRoutes,
 } from "#routes";
 
+import { spec } from "#docs";
+
 const app = express();
 const port = process.env.PORT || 8080;
 
@@ -35,6 +37,7 @@ app.use("/offers", offerRoutes);
 app.use("/requests", requestRoutes);
 
 // Docs
+app.use("/docs", swaggerUI.serve, swaggerUI.setup(spec));
 
 app.use(errorHandler);
 

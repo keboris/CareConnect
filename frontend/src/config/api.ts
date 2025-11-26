@@ -24,7 +24,7 @@ export type User = {
 export type Category = {
   _id: string;
   name: string;
-  icon: string;
+  icon?: string;
   color: string;
   description: string;
   createdAt: string;
