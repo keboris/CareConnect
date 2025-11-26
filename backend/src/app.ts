@@ -9,6 +9,7 @@ import {
   offerRoutes,
   requestRoutes,
   userRoutes,
+  helpSessionRoutes,
 } from "#routes";
 
 import { spec } from "#docs";
@@ -35,6 +36,9 @@ app.use("/offers", offerRoutes);
 
 // Requests
 app.use("/requests", requestRoutes);
+
+// Help Sessions
+app.use("/help-sessions", helpSessionRoutes);
 
 // Docs
 app.use("/docs", swaggerUI.serve, swaggerUI.setup(spec));

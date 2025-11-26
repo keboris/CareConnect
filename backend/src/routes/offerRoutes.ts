@@ -1,4 +1,5 @@
 import {
+  createHelpSession,
   createOffer,
   deleteOffer,
   getOfferById,
@@ -26,6 +27,8 @@ offerRoutes.post(
 offerRoutes.get("/myOffers", authenticate, myOffers);
 
 offerRoutes.get("/:id", getOfferById);
+
+offerRoutes.post("/:id", authenticate, createHelpSession);
 
 offerRoutes.put(
   "/:id",

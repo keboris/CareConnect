@@ -100,8 +100,8 @@ const requestSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["open", "in_progress", "completed", "cancelled"],
-      default: "open",
+      enum: ["active", "in_progress", "completed", "cancelled", "archived"],
+      default: "active",
     },
   },
   { timestamps: { createdAt: true, updatedAt: true } }
