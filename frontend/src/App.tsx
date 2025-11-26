@@ -13,8 +13,6 @@ import { FeaturesSection } from "./components/Landing/FeaturesSection";
 import { CategoriesSection } from "./components/Landing/CategoriesSection";
 import { StatsSection } from "./components/Landing/StatsSection";
 import { Footer } from "./components/Landing/Footer";
-import { API_BASE_URL } from "./config/api";
-import { getCookie } from './lib/cookies';
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -50,6 +48,10 @@ function AppContent() {
               setShowLanding(false);
               setShowRegister(true);
             }}
+            onHome={() => {
+              setShowLanding(true);
+              setShowRegister(false);
+            }}
           />
           <HeroSection
             onGetStarted={() => {
@@ -73,12 +75,28 @@ function AppContent() {
     }
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">
-        {showRegister ? (
-          <RegisterForm onToggleForm={() => setShowRegister(false)} />
-        ) : (
-          <LoginForm onToggleForm={() => setShowRegister(true)} />
-        )}
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
+        <LandingNav
+          onLogin={() => {
+            setShowLanding(false);
+            setShowRegister(false);
+          }}
+          onRegister={() => {
+            setShowLanding(false);
+            setShowRegister(true);
+          }}
+          onHome={() => {
+            setShowLanding(true);
+            setShowRegister(false);
+          }}
+        />
+        <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-4">
+          {showRegister ? (
+            <RegisterForm onToggleForm={() => setShowRegister(false)} />
+          ) : (
+            <LoginForm onToggleForm={() => setShowRegister(true)} />
+          )}
+        </div>
       </div>
     );
   }

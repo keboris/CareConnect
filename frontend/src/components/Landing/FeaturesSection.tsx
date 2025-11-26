@@ -1,4 +1,4 @@
-import { MapPin, Heart, Euro, Star, Calendar, Clock, Shield, Zap } from 'lucide-react';
+import { MapPin, Heart, Star, Calendar, Shield, Zap } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 export function FeaturesSection() {
