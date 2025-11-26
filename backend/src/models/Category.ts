@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 
-const helpCategorySchema = new Schema(
+const categorySchema = new Schema(
   {
     name: {
       type: String,
@@ -10,7 +10,7 @@ const helpCategorySchema = new Schema(
     },
     description: {
       type: String,
-      required: [true, "Category description is required"],
+      default: "",
       trim: true,
     },
   },
@@ -19,4 +19,4 @@ const helpCategorySchema = new Schema(
 
 //helpCategorySchema.index({ name: 1 });
 
-export default model("HelpCategory", helpCategorySchema);
+export default model("Category", categorySchema);

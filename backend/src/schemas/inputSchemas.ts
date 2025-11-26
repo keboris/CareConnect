@@ -164,16 +164,14 @@ export const changePasswordSchema = z
 export const categoryInputSchema = z
   .object({
     name: z.string({ error: "name must be a string" }),
+    description: z.string({ error: "description must be a string" }).optional(),
   })
   .strict();
 
 //----------------------------------------------------------------------------
 // Help Offer Schema
-export const helpOfferInputSchema = z
+export const offerInputSchema = z
   .object({
-    userId: z
-      .string({ error: "userId must be a string" })
-      .min(24, { message: "userId must be a valid ID" }),
     title: z
       .string({ error: "title must be a string" })
       .min(5, { message: "title must be at least 5 characters long" }),
@@ -190,9 +188,10 @@ export const helpOfferInputSchema = z
       .optional(),
     location: z
       .string({ error: "location must be a string" })
-      .min(2, { message: "location must be at least 2 chars long" }),
-    longitude: z.number({ error: "longitude must be a number" }),
-    latitude: z.number({ error: "latitude must be a number" }),
+      .min(2, { message: "location must be at least 2 chars long" })
+      .optional(),
+    longitude: z.number({ error: "longitude must be a number" }).optional(),
+    latitude: z.number({ error: "latitude must be a number" }).optional(),
     availability: z
       .enum(["available", "unavailable"], {
         error: "availability must be either 'available' or 'unavailable'",
@@ -208,27 +207,157 @@ export const helpOfferInputSchema = z
   })
   .strict();
 
-//----------------------------------------------------------------------------
-// Help Request Schema
-export const helpRequestInputSchema = z
+export const offerUpdateSchema = z
   .object({
-    userId: z
-      .string({ error: "userId must be a string" })
-      .min(24, { message: "userId must be a valid ID" }),
     title: z
       .string({ error: "title must be a string" })
-      .min(5, { message: "title must be at least 5 characters long" }),
+      .min(5, { message: "title must be at least 5 characters long" })
+      .optional(),
     description: z
       .string({ error: "description must be a string" })
-      .min(10, { message: "description must be at least 10 characters long" }),
+      .min(10, { message: "description must be at least 10 characters long" })
+      .optional(),
+    category: z
+      .string({ error: "category must be a string" })
+      .min(24, { message: "category must be a valid ID" })
+      .optional(),
+    isPaid: z
+      .boolean({ error: "isPaid must be a boolean" })
+      .default(false)
+      .optional(),
+    price: z
+      .number({ error: "price must be a number" })
+      .min(0, { message: "price cannot be negative" })
+      .optional(),
+    location: z
+      .string({ error: "location must be a string" })
+      .min(2, { message: "location must be at least 2 chars long" })
+      .optional(),
+    longitude: z.number({ error: "longitude must be a number" }).optional(),
+    latitude: z.number({ error: "latitude must be a number" }).optional(),
+    availability: z
+      .enum(["available", "unavailable"], {
+        error: "availability must be either 'available' or 'unavailable'",
+      })
+      .default("available"),
+    images: z
+      .array(
+        z
+          .string({ error: "each image must be a string" })
+          .url({ message: "each image must be a valid URL" })
+      )
+      .optional(),
+    status: z
+      .enum(["active", "paused", "archived"], {
+        error: "status must be one of 'active', 'paused', 'archived'",
+      })
+      .optional(),
+  })
+  .strict();
+
+//----------------------------------------------------------------------------
+// Help Request Schema
+export const requestInputSchema = z
+  .object({
+    typeRequest: z.enum(["request", "alert"]).default("request"),
+    title: z.string({ error: "title must be a string" }).optional(),
+    description: z.string({ error: "description must be a string" }).optional(),
     category: z
       .string({ error: "category must be a string" })
       .min(24, { message: "category must be a valid ID" }),
     location: z
       .string({ error: "location must be a string" })
-      .min(2, { message: "location must be at least 2 chars long" }),
-    longitude: z.number({ error: "longitude must be a number" }),
-    latitude: z.number({ error: "latitude must be a number" }),
+      .min(2, { message: "location must be at least 2 chars long" })
+      .optional(),
+    longitude: z.number({ error: "longitude must be a number" }).optional(),
+    latitude: z.number({ error: "latitude must be a number" }).optional(),
+    rewardType: z
+      .enum(["free", "paid"], {
+        error: "rewardType must be either 'free' or 'paid'",
+      })
+      .default("free")
+      .optional(),
+    price: z
+      .number({ error: "price must be a number" })
+      .min(0, { message: "price cannot be negative" })
+      .optional(),
+    radius: z
+      .number({ error: "radius must be a number" })
+      .min(100, { message: "radius must be at least 100 meters" })
+      .max(10000, { message: "radius must be at most 10000 meters" })
+      .optional(),
+    urgency: z
+      .enum(["low", "normal", "high"], {
+        error: "urgency must be one of 'low', 'normal', 'high'",
+      })
+      .optional(),
+    typeAlert: z.string({ error: "typeAlert must be a string" }).optional(),
+    images: z
+      .array(
+        z
+          .string({ error: "each image must be a string" })
+          .url({ message: "each image must be a valid URL" })
+      )
+      .optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.typeRequest === "request") {
+      // validate title for request type
+      if (!data.title) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "title is required for typeRequest 'request'",
+        });
+      } else {
+        if (data.title.length < 5) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message:
+              "title must be at least 5 characters long for typeRequest 'request'",
+          });
+        }
+      }
+
+      // validate description for request type
+      if (!data.description) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "description is required for typeRequest 'request'",
+        });
+      } else {
+        if (data.description.length < 10) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message:
+              "description must be at least 10 characters long for typeRequest 'request'",
+          });
+        }
+      }
+    }
+    if (data.typeRequest === "alert") {
+      if (!data.title) data.title = "SOS Alert";
+      if (!data.description) data.description = "SOS Alert";
+      if (!data.radius) data.radius = 500;
+      if (!data.typeAlert) data.typeAlert = "other";
+    }
+  })
+  .strict();
+
+export const requestUpdateSchema = z
+  .object({
+    typeRequest: z.enum(["request", "alert"]).optional(),
+    title: z.string({ error: "title must be a string" }).optional(),
+    description: z.string({ error: "description must be a string" }).optional(),
+    category: z
+      .string({ error: "category must be a string" })
+      .min(24, { message: "category must be a valid ID" })
+      .optional(),
+    location: z
+      .string({ error: "location must be a string" })
+      .min(2, { message: "location must be at least 2 chars long" })
+      .optional(),
+    longitude: z.number({ error: "longitude must be a number" }).optional(),
+    latitude: z.number({ error: "latitude must be a number" }).optional(),
     rewardType: z
       .enum(["free", "paid"], {
         error: "rewardType must be either 'free' or 'paid'",
@@ -238,11 +367,17 @@ export const helpRequestInputSchema = z
       .number({ error: "price must be a number" })
       .min(0, { message: "price cannot be negative" })
       .optional(),
+    radius: z
+      .number({ error: "radius must be a number" })
+      .min(100, { message: "radius must be at least 100 meters" })
+      .max(10000, { message: "radius must be at most 10000 meters" })
+      .optional(),
     urgency: z
       .enum(["low", "normal", "high"], {
         error: "urgency must be one of 'low', 'normal', 'high'",
       })
-      .default("normal"),
+      .optional(),
+    typeAlert: z.string({ error: "typeAlert must be a string" }).optional(),
     images: z
       .array(
         z
@@ -250,6 +385,47 @@ export const helpRequestInputSchema = z
           .url({ message: "each image must be a valid URL" })
       )
       .optional(),
+    status: z
+      .enum(["open", "in_progress", "completed", "cancelled"], {
+        error:
+          "status must be one of 'open', 'in_progress', 'completed', 'cancelled'",
+      })
+      .optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.typeRequest === "request") {
+      // validate title for request type
+      if (!data.title) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "title is required for typeRequest 'request'",
+        });
+      } else {
+        if (data.title.length < 5) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message:
+              "title must be at least 5 characters long for typeRequest 'request'",
+          });
+        }
+      }
+
+      // validate description for request type
+      if (!data.description) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "description is required for typeRequest 'request'",
+        });
+      } else {
+        if (data.description.length < 10) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message:
+              "description must be at least 10 characters long for typeRequest 'request'",
+          });
+        }
+      }
+    }
   })
   .strict();
 

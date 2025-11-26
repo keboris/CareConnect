@@ -3,7 +3,13 @@ import "#db";
 import swaggerUI from "swagger-ui-express";
 import { errorHandler } from "#middlewares";
 import cookieParser from "cookie-parser";
-import { authRoutes, userRoutes } from "#routes";
+import {
+  authRoutes,
+  categoryRoutes,
+  offerRoutes,
+  requestRoutes,
+  userRoutes,
+} from "#routes";
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -12,11 +18,21 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Routes
+
+// Categories
+app.use("/categories", categoryRoutes);
+
 // Authentication
 app.use("/auth", authRoutes);
 
 // Users
 app.use("/users", userRoutes);
+
+// Offers
+app.use("/offers", offerRoutes);
+
+// Requests
+app.use("/requests", requestRoutes);
 
 // Docs
 

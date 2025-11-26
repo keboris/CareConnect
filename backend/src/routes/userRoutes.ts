@@ -9,11 +9,7 @@ import {
 } from "#controllers";
 import { authenticate, authorize, upload, validateBodyZod } from "#middlewares";
 import { User } from "#models";
-import {
-  userInputSchema,
-  changePasswordSchema,
-  userUpdateSchema,
-} from "#schemas";
+import { changePasswordSchema, userUpdateSchema } from "#schemas";
 
 const userRoutes = Router();
 

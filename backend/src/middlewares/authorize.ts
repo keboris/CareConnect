@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 
 const authorize = (Model: any): RequestHandler => {
   return async (req, res, next) => {
+    console.log("Model : ", Model);
     if (req.params.id) {
       const { id } = req.params;
       const model = await Model.findById(id);

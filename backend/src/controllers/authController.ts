@@ -39,6 +39,7 @@ export const register: RequestHandler<
 
   const file = req.file as Express.Multer.File | undefined;
   const profileImage = file?.path || "";
+  const profileImagePublicId = file?.filename || "";
 
   const user = await User.create({
     firstName,
@@ -47,6 +48,7 @@ export const register: RequestHandler<
     password: hash,
     phone,
     profileImage: profileImage,
+    profileImagePublicId: profileImagePublicId,
     bio,
     skills,
     languages,
@@ -105,12 +107,16 @@ export const login: RequestHandler<
 
   const { password: _, ...userWithoutPassword } = user.toObject();
 
-  res.cookie("accessToken", accessToken, accessCookieOpts).status(200).json({
-    message: "User logged in successfully",
-    user: userWithoutPassword,
-    accessToken,
-    refreshToken,
-  });
+  res
+    .cookie("accessToken", accessToken, accessCookieOpts)
+    .cookie("refreshToken", refreshToken, refreshCookieOpts)
+    .status(200)
+    .json({
+      message: "User logged in successfully",
+      user: userWithoutPassword,
+      accessToken,
+      refreshToken,
+    });
 };
 
 /*------------------------------- REFRESH TOKEN ------------------------------*/
@@ -124,9 +130,10 @@ export const refresh: RequestHandler<
     throw new Error("No refresh token provided", { cause: { status: 401 } });
   }
 
+  console.log("🔄 Refreshing tokens with token:", token);
   let payload: jwt.JwtPayload & { jti: string; ver?: number };
   try {
-    payload = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET!) as any;
+    payload = jwt.verify(token, process.env.REFRESH_JWT_SECRET!) as any;
   } catch (err) {
     throw new Error("Invalid refresh token", { cause: { status: 401 } });
   }
