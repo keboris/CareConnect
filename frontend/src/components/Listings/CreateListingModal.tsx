@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { API_BASE_URL, Category } from '../../config/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { getCookie } from '../../lib/cookies';
 import { X } from 'lucide-react';
 
 type Props = {
@@ -71,7 +72,8 @@ export function CreateListingModal({ onClose, onSuccess }: Props) {
         formData.postal_code
       );
 
-      const token = localStorage.getItem('auth_token');
+      // Get authentication token from cookies
+      const token = getCookie('auth_token');
       const response = await fetch(`${API_BASE_URL}/listings`, {
         method: 'POST',
         headers: {

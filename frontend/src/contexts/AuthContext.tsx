@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { API_BASE_URL, User, Profile } from '../config/api';
+import { getCookie, setCookie, removeCookie } from '../lib/cookies';
 
 type AuthContextType = {
   user: User | null;
@@ -20,7 +21,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     try {
-      const token = localStorage.getItem('auth_token');
+      // Get authentication token from cookies
+      const token = getCookie('auth_token');
       const response = await fetch(`${API_BASE_URL}/profile/${userId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -46,8 +48,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    const storedUser = localStorage.getItem('user');
+    // Check for existing authentication token and user data in cookies
+    const token = getCookie('auth_token');
+    const storedUser = getCookie('user');
 
     if (token && storedUser) {
       const userData = JSON.parse(storedUser);
@@ -73,8 +76,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const data = await response.json();
-    localStorage.setItem('auth_token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
+    // Store authentication token and user data in cookies (expires in 7 days)
+    setCookie('auth_token', data.token, 7);
+    setCookie('user', JSON.stringify(data.user), 7);
     setUser(data.user);
     setProfile(data.profile);
   };
@@ -94,15 +98,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const data = await response.json();
-    localStorage.setItem('auth_token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
+    // Store authentication token and user data in cookies (expires in 7 days)
+    setCookie('auth_token', data.token, 7);
+    setCookie('user', JSON.stringify(data.user), 7);
     setUser(data.user);
     setProfile(data.profile);
   };
 
   const signOut = async () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user');
+    // Remove authentication token and user data from cookies
+    removeCookie('auth_token');
+    removeCookie('user');
     setUser(null);
     setProfile(null);
   };
