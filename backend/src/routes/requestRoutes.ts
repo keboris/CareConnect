@@ -1,4 +1,5 @@
 import {
+  createHelpSession,
   createRequest,
   deleteRequest,
   getRequestById,
@@ -27,6 +28,8 @@ requestRoutes.get("/myRequests", authenticate, myRequests);
 requestRoutes.get("/myAlerts", authenticate, myRequests);
 
 requestRoutes.get("/:id", getRequestById);
+
+requestRoutes.post("/:id", authenticate, createHelpSession);
 
 requestRoutes.put(
   "/:id",

@@ -61,7 +61,7 @@ const offerSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["active", "paused", "archived"],
+      enum: ["active", "in_progress", "completed", "cancelled", "archived"],
       default: "active",
     },
   },

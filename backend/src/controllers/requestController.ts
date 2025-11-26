@@ -110,7 +110,7 @@ export const getRequestById: RequestHandler = async (req, res) => {
     if (!request) {
       return res.status(404).json({ error: `Request with id:${id} not found` });
     }
-    res.status(200).json({ message: `Request with id:${id} found`, Request });
+    res.status(200).json({ message: `Request with id:${id} found`, request });
   } catch (error: unknown) {
     if (error instanceof Error) {
       res.status(500).json({ message: error.message });

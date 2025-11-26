@@ -11,20 +11,20 @@ const helpSessionSchema = new Schema({
     ref: "Offer",
     default: null,
   },
-  requesterId: {
+  userRequesterId: {
     type: Schema.Types.ObjectId,
     ref: "User",
     required: true,
   },
-  helperId: {
+  userHelperId: {
     type: Schema.Types.ObjectId,
     ref: "User",
     required: true,
   },
   status: {
     type: String,
-    enum: ["pending", "in_progress", "completed", "cancelled"],
-    default: "pending",
+    enum: ["active", "in_progress", "completed", "cancelled"],
+    default: "active",
   },
   startedAt: {
     type: Date,
