@@ -8,6 +8,16 @@ const categorySchema = new Schema(
       unique: true,
       trim: true,
     },
+    icon: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    color: {
+      type: String,
+      default: "#000000",
+      trim: true,
+    },
     description: {
       type: String,
       default: "",
