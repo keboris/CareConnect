@@ -73,7 +73,9 @@ export function MapModal({ onClose }: Props) {
 
     const matchesCategory =
       selectedCategory === "all" ||
-      (typeof offer.category === 'string' ? offer.category === selectedCategory : offer.category?.name === selectedCategory);
+      (typeof offer.category === "string"
+        ? offer.category === selectedCategory
+        : offer.category?.name === selectedCategory);
 
     return matchesSearch && matchesCategory && showOffers;
   });
