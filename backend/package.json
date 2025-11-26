@@ -7,35 +7,35 @@
   "imports": {
     "#db": {
       "development": "./src/db/index.ts",
-      "default": "./src/db/index.js"
+      "default": "./dist/db/index.js"
     },
     "#controllers": {
       "development": "./src/controllers/index.ts",
-      "default": "./src/controllers/index.js"
+      "default": "./dist/controllers/index.js"
     },
     "#docs": {
       "development": "./src/docs/index.ts",
-      "default": "./src/docs/index.js"
+      "default": "./dist/docs/index.js"
     },
     "#middlewares": {
       "development": "./src/middlewares/index.ts",
-      "default": "./src/middlewares/index.js"
+      "default": "./dist/middlewares/index.js"
     },
     "#models": {
       "development": "./src/models/index.ts",
-      "default": "./src/models/index.js"
+      "default": "./dist/models/index.js"
     },
     "#routes": {
       "development": "./src/routes/index.ts",
-      "default": "./src/routes/index.js"
+      "default": "./dist/routes/index.js"
     },
     "#schemas": {
       "development": "./src/schemas/index.ts",
-      "default": "./src/schemas/index.js"
+      "default": "./dist/schemas/index.js"
     },
     "#utils": {
       "development": "./src/utils/index.ts",
-      "default": "./src/utils/index.js"
+      "default": "./dist/utils/index.js"
     }
   },
   "scripts": {
