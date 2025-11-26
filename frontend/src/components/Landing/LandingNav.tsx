@@ -1,5 +1,5 @@
-import { LogIn, UserPlus, Globe } from 'lucide-react';
-import { useLanguage } from '../../contexts/LanguageContext';
+import { LogIn, UserPlus, Globe } from "lucide-react";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 type Props = {
   onLogin: () => void;
@@ -15,7 +15,7 @@ export function LandingNav({ onLogin, onRegister }: Props) {
         <div className="flex items-center justify-between h-20">
           <div className="flex items-center space-x-3">
             <img
-              src="/chatgpt_image_17_nov._2025__10_56_53.png"
+              src="/logo.png"
               alt="CareConnect Logo"
               className="h-12 w-auto"
             />
@@ -24,7 +24,7 @@ export function LandingNav({ onLogin, onRegister }: Props) {
 
           <div className="flex items-center space-x-3">
             <button
-              onClick={() => setLanguage(language === 'en' ? 'de' : 'en')}
+              onClick={() => setLanguage(language === "en" ? "de" : "en")}
               className="p-2.5 rounded-lg text-white hover:bg-white/10 transition-all flex items-center space-x-1"
               title="Change Language"
             >
@@ -37,7 +37,7 @@ export function LandingNav({ onLogin, onRegister }: Props) {
               className="hidden sm:inline-flex items-center space-x-2 px-6 py-2.5 bg-white/10 backdrop-blur-md text-white border border-white/30 rounded-xl font-medium hover:bg-white/20 transition-all duration-300"
             >
               <LogIn size={18} />
-              <span>{t('nav.login')}</span>
+              <span>{t("nav.login")}</span>
             </button>
 
             <button
@@ -45,7 +45,7 @@ export function LandingNav({ onLogin, onRegister }: Props) {
               className="inline-flex items-center space-x-2 px-6 py-2.5 bg-white text-blue-700 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
             >
               <UserPlus size={18} />
-              <span>{t('nav.register')}</span>
+              <span>{t("nav.register")}</span>
             </button>
           </div>
         </div>

@@ -1,5 +1,13 @@
-import { Heart, MapPin, ArrowRight, CheckCircle, Users, MessageCircle, Shield } from 'lucide-react';
-import { useLanguage } from '../../contexts/LanguageContext';
+import {
+  Heart,
+  MapPin,
+  ArrowRight,
+  CheckCircle,
+  Users,
+  MessageCircle,
+  Shield,
+} from "lucide-react";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 type Props = {
   onGetStarted: () => void;
@@ -20,21 +28,19 @@ export function HeroSection({ onGetStarted, onOpenMap }: Props) {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="text-white space-y-8">
             <div className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/30">
-              <img
-                src="/chatgpt_image_17_nov._2025__10_56_53.png"
-                alt="CareConnect"
-                className="h-5 w-auto"
-              />
-              <span className="text-sm font-medium">{t('hero.tagline')}</span>
+              <img src="/logo.png" alt="CareConnect" className="h-5 w-auto" />
+              <span className="text-sm font-medium">{t("hero.tagline")}</span>
             </div>
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
-              {t('hero.title')}
-              <span className="block text-yellow-300">{t('hero.titleHighlight')}</span>
+              {t("hero.title")}
+              <span className="block text-yellow-300">
+                {t("hero.titleHighlight")}
+              </span>
             </h1>
 
             <p className="text-xl md:text-2xl text-white/90 leading-relaxed max-w-xl">
-              {t('hero.description')}
+              {t("hero.description")}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -42,8 +48,11 @@ export function HeroSection({ onGetStarted, onOpenMap }: Props) {
                 onClick={onGetStarted}
                 className="group inline-flex items-center justify-center space-x-2 px-8 py-4 bg-white text-cyan-600 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-300"
               >
-                <span>{t('hero.getStarted')}</span>
-                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                <span>{t("hero.getStarted")}</span>
+                <ArrowRight
+                  size={20}
+                  className="group-hover:translate-x-1 transition-transform"
+                />
               </button>
 
               <button
@@ -51,7 +60,7 @@ export function HeroSection({ onGetStarted, onOpenMap }: Props) {
                 className="group inline-flex items-center justify-center space-x-2 px-8 py-4 bg-white/10 backdrop-blur-md text-white border-2 border-white/30 rounded-2xl font-semibold text-lg hover:bg-white/20 transition-all duration-300"
               >
                 <MapPin size={20} />
-                <span>{t('hero.exploreMap')}</span>
+                <span>{t("hero.exploreMap")}</span>
               </button>
             </div>
 
@@ -78,7 +87,9 @@ export function HeroSection({ onGetStarted, onOpenMap }: Props) {
                   <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-2xl flex items-center justify-center mb-4">
                     <Users size={32} className="text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">1.500+</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    1.500+
+                  </h3>
                   <p className="text-gray-600">Aktive Helfer</p>
                 </div>
 
@@ -96,7 +107,9 @@ export function HeroSection({ onGetStarted, onOpenMap }: Props) {
                   <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center mb-4">
                     <Heart size={32} className="text-white" fill="white" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">5.000+</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    5.000+
+                  </h3>
                   <p className="text-gray-600">Hilfestellungen</p>
                 </div>
 
@@ -117,7 +130,10 @@ export function HeroSection({ onGetStarted, onOpenMap }: Props) {
 
       <div className="absolute bottom-0 left-0 right-0">
         <svg viewBox="0 0 1440 120" fill="none" className="w-full">
-          <path d="M0,64 C240,96 480,96 720,64 C960,32 1200,32 1440,64 L1440,120 L0,120 Z" fill="white"/>
+          <path
+            d="M0,64 C240,96 480,96 720,64 C960,32 1200,32 1440,64 L1440,120 L0,120 Z"
+            fill="white"
+          />
         </svg>
       </div>
     </div>

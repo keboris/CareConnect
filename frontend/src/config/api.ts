@@ -1,88 +1,74 @@
 // API Configuration for MongoDB Backend
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 export type User = {
-  id: string;
+  _id: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  full_name: string;
-};
-
-export type Profile = {
-  id: string;
-  email: string;
-  full_name: string;
-  avatar_url?: string;
-  bio?: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  postal_code?: string;
-  latitude?: number;
-  longitude?: number;
-  is_verified: boolean;
-  rating_average: number;
-  rating_count: number;
-  created_at: string;
-  updated_at: string;
+  role: "user" | "helper" | "admin";
+  phone: string;
+  profileImage: string;
+  profileImagePublicId: string;
+  bio: string;
+  skills: string[];
+  location: string;
+  longitude: number;
+  latitude: number;
+  rating?: number;
+  languages: string[];
+  createdAt: string;
 };
 
 export type Category = {
-  id: string;
+  _id: string;
   name: string;
   icon: string;
   color: string;
-  created_at: string;
+  description: string;
+  createdAt: string;
 };
 
-export type Listing = {
-  id: string;
-  user_id: string;
-  category_id: string;
+export type Offer = {
+  _id: string;
+  userId: string;
   title: string;
   description: string;
-  is_paid: boolean;
+  category: string | Category;
+  isPaid: boolean;
   price?: number;
-  latitude: number;
+  location: string;
   longitude: number;
-  address: string;
-  city: string;
-  postal_code: string;
-  status: 'active' | 'in_progress' | 'completed' | 'cancelled';
-  created_at: string;
-  updated_at: string;
-  profile?: Profile;
-  category?: Category;
+  latitude: number;
+  availability: "available" | "unavailable";
+  images: string[];
+  imagesPublicIds: string[];
+  status: "active" | "paused" | "archived";
+  user?: User;
+  createdAt: string;
+  updatedAt: string;
 };
 
-export type Conversation = {
-  id: string;
-  listing_id: string;
-  requester_id: string;
-  helper_id: string;
-  last_message_at: string;
-  created_at: string;
-  listing?: Listing;
-  requester?: Profile;
-  helper?: Profile;
-};
-
-export type Message = {
-  id: string;
-  conversation_id: string;
-  sender_id: string;
-  content: string;
-  is_read: boolean;
-  created_at: string;
-  sender?: Profile;
-};
-
-export type Review = {
-  id: string;
-  listing_id: string;
-  reviewer_id: string;
-  reviewee_id: string;
-  rating: number;
-  comment?: string;
-  created_at: string;
-  reviewer?: Profile;
+export type Request = {
+  _id: string;
+  userId: string;
+  typeRequest: "alert" | "request";
+  title?: string;
+  description: string;
+  category: string | Category;
+  location: string;
+  longitude: number;
+  latitude: number;
+  rewardType: "free" | "paid";
+  price?: number;
+  radius?: number;
+  urgency: "low" | "normal" | "high";
+  typeAlert?: "medical" | "danger" | "fire" | "police" | "assistance" | "other";
+  images: string[];
+  imagesPublicIds: string[];
+  status: "open" | "in_progress" | "completed" | "cancelled";
+  user?: User;
+  createdAt: string;
+  updatedAt: string;
 };

@@ -4,12 +4,12 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useState } from 'react';
 
 type Props = {
-  currentView: 'map' | 'messages' | 'profile';
-  onViewChange: (view: 'map' | 'messages' | 'profile') => void;
+  currentView: 'map' | 'messages';
+  onViewChange: (view: 'map' | 'messages') => void;
 };
 
 export function Header({ currentView, onViewChange }: Props) {
-  const { profile, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const [sosActive, setSosActive] = useState(false);
 
@@ -49,19 +49,11 @@ export function Header({ currentView, onViewChange }: Props) {
               <MessageSquare size={18} />
               <span>{t('nav.messages')}</span>
             </button>
-            <button
-              onClick={() => onViewChange('profile')}
-              className={`px-4 py-2 rounded-lg transition-all flex items-center space-x-2 ${
-                currentView === 'profile'
-                  ? 'bg-white text-blue-700 font-medium shadow-lg'
-                  : 'text-white hover:bg-blue-500'
-              }`}
-            >
-              <User size={18} />
-              <span>{profile?.full_name || t('nav.profile')}</span>
-            </button>
 
             <div className="ml-4 flex items-center space-x-2 border-l border-white/20 pl-4">
+              <div className="text-white text-sm font-medium px-3">
+                {user?.firstName} {user?.lastName}
+              </div>
               <button
                 onClick={() => setSosActive(!sosActive)}
                 className={`px-4 py-2 rounded-lg font-bold transition-all flex items-center space-x-2 ${
