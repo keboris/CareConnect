@@ -1,60 +1,80 @@
 // API Configuration for MongoDB Backend
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 export type User = {
   id: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  full_name: string;
-};
-
-export type Profile = {
-  id: string;
-  email: string;
-  full_name: string;
-  avatar_url?: string;
+  role: string;
+  phone: string;
+  profileImage?: string;
   bio?: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  postal_code?: string;
-  latitude?: number;
+  skills?: string[];
+  location: string;
   longitude?: number;
-  is_verified: boolean;
-  rating_average: number;
-  rating_count: number;
-  created_at: string;
-  updated_at: string;
+  latitude?: number;
+  rating: number;
+  languages?: string[];
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type Category = {
   id: string;
   name: string;
-  icon: string;
+  icon?: string;
   color: string;
-  created_at: string;
-};
-
-export type Listing = {
-  id: string;
-  user_id: string;
-  category_id: string;
-  title: string;
-  description: string;
-  is_paid: boolean;
-  price?: number;
-  latitude: number;
-  longitude: number;
-  address: string;
-  city: string;
-  postal_code: string;
-  status: 'active' | 'in_progress' | 'completed' | 'cancelled';
+  description?: string;
   created_at: string;
   updated_at: string;
-  profile?: Profile;
-  category?: Category;
 };
 
-export type Conversation = {
+export type Offer = {
+  id: string;
+  userId: string;
+  title: string;
+  description: string;
+  categoryId: string;
+  isPaid: boolean;
+  price?: number;
+  location: string;
+  longitude: number;
+  latitude: number;
+  availability: "available" | "unavailable";
+  images?: string[];
+  status: "active" | "paused" | "archived";
+  user?: User;
+  category?: Category;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Request = {
+  id: string;
+  userId: string;
+  typeRequest: "alert" | "request";
+  title?: string;
+  description: string;
+  categoryId: string;
+  location: string;
+  longitude: number;
+  latitude: number;
+  rewardType: "free" | "paid";
+  price?: number;
+  radius?: number;
+  urgencyLevel?: "low" | "medium" | "high";
+  typeAlert?: "medical" | "safety" | "other";
+  images?: string[];
+  status: "open" | "in_progress" | "completed" | "cancelled";
+  user?: User;
+  category?: Category;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/*export type Conversation = {
   id: string;
   listing_id: string;
   requester_id: string;
@@ -85,4 +105,4 @@ export type Review = {
   comment?: string;
   created_at: string;
   reviewer?: Profile;
-};
+};*/
