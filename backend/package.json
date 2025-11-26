@@ -57,6 +57,7 @@
     "mongoose": "^8.20.0",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
+    "openapi-types": "^12.1.3",
     "swagger-ui-express": "^5.0.1",
     "zod": "^4.1.12"
   },
