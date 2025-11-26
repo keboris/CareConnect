@@ -1,5 +1,14 @@
-import { Heart, Mail, MapPin, Phone, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
-import { useLanguage } from '../../contexts/LanguageContext';
+import {
+  Heart,
+  Mail,
+  MapPin,
+  Phone,
+  Facebook,
+  Twitter,
+  Instagram,
+  Linkedin,
+} from "lucide-react";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -12,14 +21,14 @@ export function Footer() {
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
               <img
-                src="/chatgpt_image_17_nov._2025__10_56_53.png"
+                src="/logo.png"
                 alt="CareConnect Logo"
                 className="h-10 w-auto"
               />
               <span className="text-2xl font-bold">CareConnect</span>
             </div>
             <p className="text-gray-400 leading-relaxed">
-              {t('footer.description')}
+              {t("footer.description")}
             </p>
             <div className="flex space-x-3">
               <a
@@ -50,63 +59,100 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-lg font-bold mb-4 text-white">{t('footer.company')}</h3>
+            <h3 className="text-lg font-bold mb-4 text-white">
+              {t("footer.company")}
+            </h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
-                  {t('footer.about')}
+                <a
+                  href="#"
+                  className="text-gray-400 hover:text-blue-400 transition-colors"
+                >
+                  {t("footer.about")}
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
-                  {t('footer.careers')}
+                <a
+                  href="#"
+                  className="text-gray-400 hover:text-blue-400 transition-colors"
+                >
+                  {t("footer.careers")}
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
-                  {t('footer.blog')}
+                <a
+                  href="#"
+                  className="text-gray-400 hover:text-blue-400 transition-colors"
+                >
+                  {t("footer.blog")}
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
-                  {t('footer.press')}
+                <a
+                  href="#"
+                  className="text-gray-400 hover:text-blue-400 transition-colors"
+                >
+                  {t("footer.press")}
                 </a>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="text-lg font-bold mb-4 text-white">{t('footer.legal')}</h3>
+            <h3 className="text-lg font-bold mb-4 text-white">
+              {t("footer.legal")}
+            </h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
-                  {t('footer.privacy')}
+                <a
+                  href="#"
+                  className="text-gray-400 hover:text-blue-400 transition-colors"
+                >
+                  {t("footer.privacy")}
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
-                  {t('footer.terms')}
+                <a
+                  href="#"
+                  className="text-gray-400 hover:text-blue-400 transition-colors"
+                >
+                  {t("footer.terms")}
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
-                  {t('footer.imprint')}
+                <a
+                  href="#"
+                  className="text-gray-400 hover:text-blue-400 transition-colors"
+                >
+                  {t("footer.imprint")}
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
-                  {t('footer.cookies')}
+                <a
+                  href="#"
+                  className="text-gray-400 hover:text-blue-400 transition-colors"
+                >
+                  {t("footer.cookies")}
                 </a>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="text-lg font-bold mb-4 text-white">{t('footer.contact')}</h3>
+            <h3 className="text-lg font-bold mb-4 text-white">
+              {t("footer.contact")}
+            </h3>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3 text-gray-400">
-                <MapPin size={20} className="mt-1 flex-shrink-0 text-blue-400" />
-                <span>Musterstraße 123<br />10115 Berlin</span>
+                <MapPin
+                  size={20}
+                  className="mt-1 flex-shrink-0 text-blue-400"
+                />
+                <span>
+                  Musterstraße 123
+                  <br />
+                  10115 Berlin
+                </span>
               </li>
               <li className="flex items-center space-x-3 text-gray-400">
                 <Phone size={20} className="flex-shrink-0 text-blue-400" />
@@ -123,11 +169,15 @@ export function Footer() {
         <div className="border-t border-gray-700 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-gray-400 text-sm">
-              © {currentYear} CareConnect. {t('footer.rights')}
+              © {currentYear} CareConnect. {t("footer.rights")}
             </p>
             <p className="text-gray-400 text-sm flex items-center space-x-2">
-              <span>{t('footer.madeWith')}</span>
-              <Heart size={16} className="text-red-500 animate-pulse" fill="currentColor" />
+              <span>{t("footer.madeWith")}</span>
+              <Heart
+                size={16}
+                className="text-red-500 animate-pulse"
+                fill="currentColor"
+              />
               <span>Boris & Hamdo</span>
             </p>
           </div>

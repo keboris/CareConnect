@@ -13,10 +13,10 @@ import { getCookie, setCookie, removeCookie } from '../lib/cookies';
 type AuthContextType = {
   user: User | null;
   loading: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<void>;
+  signUp: (formData: FormData) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,58 +25,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchUser = async () => {
     try {
+      const token = getCookie('accessToken');
+      if (!token) return null;
 
-      // Get authentication token from cookies
-      const token = getCookie('auth_token');
-      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
-
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        credentials: 'include',
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch profile");
+        throw new Error("Failed to fetch user");
       }
 
-      return await response.json();
+      const data = await response.json();
+      return data.user;
     } catch (error) {
-      console.error("Error fetching profile:", error);
+      console.error("Error fetching user:", error);
       return null;
     }
   };
 
-  const refreshProfile = async () => {
-    if (user) {
-      const profileData = await fetchProfile(user.id);
-      setProfile(profileData);
+  const refreshUser = async () => {
+    const userData = await fetchUser();
+    if (userData) {
+      setUser(userData);
+      setCookie('user', JSON.stringify(userData), 7);
     }
   };
 
   useEffect(() => {
-
-    // Check for existing authentication token and user data in cookies
-    const token = getCookie('auth_token');
+    const token = getCookie('accessToken');
     const storedUser = getCookie('user');
 
     if (token && storedUser) {
-      const userData = JSON.parse(storedUser);
-      setUser(userData);
-      fetchProfile(userData.id).then(setProfile);
+      try {
+        const userData = JSON.parse(storedUser);
+        setUser(userData);
+        fetchUser().then((user) => {
+          if (user) setUser(user);
+        });
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+        removeCookie('accessToken');
+        removeCookie('user');
+      }
     }
 
     setLoading(false);
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (formData: FormData) => {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password, full_name: fullName }),
+      body: formData,
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -86,12 +92,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const data = await response.json();
 
-    // Store authentication token and user data in cookies (expires in 7 days)
-    setCookie('auth_token', data.token, 7);
+    setCookie('accessToken', data.token, 7);
+    setCookie('refreshToken', data.token, 7);
     setCookie('user', JSON.stringify(data.user), 7);
-    
+
     setUser(data.user);
-    setProfile(data.profile);
   };
 
   const signIn = async (email: string, password: string) => {
@@ -101,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ email, password }),
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -110,33 +116,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const data = await response.json();
 
-    // Store authentication token and user data in cookies (expires in 7 days)
-    setCookie('auth_token', data.token, 7);
+    setCookie('accessToken', data.accessToken, 7);
+    setCookie('refreshToken', data.refreshToken, 7);
     setCookie('user', JSON.stringify(data.user), 7);
+
     setUser(data.user);
-    setProfile(data.profile);
   };
 
   const signOut = async () => {
+    try {
+      const token = getCookie('accessToken');
+      await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
 
-    // Remove authentication token and user data from cookies
-    removeCookie('auth_token');
+    removeCookie('accessToken');
+    removeCookie('refreshToken');
     removeCookie('user');
 
     setUser(null);
-    setProfile(null);
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        profile,
         loading,
         signUp,
         signIn,
         signOut,
-        refreshProfile,
+        refreshUser,
       }}
     >
       {children}

@@ -7,9 +7,6 @@ import { RegisterForm } from "./components/Auth/RegisterForm";
 import { Header } from "./components/Layout/Header";
 import { MapModal } from "./components/Map/MapModal";
 import { MessagesView } from "./components/Messages/MessagesView";
-import { ProfileView } from "./components/Profile/ProfileView";
-import { CreateListingModal } from "./components/Listings/CreateListingModal";
-import { ListingDetailModal } from "./components/Listings/ListingDetailModal";
 import { LandingNav } from "./components/Landing/LandingNav";
 import { HeroSection } from "./components/Landing/HeroSection";
 import { FeaturesSection } from "./components/Landing/FeaturesSection";
@@ -25,45 +22,9 @@ function AppContent() {
   const [showRegister, setShowRegister] = useState(false);
   const [showLanding, setShowLanding] = useState(true);
   const [currentView, setCurrentView] = useState<
-    "map" | "messages" | "profile"
+    "map" | "messages"
   >("map");
-  const [showCreateListing, setShowCreateListing] = useState(false);
-  //const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
-  const [selectedListing, setSelectedListing] = useState<null>(null);
   const [showMap, setShowMap] = useState(false);
-
-  const handleStartChat = async (listing: Listing) => {
-    if (!user || !listing.profile) return;
-
-    try {
-
-      // Get authentication token from cookies
-      const token = getCookie('auth_token');
-
-      const response = await fetch(`${API_BASE_URL}/conversations`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          listing_id: listing.id,
-          requester_id: user.id,
-          helper_id: listing.user_id,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to start conversation");
-      }
-
-      setSelectedListing(null);
-      setCurrentView("messages");
-    } catch (error) {
-      console.error("Error starting chat:", error);
-      alert("Fehler beim Starten der Unterhaltung");
-    }
-  };
 
   if (loading) {
     return (
@@ -105,24 +66,6 @@ function AppContent() {
           {showMap && (
             <MapModal
               onClose={() => setShowMap(false)}
-              onSelectListing={setSelectedListing}
-              onCreateListing={() => {
-                setShowMap(false);
-                setShowLanding(false);
-                setShowRegister(true);
-              }}
-            />
-          )}
-
-          {selectedListing && (
-            <ListingDetailModal
-              listing={selectedListing}
-              onClose={() => setSelectedListing(null)}
-              onStartChat={() => {
-                setSelectedListing(null);
-                setShowLanding(false);
-                setShowRegister(true);
-              }}
             />
           )}
         </div>
@@ -146,7 +89,6 @@ function AppContent() {
 
       <main className="flex-1 overflow-hidden">
         {currentView === "messages" && <MessagesView />}
-        {currentView === "profile" && <ProfileView />}
         {currentView === "map" && (
           <div className="h-full flex items-center justify-center bg-gray-50">
             <button
@@ -162,29 +104,6 @@ function AppContent() {
       {showMap && (
         <MapModal
           onClose={() => setShowMap(false)}
-          onSelectListing={setSelectedListing}
-          onCreateListing={() => {
-            setShowMap(false);
-            setShowCreateListing(true);
-          }}
-        />
-      )}
-
-      {showCreateListing && (
-        <CreateListingModal
-          onClose={() => setShowCreateListing(false)}
-          onSuccess={() => {
-            setShowCreateListing(false);
-            window.location.reload();
-          }}
-        />
-      )}
-
-      {selectedListing && (
-        <ListingDetailModal
-          listing={selectedListing}
-          onClose={() => setSelectedListing(null)}
-          onStartChat={handleStartChat}
         />
       )}
     </div>

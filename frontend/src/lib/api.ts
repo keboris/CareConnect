@@ -9,29 +9,28 @@ import { getCookie } from './cookies';
  * @returns The parsed JSON response
  */
 export async function apiRequest(endpoint: string, options: RequestInit = {}) {
-  // Get authentication token from cookies
-  const token = getCookie('auth_token');
-  
+  const token = getCookie('accessToken');
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...options.headers,
   };
-  
-  // Add authorization header if token exists
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  
+
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers,
+    credentials: 'include',
   });
-  
+
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Request failed' }));
     throw new Error(error.message || 'Request failed');
   }
-  
+
   return response.json();
 }
 
