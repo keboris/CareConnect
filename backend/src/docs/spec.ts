@@ -13,7 +13,7 @@ export const spec: OpenAPIV3.Document = {
       description: "Local development server",
     },
     {
-      url: "https://api.careconnect.com",
+      url: "https://careconnect-backend-hox4.onrender.com",
       description: "Production server",
     },
   ],
