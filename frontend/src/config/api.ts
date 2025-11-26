@@ -7,10 +7,9 @@ export type User = {
   firstName: string;
   lastName: string;
   email: string;
-  role: "user" | "helper" | "admin";
+  role: "user" | "admin";
   phone: string;
   profileImage: string;
-  profileImagePublicId: string;
   bio: string;
   skills: string[];
   location: string;
@@ -35,17 +34,22 @@ export type Offer = {
   userId: string;
   title: string;
   description: string;
-  category: string | Category;
+  categoryId: string;
   isPaid: boolean;
   price?: number;
   location: string;
   longitude: number;
   latitude: number;
-  availability: "available" | "unavailable";
   images: string[];
-  imagesPublicIds: string[];
-  status: "active" | "paused" | "archived";
+  status:
+    | "active"
+    | "in_progress"
+    | "completed"
+    | "cancelled"
+    | "inactive"
+    | "archived";
   user?: User;
+  category?: Category;
   createdAt: string;
   updatedAt: string;
 };
@@ -56,7 +60,7 @@ export type Request = {
   typeRequest: "alert" | "request";
   title?: string;
   description: string;
-  category: string | Category;
+  categoryId: string;
   location: string;
   longitude: number;
   latitude: number;
@@ -66,9 +70,15 @@ export type Request = {
   urgency: "low" | "normal" | "high";
   typeAlert?: "medical" | "danger" | "fire" | "police" | "assistance" | "other";
   images: string[];
-  imagesPublicIds: string[];
-  status: "open" | "in_progress" | "completed" | "cancelled";
+  status:
+    | "active"
+    | "in_progress"
+    | "completed"
+    | "cancelled"
+    | "inactive"
+    | "archived";
   user?: User;
+  category?: Category;
   createdAt: string;
   updatedAt: string;
 };
