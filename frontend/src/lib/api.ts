@@ -1,13 +1,23 @@
 import { API_BASE_URL } from '../config/api';
+import { getCookie } from './cookies';
 
+/**
+ * Make an authenticated API request
+ * Automatically includes the authentication token from cookies if available
+ * @param endpoint - The API endpoint to call (e.g., '/users')
+ * @param options - Fetch options (method, body, headers, etc.)
+ * @returns The parsed JSON response
+ */
 export async function apiRequest(endpoint: string, options: RequestInit = {}) {
-  const token = localStorage.getItem('auth_token');
+  // Get authentication token from cookies
+  const token = getCookie('auth_token');
   
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...options.headers,
   };
   
+  // Add authorization header if token exists
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -25,6 +35,9 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   return response.json();
 }
 
+/**
+ * API helper object with common HTTP methods
+ */
 export const api = {
   get: (endpoint: string) => apiRequest(endpoint, { method: 'GET' }),
   post: (endpoint: string, data: any) => apiRequest(endpoint, { method: 'POST', body: JSON.stringify(data) }),

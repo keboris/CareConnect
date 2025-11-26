@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LanguageProvider, useLanguage } from "./contexts/LanguageContext";
@@ -16,6 +17,7 @@ import { CategoriesSection } from "./components/Landing/CategoriesSection";
 import { StatsSection } from "./components/Landing/StatsSection";
 import { Footer } from "./components/Landing/Footer";
 import { API_BASE_URL } from "./config/api";
+import { getCookie } from './lib/cookies';
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -34,7 +36,10 @@ function AppContent() {
     if (!user || !listing.profile) return;
 
     try {
-      const token = localStorage.getItem("auth_token");
+
+      // Get authentication token from cookies
+      const token = getCookie('auth_token');
+
       const response = await fetch(`${API_BASE_URL}/conversations`, {
         method: "POST",
         headers: {

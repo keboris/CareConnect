@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
+import { getCookie, setCookie } from '../lib/cookies';
 
 type Language = 'en' | 'de';
 
@@ -157,13 +158,15 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>(() => {
-    const stored = localStorage.getItem('language') as Language;
+    // Get language preference from cookies, default to 'en' if not set
+    const stored = getCookie('language') as Language;
     return stored || 'en';
   });
 
   const changeLanguage = (lang: Language) => {
     setLanguage(lang);
-    localStorage.setItem('language', lang);
+    // Store language preference in cookies (expires in 365 days)
+    setCookie('language', lang, 365);
   };
 
   const t = (key: string): string => {
