@@ -1,8 +1,8 @@
 export { default as Chat } from "./Chat.ts";
 
-export { default as HelpCategory } from "./HelpCategory.ts";
-export { default as HelpOffer } from "./HelpOffer.ts";
-export { default as HelpRequest } from "./HelpRequest.ts";
+export { default as Category } from "./Category.ts";
+export { default as Offer } from "./Offer.ts";
+export { default as Request } from "./Request.ts";
 export { default as HelpSession } from "./HelpSession.ts";
 
 export { default as Log } from "./Log.ts";

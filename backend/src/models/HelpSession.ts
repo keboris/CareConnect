@@ -1,14 +1,14 @@
 import { Schema, model } from "mongoose";
 
-const help_SessionSchema = new Schema({
+const helpSessionSchema = new Schema({
   requestId: {
     type: Schema.Types.ObjectId,
-    ref: "HelpRequest",
+    ref: "Request",
     default: null,
   },
   offerId: {
     type: Schema.Types.ObjectId,
-    ref: "HelpOffer",
+    ref: "Offer",
     default: null,
   },
   requesterId: {
@@ -36,4 +36,4 @@ const help_SessionSchema = new Schema({
   },
 });
 
-export default model("Help_Session", help_SessionSchema);
+export default model("HelpSession", helpSessionSchema);

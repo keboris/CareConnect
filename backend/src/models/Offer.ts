@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 
-const helpRequestSchema = new Schema(
+const offerSchema = new Schema(
   {
     userId: {
       type: Schema.Types.ObjectId,
@@ -19,8 +19,19 @@ const helpRequestSchema = new Schema(
     },
     category: {
       type: Schema.Types.ObjectId,
-      ref: "HelpCategory",
+      ref: "Category",
       required: true,
+    },
+    isPaid: {
+      type: Boolean,
+      default: false,
+    },
+    price: {
+      type: Number,
+      required: function () {
+        return this.isPaid;
+      },
+      min: [0, "Price cannot be negative"],
     },
     location: {
       type: String,
@@ -35,34 +46,26 @@ const helpRequestSchema = new Schema(
       type: Number,
       required: [true, "Latitude is required"],
     },
-    rewardType: {
+    availability: {
       type: String,
-      enum: ["free", "paid"],
-      default: "free",
-    },
-    price: {
-      type: Number,
-      required: function () {
-        return this.rewardType === "paid";
-      },
-      min: [0, "Price cannot be negative"],
-    },
-    urgency: {
-      type: String,
-      enum: ["low", "normal", "high"],
-      default: "normal",
+      enum: ["available", "unavailable"],
+      default: "available",
     },
     images: {
       type: [String],
       default: [],
     },
+    imagesPublicIds: {
+      type: [String],
+      default: [],
+    },
     status: {
       type: String,
-      enum: ["open", "in_progress", "completed", "cancelled"],
-      default: "open",
+      enum: ["active", "paused", "archived"],
+      default: "active",
     },
   },
   { timestamps: { createdAt: true, updatedAt: true } }
 );
 
-export default model("HelpRequest", helpRequestSchema);
+export default model("Offer", offerSchema);

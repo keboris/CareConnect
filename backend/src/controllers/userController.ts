@@ -50,7 +50,7 @@ export const getUserById: RequestHandler = async (req, res) => {
 
 export const updateUser: RequestHandler<
   { id: string },
-  UserDTO,
+  { message: string; user: UserDTO },
   UserUpdateDTO
 > = async (req, res) => {
   const { id } = req.params;
@@ -71,6 +71,14 @@ export const updateUser: RequestHandler<
 
   const profileImage = file?.path || "";
   const profileImagePublicId = file?.filename || "";
+
+  const searchProfile = await User.findById(id).select("profileImagePublicId");
+  if (searchProfile && file) {
+    const existingPublicId = searchProfile.profileImagePublicId;
+    if (existingPublicId) {
+      await cloudinary.uploader.destroy(existingPublicId);
+    }
+  }
 
   const updatedUser = await User.findByIdAndUpdate(
     id,
@@ -94,7 +102,9 @@ export const updateUser: RequestHandler<
   if (!updatedUser) {
     throw new Error("user not found", { cause: { status: 404 } });
   }
-  res.status(200).json(updatedUser);
+  res
+    .status(200)
+    .json({ message: "User updated successfully", user: updatedUser });
 };
 
 export const deleteProfileImage: RequestHandler = async (req, res) => {
@@ -103,15 +113,14 @@ export const deleteProfileImage: RequestHandler = async (req, res) => {
       params: { id },
     } = req;
 
-    const { publicId } = req.body;
-
-    if (!publicId) {
-      return res.status(400).json({ message: "publicId is required" });
-    }
-
     const user = await User.findById(id);
-    if (!user) return res.status(404).json({ error: "User not found" });
-
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const publicId = user.profileImagePublicId;
+    if (!publicId) {
+      return res.status(400).json({ message: "No profile image to delete" });
+    }
     const result = await cloudinary.uploader.destroy(publicId);
     if (result.result !== "ok") {
       return res
@@ -121,8 +130,11 @@ export const deleteProfileImage: RequestHandler = async (req, res) => {
 
     user.profileImage = "";
     user.profileImagePublicId = "";
+
     await user.save();
-    res.json(user);
+    res
+      .status(200)
+      .json({ message: "User profile image deleted successfully", user });
   } catch (error: unknown) {
     if (error instanceof Error) {
       res.status(500).json({ message: error.message });
@@ -131,12 +143,20 @@ export const deleteProfileImage: RequestHandler = async (req, res) => {
     }
   }
 };
+
 export const deleteUser: RequestHandler = async (req, res) => {
   try {
     const { id } = req.params;
+
+    const userProfile = await User.findById(id).select("profileImagePublicId");
+    if (userProfile && userProfile.profileImagePublicId) {
+      const publicId = userProfile.profileImagePublicId;
+      await cloudinary.uploader.destroy(publicId);
+    }
+
     const user = await User.findByIdAndDelete(id);
     if (!user) return res.status(404).json({ error: "User not found" });
-    res.json({ message: "User deleted successfully" });
+    res.status(200).json({ message: "User deleted successfully" });
   } catch (error: unknown) {
     if (error instanceof Error) {
       res.status(500).json({ message: error.message });
