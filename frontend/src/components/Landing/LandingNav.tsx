@@ -1,4 +1,4 @@
-import { LogIn, UserPlus, Globe } from "lucide-react";
+import { LogIn, UserPlus } from "lucide-react";
 import { useLanguage } from "../../contexts";
 import type { LandingNavProps } from "../../types";
 import ReactCountryFlag from "react-country-flag";
