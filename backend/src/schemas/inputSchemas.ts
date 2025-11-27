@@ -40,9 +40,9 @@ export const userInputSchema = z
       .optional(),
     skills: z
       .array(
-        z.string({ error: "each skill must be a string" }).min(2, {
-          message: "each skill must be at least 2 characters long",
-        })
+        z
+          .string({ error: "skill must be a string" })
+          .min(24, { message: "skill must be a valid ID" })
       )
       .optional(),
     location: z
@@ -52,8 +52,8 @@ export const userInputSchema = z
     latitude: z.number({ error: "latitude must be a number" }),
     languages: z
       .array(
-        z.enum(["English", "Spanish", "French", "German", "Chinese", "Other"], {
-          error: "language must be one of the predefined options",
+        z.string({ error: "language must be a string" }).min(24, {
+          message: "language must be a valid ID",
         })
       )
       .min(1, { message: "at least one language must be selected" })
@@ -87,8 +87,8 @@ export const userUpdateSchema = z
       .optional(),
     skills: z
       .array(
-        z.string({ error: "each skill must be a string" }).min(2, {
-          message: "each skill must be at least 2 characters long",
+        z.string({ error: "skill must be a string" }).min(24, {
+          message: "skill must be a valid ID",
         })
       )
       .optional(),
@@ -100,11 +100,10 @@ export const userUpdateSchema = z
     latitude: z.number({ error: "latitude must be a number" }).optional(),
     languages: z
       .array(
-        z.enum(["English", "Spanish", "French", "German", "Chinese", "Other"], {
-          error: "language must be one of the predefined options",
+        z.string({ error: "language must be a string" }).min(24, {
+          message: "language must be a valid ID",
         })
       )
-      .min(1, { message: "at least one language must be selected" })
       .optional(),
   })
   .strict();

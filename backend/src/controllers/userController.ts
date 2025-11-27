@@ -102,9 +102,34 @@ export const updateUser: RequestHandler<
   if (!updatedUser) {
     throw new Error("user not found", { cause: { status: 404 } });
   }
+
+  // convert Mongoose document to plain object and normalize ObjectId[] -> string[]
+  const userObj = updatedUser.toObject();
+
+  const safeUser = {
+    firstName: userObj.firstName,
+    lastName: userObj.lastName,
+    email: userObj.email,
+    phone: userObj.phone,
+    profileImage: userObj.profileImage,
+    profileImagePublicId: userObj.profileImagePublicId,
+    bio: userObj.bio,
+    skills: Array.isArray(userObj.skills)
+      ? userObj.skills.map((s: any) =>
+          s && typeof s === "object" && typeof s.toString === "function"
+            ? s.toString()
+            : s
+        )
+      : userObj.skills,
+    languages: userObj.languages,
+    location: userObj.location,
+    longitude: userObj.longitude,
+    latitude: userObj.latitude,
+  } as unknown as UserDTO;
+
   res
     .status(200)
-    .json({ message: "User updated successfully", user: updatedUser });
+    .json({ message: "User updated successfully", user: safeUser });
 };
 
 export const deleteProfileImage: RequestHandler = async (req, res) => {
