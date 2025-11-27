@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import { ref } from "process";
 
 const userSchema = new Schema(
   {
@@ -50,7 +51,7 @@ const userSchema = new Schema(
       default: "",
     },
     skills: {
-      type: [String],
+      type: [{ type: Schema.Types.ObjectId, ref: "Skill" }],
       default: [],
     },
     location: {
@@ -71,9 +72,8 @@ const userSchema = new Schema(
       min: 0,
     },
     languages: {
-      type: [String],
-      enum: ["English", "Spanish", "French", "German", "Chinese", "Other"],
-      default: ["English"],
+      type: [{ type: Schema.Types.ObjectId, ref: "Language" }],
+      default: ["69283282419047da24cd7957"], // Default to English language ID
     },
     tokenVersion: {
       type: Number,
