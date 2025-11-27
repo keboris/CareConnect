@@ -5,34 +5,29 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { API_BASE_URL, type User } from "../config/api";
+import { API_BASE_URL } from "../config/api";
 
-import { getCookie, setCookie, removeCookie } from "../lib/cookies";
-
-type AuthContextType = {
-  user: User | null;
-  loading: boolean;
-  signUp: (formData: FormData) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  refreshUser: () => Promise<void>;
-};
+import type { AuthContextType, User } from "../types";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export default function AuthContextProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const [user, setUser] = useState<User | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchUser = async () => {
     try {
-      const token = getCookie("accessToken");
-      if (!token) return null;
-
       const response = await fetch(`${API_BASE_URL}/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: accessToken
+          ? {
+              Authorization: `Bearer ${accessToken}`,
+            }
+          : {},
         credentials: "include",
       });
 
@@ -41,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const data = await response.json();
+      setUser(data.user);
       return data.user;
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -48,33 +44,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const refreshUser = async () => {
-    const userData = await fetchUser();
-    if (userData) {
-      setUser(userData);
-      setCookie("user", JSON.stringify(userData), 7);
-    }
-  };
-
   useEffect(() => {
-    const token = getCookie("accessToken");
-    const storedUser = getCookie("user");
-
-    if (token && storedUser) {
+    const initAuth = async () => {
       try {
-        const userData = JSON.parse(storedUser);
-        setUser(userData);
-        fetchUser().then((user) => {
-          if (user) setUser(user);
+        const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: "POST",
+          credentials: "include",
         });
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-        removeCookie("accessToken");
-        removeCookie("user");
-      }
-    }
 
-    setLoading(false);
+        if (res.ok) {
+          const data = await res.json();
+          setAccessToken(data.accessToken);
+          await fetchUser();
+        }
+      } catch (error) {
+        console.error("Error during auth initialization:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    initAuth();
   }, []);
 
   const signUp = async (formData: FormData) => {
@@ -91,9 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const data = await response.json();
 
-    setCookie("accessToken", data.token, 7);
-    setCookie("refreshToken", data.token, 7);
-    setCookie("user", JSON.stringify(data.user), 7);
+    setAccessToken(data.accessToken);
 
     setUser(data.user);
   };
@@ -115,32 +102,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const data = await response.json();
 
-    setCookie("accessToken", data.accessToken, 7);
-    setCookie("refreshToken", data.refreshToken, 7);
-    setCookie("user", JSON.stringify(data.user), 7);
+    setAccessToken(data.accessToken);
 
     setUser(data.user);
   };
 
   const signOut = async () => {
     try {
-      const token = getCookie("accessToken");
       await fetch(`${API_BASE_URL}/auth/logout`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         credentials: "include",
       });
     } catch (error) {
       console.error("Logout error:", error);
+    } finally {
+      setUser(null);
+      setAccessToken(null);
+    }
+  };
+
+  // Function for secure fetch with auto-refresh
+  const refreshUser = async (input: RequestInfo, init: RequestInit = {}) => {
+    if (!init.headers) init.headers = {};
+    if (accessToken) {
+      (init.headers as any)["Authorization"] = `Bearer ${accessToken}`;
     }
 
-    removeCookie("accessToken");
-    removeCookie("refreshToken");
-    removeCookie("user");
+    init.credentials = "include"; // to send the refreshToken cookie
 
-    setUser(null);
+    let res = await fetch(input, init);
+
+    // If 401, try to get a new accessToken via refreshToken
+    if (res.status === 401) {
+      const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        credentials: "include", // to send the refreshToken cookie
+      });
+
+      if (refreshRes.ok) {
+        const data = await refreshRes.json();
+        setAccessToken(data.accessToken); // new token in memory
+
+        // Refaire la requête initiale avec le nouveau token
+        (init.headers as any)["Authorization"] = `Bearer ${data.accessToken}`;
+        res = await fetch(input, init);
+      } else {
+        // refreshToken invalid → logout
+        await signOut();
+      }
+    }
+
+    return res;
   };
 
   return (

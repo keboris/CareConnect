@@ -7,14 +7,13 @@ import {
   MessageCircle,
   Shield,
 } from "lucide-react";
-import { useLanguage } from "../../contexts/LanguageContext";
+import { useLanguage } from "../../contexts";
+import type { HeroSectionProps } from "../../types";
 
-type Props = {
-  onGetStarted: () => void;
-  onOpenMap: () => void;
-};
-
-export function HeroSection({ onGetStarted, onOpenMap }: Props) {
+const HeroSection: React.FC<HeroSectionProps> = ({
+  onGetStarted,
+  onOpenMap,
+}) => {
   const { t } = useLanguage();
 
   return (
@@ -28,7 +27,7 @@ export function HeroSection({ onGetStarted, onOpenMap }: Props) {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="text-white space-y-8">
             <div className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/30">
-              <img src="/logo.png" alt="CareConnect" className="h-5 w-auto" />
+              <img src="logo.png" alt="CareConnect" className="h-5 w-auto" />
               <span className="text-sm font-medium">{t("hero.tagline")}</span>
             </div>
 
@@ -144,4 +143,6 @@ export function HeroSection({ onGetStarted, onOpenMap }: Props) {
       </div>
     </div>
   );
-}
+};
+
+export default HeroSection;
