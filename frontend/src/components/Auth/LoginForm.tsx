@@ -1,13 +1,10 @@
 import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { useLanguage } from "../../contexts/LanguageContext";
+import { useLanguage } from "../../contexts";
 import { Mail, Lock } from "lucide-react";
+import type { LoginFormProps } from "../../types";
 
-type Props = {
-  onToggleForm: () => void;
-};
-
-export function LoginForm({ onToggleForm }: Props) {
+const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -30,7 +27,7 @@ export function LoginForm({ onToggleForm }: Props) {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white rounded-3xl shadow-2xl p-8 border-2 border-gray-100">
+    <div className="w-full max-w-md mx-auto bg-white rounded-3xl shadow-2xl p-8 border-2 border-gray-100 mt-10">
       <div className="text-center mb-8">
         <div className="inline-flex mb-4">
           <img src="/logo.png" alt="CareConnect Logo" className="h-16 w-auto" />
@@ -108,7 +105,7 @@ export function LoginForm({ onToggleForm }: Props) {
       <p className="mt-6 text-center text-sm text-gray-600">
         {t("noAccount")}{" "}
         <button
-          onClick={onToggleForm}
+          onClick={onLoginSuccess}
           className="text-blue-600 hover:text-blue-700 font-bold"
         >
           {t("registerNow")}
@@ -116,4 +113,6 @@ export function LoginForm({ onToggleForm }: Props) {
       </p>
     </div>
   );
-}
+};
+
+export default LoginForm;

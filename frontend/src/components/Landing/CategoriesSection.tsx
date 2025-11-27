@@ -1,19 +1,32 @@
-import { ShoppingCart, Baby, Hammer, Users, Leaf, Home, Dog, Car } from 'lucide-react';
+import {
+  ShoppingCart,
+  Baby,
+  Hammer,
+  Users,
+  Leaf,
+  Home,
+  Dog,
+  Car,
+} from "lucide-react";
+import type { CategoriesSectionProps } from "../../types";
 
-type Props = {
-  onCategoryClick: () => void;
-};
-
-export function CategoriesSection({ onCategoryClick }: Props) {
+const CategoriesSection: React.FC<CategoriesSectionProps> = ({
+  onCategoryClick,
+}) => {
   const categories = [
-    { icon: ShoppingCart, name: 'Einkaufen', color: 'bg-emerald-500', count: '24+' },
-    { icon: Baby, name: 'Kinderbetreuung', color: 'bg-blue-500', count: '18+' },
-    { icon: Hammer, name: 'Heimwerken', color: 'bg-amber-500', count: '31+' },
-    { icon: Users, name: 'Begleitung', color: 'bg-purple-500', count: '15+' },
-    { icon: Leaf, name: 'Gartenarbeit', color: 'bg-green-500', count: '22+' },
-    { icon: Home, name: 'Haushalt', color: 'bg-cyan-500', count: '28+' },
-    { icon: Dog, name: 'Tierbetreuung', color: 'bg-pink-500', count: '19+' },
-    { icon: Car, name: 'Fahrdienst', color: 'bg-red-500', count: '13+' }
+    {
+      icon: ShoppingCart,
+      name: "Einkaufen",
+      color: "bg-emerald-500",
+      count: "24+",
+    },
+    { icon: Baby, name: "Kinderbetreuung", color: "bg-blue-500", count: "18+" },
+    { icon: Hammer, name: "Heimwerken", color: "bg-amber-500", count: "31+" },
+    { icon: Users, name: "Begleitung", color: "bg-purple-500", count: "15+" },
+    { icon: Leaf, name: "Gartenarbeit", color: "bg-green-500", count: "22+" },
+    { icon: Home, name: "Haushalt", color: "bg-cyan-500", count: "28+" },
+    { icon: Dog, name: "Tierbetreuung", color: "bg-pink-500", count: "19+" },
+    { icon: Car, name: "Fahrdienst", color: "bg-red-500", count: "13+" },
   ];
 
   return (
@@ -35,7 +48,9 @@ export function CategoriesSection({ onCategoryClick }: Props) {
               onClick={onCategoryClick}
               className="group relative bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-blue-200 hover:-translate-y-1"
             >
-              <div className={`${category.color} w-16 h-16 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+              <div
+                className={`${category.color} w-16 h-16 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg`}
+              >
                 <category.icon size={28} className="text-white" />
               </div>
 
@@ -43,9 +58,7 @@ export function CategoriesSection({ onCategoryClick }: Props) {
                 {category.name}
               </h3>
 
-              <p className="text-sm text-gray-500">
-                {category.count} Anzeigen
-              </p>
+              <p className="text-sm text-gray-500">{category.count} Anzeigen</p>
 
               <div className="absolute inset-0 bg-gradient-to-t from-blue-50/50 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </button>
@@ -63,4 +76,6 @@ export function CategoriesSection({ onCategoryClick }: Props) {
       </div>
     </div>
   );
-}
+};
+
+export default CategoriesSection;

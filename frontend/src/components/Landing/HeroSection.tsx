@@ -7,14 +7,13 @@ import {
   MessageCircle,
   Shield,
 } from "lucide-react";
-import { useLanguage } from "../../contexts/LanguageContext";
+import { useLanguage } from "../../contexts";
+import type { HeroSectionProps } from "../../types";
 
-type Props = {
-  onGetStarted: () => void;
-  onOpenMap: () => void;
-};
-
-export function HeroSection({ onGetStarted, onOpenMap }: Props) {
+const HeroSection: React.FC<HeroSectionProps> = ({
+  onGetStarted,
+  onOpenMap,
+}) => {
   const { t } = useLanguage();
 
   return (
@@ -144,4 +143,6 @@ export function HeroSection({ onGetStarted, onOpenMap }: Props) {
       </div>
     </div>
   );
-}
+};
+
+export default HeroSection;

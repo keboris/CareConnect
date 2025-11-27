@@ -8,9 +8,9 @@ import {
   Instagram,
   Linkedin,
 } from "lucide-react";
-import { useLanguage } from "../../contexts/LanguageContext";
+import { useLanguage } from "../../contexts";
 
-export function Footer() {
+const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const { t } = useLanguage();
 
@@ -185,4 +185,6 @@ export function Footer() {
       </div>
     </footer>
   );
-}
+};
+
+export default Footer;

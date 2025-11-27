@@ -1,5 +1,7 @@
+import LoginForm from "../components/Auth/LoginForm";
+
 const Login: React.FC = () => {
-  return <div>Login Page</div>;
+  return <LoginForm onLoginSuccess={() => {}} />;
 };
 
 export default Login;

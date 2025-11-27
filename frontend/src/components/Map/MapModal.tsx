@@ -1,26 +1,16 @@
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { Icon } from "leaflet";
-import type { Offer, Request } from "../../config/api";
+
 import { api } from "../../lib/api";
 import { X, MapPin, Search } from "lucide-react";
 import "leaflet/dist/leaflet.css";
+import RecenterMap from "./RecenterMap";
+import type { MapModalProps, OfferProps, RequestProps } from "../../types";
 
-type Props = {
-  onClose: () => void;
-};
-
-function RecenterMap({ center }: { center: [number, number] }) {
-  const map = useMap();
-  useEffect(() => {
-    map.setView(center);
-  }, [center, map]);
-  return null;
-}
-
-export function MapModal({ onClose }: Props) {
-  const [offers, setOffers] = useState<Offer[]>([]);
-  const [requests, setRequests] = useState<Request[]>([]);
+const MapModal: React.FC<MapModalProps> = ({ onClose }) => {
+  const [offers, setOffers] = useState<OfferProps[]>([]);
+  const [requests, setRequests] = useState<RequestProps[]>([]);
   const [center, setCenter] = useState<[number, number]>([35.5, 33.9]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showOffers, setShowOffers] = useState(true);
@@ -238,4 +228,6 @@ export function MapModal({ onClose }: Props) {
       </div>
     </div>
   );
-}
+};
+
+export default MapModal;

@@ -1,13 +1,10 @@
 import { useState } from "react";
-import { useAuth } from "../../contexts/AuthContext";
-import { useLanguage } from "../../contexts/LanguageContext";
+
+import { useAuth, useLanguage } from "../../contexts";
 import { Mail, Lock, User, Phone, MapPin } from "lucide-react";
+import type { RegisterFormProps } from "../../types";
 
-type Props = {
-  onToggleForm: () => void;
-};
-
-export function RegisterForm({ onToggleForm }: Props) {
+const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -221,7 +218,7 @@ export function RegisterForm({ onToggleForm }: Props) {
       <p className="mt-6 text-center text-sm text-gray-600">
         {t("haveAccount")}{" "}
         <button
-          onClick={onToggleForm}
+          onClick={onRegisterSuccess}
           className="text-blue-600 hover:text-blue-700 font-bold"
         >
           {t("loginNow")}
@@ -229,4 +226,6 @@ export function RegisterForm({ onToggleForm }: Props) {
       </p>
     </div>
   );
-}
+};
+
+export default RegisterForm;
