@@ -1,5 +1,4 @@
 import { Schema, model } from "mongoose";
-import { ref } from "process";
 
 const userSchema = new Schema(
   {
