@@ -1,6 +1,7 @@
 import { Outlet, useNavigate } from "react-router";
 import LandingNav from "../components/Landing/LandingNav";
 import { useState } from "react";
+import Footer from "../components/Landing/Footer";
 
 const MainLayout: React.FC = () => {
   const [showRegister, setShowRegister] = useState(false);
@@ -44,6 +45,8 @@ const MainLayout: React.FC = () => {
           <Outlet /> {/* Login page via Outlet */}
         </div>
       )}
+
+      <Footer />
     </div>
   );
 };

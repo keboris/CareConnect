@@ -134,3 +134,10 @@ export type HeaderProps = {
 export type MapModalProps = {
   onClose: () => void;
 };
+
+export type Lang = {
+  _id: string;
+  en: string;
+  de: string;
+  fr: string;
+};
