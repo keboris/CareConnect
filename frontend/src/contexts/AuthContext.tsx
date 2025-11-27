@@ -64,7 +64,7 @@ export default function AuthContextProvider({
       }
     };
     initAuth();
-  }, []);
+  }, [accessToken]);
 
   const signUp = async (formData: FormData) => {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {

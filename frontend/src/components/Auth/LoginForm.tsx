@@ -27,15 +27,15 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white rounded-3xl shadow-2xl p-8 border-2 border-gray-100 mt-10">
+    <div className="w-full max-w-md mx-auto bg-white rounded-3xl shadow-2xl p-8 border-2 border-gray-100 mt-10 mb-10">
       <div className="text-center mb-8">
         <div className="inline-flex mb-4">
           <img src="/logo.png" alt="CareConnect Logo" className="h-16 w-auto" />
         </div>
         <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          {t("welcomeBack")}
+          {t("auth.welcomeBack")}
         </h2>
-        <p className="text-gray-600">{t("signInAccount")}</p>
+        <p className="text-gray-600">{t("auth.signInAccount")}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -50,7 +50,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
             htmlFor="email"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            {t("email")}
+            {t("auth.email")}
           </label>
           <div className="relative">
             <Mail
@@ -74,7 +74,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
             htmlFor="password"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            {t("password")}
+            {t("auth.password")}
           </label>
           <div className="relative">
             <Lock
@@ -98,17 +98,17 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
           disabled={loading}
           className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg shadow-lg hover:shadow-xl hover:scale-105 duration-300"
         >
-          {loading ? t("signingIn") : t("signIn")}
+          {loading ? t("auth.signingIn") : t("auth.signIn")}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-gray-600">
-        {t("noAccount")}{" "}
+        {t("auth.noAccount")}{" "}
         <button
           onClick={onLoginSuccess}
           className="text-blue-600 hover:text-blue-700 font-bold"
         >
-          {t("registerNow")}
+          {t("auth.registerNow")}
         </button>
       </p>
     </div>

@@ -3,7 +3,6 @@ import HeroSection from "../components/Landing/HeroSection";
 import FeaturesSection from "../components/Landing/FeaturesSection";
 import CategoriesSection from "../components/Landing/CategoriesSection";
 import StatsSection from "../components/Landing/StatsSection";
-import Footer from "../components/Landing/Footer";
 import MapModal from "../components/Map/MapModal";
 
 const Home: React.FC = () => {
@@ -18,7 +17,6 @@ const Home: React.FC = () => {
       <FeaturesSection />
       <CategoriesSection onCategoryClick={() => setShowMap(true)} />
       <StatsSection />
-      <Footer />
 
       {showMap && <MapModal onClose={() => setShowMap(false)} />}
     </>
