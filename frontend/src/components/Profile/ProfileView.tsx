@@ -1,18 +1,10 @@
 import { useState, useEffect } from "react";
 
 import { api } from "../../lib/api";
-import {
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Star,
-  Edit2,
-  Save,
-  Languages,
-} from "lucide-react";
+import { User, Mail, Phone, MapPin, Star, Edit2, Save } from "lucide-react";
 import type { OfferProps, RequestProps } from "../../types";
 import { useAuth } from "../../contexts";
+import { API_BASE_URL } from "../../config/api";
 
 export function ProfileView() {
   const { user, refreshUser } = useAuth();
@@ -61,7 +53,7 @@ export function ProfileView() {
     // TODO: Replace with actual MongoDB API endpoint
     // Expected response format: Array of Offer objects with populated category, sorted by created_at desc
     try {
-      const data = await api.get(`/offers/myOffers`);
+      const data = await api.get(`${API_BASE_URL}/offers/myOffers`);
       if (data) setUserOffers(data);
     } catch (error) {
       console.error("Failed to load your Offers:", error);
@@ -72,7 +64,7 @@ export function ProfileView() {
     if (!user) return;
 
     try {
-      const data = await api.get(`/requests/myRequests`);
+      const data = await api.get(`${API_BASE_URL}/requests/myRequests`);
       if (data) setUserRequests(data);
     } catch (error) {
       console.error("Failed to load your Requests:", error);
@@ -84,14 +76,23 @@ export function ProfileView() {
 
     setLoading(true);
     try {
-      // TODO: Replace with actual MongoDB API endpoint
-      // Update user profile with form data
-      await api.put(`/users/${user._id}`, {
-        ...formData,
-        updated_at: new Date().toISOString(),
+      const res = await refreshUser(`${API_BASE_URL}/users/${user._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          updated_at: new Date().toISOString(),
+        }),
       });
 
-      // await refreshUser();
+      if (!res.ok) {
+        throw new Error("Failed to update profile");
+      }
+
+      await refreshUser(`${API_BASE_URL}/auth/me`);
+
       setEditing(false);
     } catch (error) {
       console.error("Error updating profile:", error);
