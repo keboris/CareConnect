@@ -560,3 +560,22 @@ export const notificationInputSchema = z
   })
   .strict();
 //----------------------------------------------------------------------------
+
+// Languages Schema
+export const langInputSchema = z
+  .object({
+    en: z
+      .string({ error: "name must be a string" })
+      .min(2, { message: "name must be at least 2 characters long" }),
+    de: z
+      .string({ error: "name must be a string" })
+      .min(2, { message: "name must be at least 2 characters long" })
+      .optional(),
+    fr: z
+      .string({ error: "name must be a string" })
+      .min(2, { message: "name must be at least 2 characters long" })
+      .optional(),
+  })
+  .strict();
+
+//----------------------------------------------------------------------------

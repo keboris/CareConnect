@@ -10,12 +10,22 @@ import {
   requestRoutes,
   userRoutes,
   helpSessionRoutes,
+  langRoutes,
 } from "#routes";
 
 import { spec } from "#docs";
+import cors from "cors";
 
 const app = express();
 const port = process.env.PORT || 8080;
+
+app.use(
+  cors({
+    origin: "https://careconnect-frontend-5jih.onrender.com/", // Frontend URL
+    //"http://localhost:5173", // Frontend URL
+    credentials: true, // to send cookies (refreshToken)
+  })
+);
 
 app.use(express.json());
 app.use(cookieParser());
@@ -24,6 +34,10 @@ app.use(cookieParser());
 
 // Categories
 app.use("/categories", categoryRoutes);
+
+// Languages and Skills
+app.use("/languages", langRoutes);
+app.use("/skills", langRoutes);
 
 // Authentication
 app.use("/auth", authRoutes);

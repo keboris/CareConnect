@@ -148,7 +148,6 @@ export const updateOffer: RequestHandler<
         location,
         longitude,
         latitude,
-        availability,
         status,
       },
       params: { id },
@@ -192,7 +191,6 @@ export const updateOffer: RequestHandler<
         location: location || offer.location,
         longitude: longitude || offer.longitude,
         latitude: latitude || offer.latitude,
-        availability: availability ?? offer.availability,
         status: status ?? offer.status,
         images: images.length > 0 ? [...offer.images, ...images] : offer.images,
         imagesPublicIds:

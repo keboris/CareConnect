@@ -18,4 +18,7 @@ export { default as Rating } from "./Rating.ts";
 export { default as SOSRequest } from "./SOSAlert.ts";
 export { default as SessionReport } from "./SOSHelpSession.ts";
 
+export { default as Language } from "./Language.ts";
+export { default as Skill } from "./Skill.ts";
+
 export { default as User } from "./User.ts";

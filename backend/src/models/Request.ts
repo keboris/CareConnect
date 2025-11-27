@@ -100,7 +100,14 @@ const requestSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["active", "in_progress", "completed", "cancelled", "archived"],
+      enum: [
+        "active",
+        "in_progress",
+        "completed",
+        "cancelled",
+        "inactive",
+        "archived",
+      ],
       default: "active",
     },
   },
