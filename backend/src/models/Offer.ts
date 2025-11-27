@@ -46,11 +46,6 @@ const offerSchema = new Schema(
       type: Number,
       required: [true, "Latitude is required"],
     },
-    availability: {
-      type: String,
-      enum: ["available", "unavailable"],
-      default: "available",
-    },
     images: {
       type: [String],
       default: [],
@@ -61,7 +56,14 @@ const offerSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["active", "in_progress", "completed", "cancelled", "archived"],
+      enum: [
+        "active",
+        "in_progress",
+        "completed",
+        "cancelled",
+        "inactive",
+        "archived",
+      ],
       default: "active",
     },
   },

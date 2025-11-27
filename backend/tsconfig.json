@@ -2,6 +2,7 @@
   "compilerOptions": {
     /* Base Options: */
     "esModuleInterop": true, // Enables default imports from CommonJS modules
+    "allowSyntheticDefaultImports": true, // Allows default imports from modules with no default export
     "lib": ["es2022"], // Includes modern ES features in the type system
     "target": "es2022", // Sets the JavaScript version output
     "skipLibCheck": true, // Skips type checking of declaration files (*.d.ts)
