@@ -21,7 +21,7 @@ const port = process.env.PORT || 8080;
 
 app.use(
   cors({
-    origin: "https://careconnect-frontend-5jih.onrender.com/", // Frontend URL
+    origin: "https://careconnect-frontend-5jih.onrender.com", // Frontend URL
     //"http://localhost:5173", // Frontend URL
     credentials: true, // to send cookies (refreshToken)
   })
