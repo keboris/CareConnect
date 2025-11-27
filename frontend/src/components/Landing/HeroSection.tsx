@@ -27,7 +27,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="text-white space-y-8">
             <div className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/30">
-              <img src="/logo.png" alt="CareConnect" className="h-5 w-auto" />
+              <img src="logo.png" alt="CareConnect" className="h-5 w-auto" />
               <span className="text-sm font-medium">{t("hero.tagline")}</span>
             </div>
 
