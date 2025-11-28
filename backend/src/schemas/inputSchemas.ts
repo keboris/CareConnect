@@ -1,3 +1,4 @@
+import { STATUS_CODES } from "http";
 import { z } from "zod";
 
 // User Schemas
@@ -191,11 +192,6 @@ export const offerInputSchema = z
       .optional(),
     longitude: z.number({ error: "longitude must be a number" }).optional(),
     latitude: z.number({ error: "latitude must be a number" }).optional(),
-    availability: z
-      .enum(["available", "unavailable"], {
-        error: "availability must be either 'available' or 'unavailable'",
-      })
-      .default("available"),
     images: z
       .array(
         z
@@ -234,11 +230,6 @@ export const offerUpdateSchema = z
       .optional(),
     longitude: z.number({ error: "longitude must be a number" }).optional(),
     latitude: z.number({ error: "latitude must be a number" }).optional(),
-    availability: z
-      .enum(["available", "unavailable"], {
-        error: "availability must be either 'available' or 'unavailable'",
-      })
-      .default("available"),
     images: z
       .array(
         z
@@ -247,8 +238,9 @@ export const offerUpdateSchema = z
       )
       .optional(),
     status: z
-      .enum(["active", "paused", "archived"], {
-        error: "status must be one of 'active', 'paused', 'archived'",
+      .enum(["active", "in_progress", "completed", "inactive", "archived"], {
+        error:
+          "status must be one of 'active', 'in_progress', 'completed', 'inactive', 'archived'",
       })
       .optional(),
   })
@@ -385,9 +377,9 @@ export const requestUpdateSchema = z
       )
       .optional(),
     status: z
-      .enum(["open", "in_progress", "completed", "cancelled"], {
+      .enum(["active", "in_progress", "completed", "inactive", "cancelled"], {
         error:
-          "status must be one of 'open', 'in_progress', 'completed', 'cancelled'",
+          "status must be one of 'active', 'in_progress', 'completed', 'inactive', 'cancelled'",
       })
       .optional(),
   })
@@ -428,6 +420,37 @@ export const requestUpdateSchema = z
   })
   .strict();
 
+//
+export const helpSessionInputSchema = z
+  .object({
+    status: z.enum(["active", "completed", "cancelled"], {
+      error: "status must be one of 'active', 'completed', 'cancelled'",
+    }),
+    result: z
+      .enum(["successful", "unsuccessful", "partial", "undefined"], {
+        error:
+          "result must be one of 'successful', 'unsuccessful', 'partial', 'undefined'",
+      })
+      .optional(),
+    ratingPending: z
+      .boolean({ error: "ratingPending must be a boolean" })
+      .optional(),
+    rating: z
+      .number({ error: "rating must be a number" })
+      .min(1, { message: "rating must be at least 1" })
+      .max(5, { message: "rating must be at most 5" })
+      .optional(),
+    notes: z
+      .string({ error: "notes must be a string" })
+      .max(2000, { message: "notes must be at most 2000 characters long" })
+      .optional(),
+    finalizedBy: z
+      .string({ error: "finalizedBy must be a string" })
+      .min(24, { message: "finalizedBy must be a valid ID" })
+      .optional(),
+    endedAt: z.date().optional(),
+  })
+  .strict();
 //----------------------------------------------------------------------------
 // Enreg Log Schema
 export const enregLogInputSchema = z

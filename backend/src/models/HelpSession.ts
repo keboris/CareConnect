@@ -23,8 +23,33 @@ const helpSessionSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ["active", "in_progress", "completed", "cancelled"],
+    enum: ["active", "completed", "cancelled"],
     default: "active",
+  },
+  result: {
+    type: String,
+    enum: ["successful", "unsuccessful", "partial", "undefined"],
+    default: "undefined",
+  },
+  ratingPending: {
+    type: Boolean,
+    default: true,
+  },
+  rating: {
+    type: Number,
+    min: 1,
+    max: 5,
+    default: null,
+  },
+  notes: {
+    type: String,
+    default: "",
+    maxLength: 2000,
+  },
+  finalizedBy: {
+    type: String,
+    enum: ["requester", "helper", "system", "none"],
+    default: "none",
   },
   startedAt: {
     type: Date,

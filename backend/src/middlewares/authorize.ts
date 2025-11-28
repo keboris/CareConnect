@@ -23,7 +23,17 @@ const authorize = (Model: any): RequestHandler => {
             cause: { status: 404 },
           })
         );
-      const ownerId = model.userId?.toString() ?? model._id.toString();
+
+      let ownerId: string | undefined;
+      if (Model.modelName != "HelpSession") {
+        ownerId = model.userId?.toString() ?? model._id.toString();
+      } else {
+        if (model.offerId) {
+          ownerId = model.userRequesterId?.toString();
+        } else if (model.requestId) {
+          ownerId = model.userHelperId?.toString();
+        }
+      }
 
       console.log("✅ authorize", "Checking ownership for user:", req.user?.id);
       // otherwise only allow if user is the author

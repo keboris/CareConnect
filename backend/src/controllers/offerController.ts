@@ -1,4 +1,4 @@
-import { Category, Offer, User } from "#models";
+import { Category, HelpSession, Offer, User } from "#models";
 import type { offerInputSchema, offerUpdateSchema } from "#schemas";
 import type z from "zod";
 
@@ -74,11 +74,16 @@ export const createOffer: RequestHandler<
 
 export const getOffers: RequestHandler = async (req, res) => {
   try {
-    const offers = await Offer.find().populate("category", "name").lean();
+    const offers = await Offer.find({
+      status: { $in: ["active", "in_progress"] },
+    })
+      .populate("category", "name")
+      .lean();
     if (!offers.length) {
       return res.status(404).json({ message: "No Offer found" });
     }
-    res.status(200).json({ offers });
+    const total = offers.length;
+    res.status(200).json({ message: `Found ${total} offers`, offers });
   } catch (error) {
     res
       .status(500)
@@ -120,7 +125,8 @@ export const myOffers: RequestHandler = async (req, res) => {
       return res.status(404).json({ message: "No offers found for this user" });
     }
 
-    res.status(200).json({ message: "My Offers", offers });
+    const total = offers.length;
+    res.status(200).json({ message: "My Offers", total, offers });
   } catch (error) {
     res
       .status(500)
@@ -159,9 +165,16 @@ export const updateOffer: RequestHandler<
       });
     }
 
-    const files = req.files as Express.Multer.File[] | undefined;
-    const images = files ? files.map((file) => file.path) : [];
-    const imagesPublicIds = files ? files.map((file) => file.filename) : [];
+    if (
+      status &&
+      !["active", "in_progress", "completed", "inactive", "cancelled"].includes(
+        status
+      )
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Invalid status value for offer", offer: undefined });
+    }
 
     const offer = await Offer.findById(id);
     if (!offer)
@@ -177,6 +190,17 @@ export const updateOffer: RequestHandler<
           .json({ message: "Category not found", offer: undefined });
       }
     }
+
+    if (offer.status === "completed" || offer.status === "cancelled") {
+      return res.status(400).json({
+        message: "Cannot update a completed or cancelled offer",
+        offer: undefined,
+      });
+    }
+
+    const files = req.files as Express.Multer.File[] | undefined;
+    const images = files ? files.map((file) => file.path) : [];
+    const imagesPublicIds = files ? files.map((file) => file.filename) : [];
 
     const priceToUpdate = isPaid ? price : 0;
 
@@ -200,6 +224,17 @@ export const updateOffer: RequestHandler<
       },
       { new: true }
     ).populate("category", "name");
+
+    if (status && ["completed", "cancelled"].includes(status as string)) {
+      await HelpSession.updateMany(
+        { offerId: offer._id, status: { $in: ["active", "in_progress"] } },
+        {
+          status: status,
+          finalizedBy: "helper",
+          endedAt: new Date(),
+        }
+      );
+    }
 
     res.json({ message: "Offer updated successfully", offer: updatedOffer });
   } catch (error: unknown) {

@@ -1,9 +1,21 @@
-import { createHelpSession } from "#controllers";
-import { authenticate } from "#middlewares";
+import {
+  createHelpSession,
+  getHelpSession,
+  updateHelpSession,
+} from "#controllers";
+import { authenticate, authorize } from "#middlewares";
+import { HelpSession } from "#models";
 import { Router } from "express";
 
 const helpSessionRoutes = Router();
 
-helpSessionRoutes.post("/:resourceId", authenticate, createHelpSession);
+helpSessionRoutes.get("/", authenticate, getHelpSession);
+
+helpSessionRoutes.put(
+  "/:id",
+  authenticate,
+  authorize(HelpSession),
+  updateHelpSession
+);
 
 export default helpSessionRoutes;
