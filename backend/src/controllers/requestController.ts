@@ -1,4 +1,4 @@
-import { Category, Request, User } from "#models";
+import { Category, HelpSession, Request, User } from "#models";
 import type { requestInputSchema, requestUpdateSchema } from "#schemas";
 import type z from "zod";
 
@@ -88,11 +88,16 @@ export const createRequest: RequestHandler<
 
 export const getRequests: RequestHandler = async (req, res) => {
   try {
-    const requests = await Request.find().populate("category", "name").lean();
+    const requests = await Request.find({
+      status: { $in: ["active", "in_progress"] },
+    })
+      .populate("category", "name")
+      .lean();
     if (!requests.length) {
       return res.status(404).json({ message: "No Request found" });
     }
-    res.status(200).json({ requests });
+    const total = requests.length;
+    res.status(200).json({ message: `Found ${total} requests`, requests });
   } catch (error) {
     res
       .status(500)
@@ -191,15 +196,26 @@ export const updateRequest: RequestHandler<
       });
     }
 
-    const files = req.files as Express.Multer.File[] | undefined;
-    const images = files ? files.map((file) => file.path) : [];
-    const imagesPublicIds = files ? files.map((file) => file.filename) : [];
+    if (
+      status &&
+      !["active", "in_progress", "completed", "inactive", "cancelled"].includes(
+        status
+      )
+    ) {
+      return res
+        .status(400)
+        .json({
+          message: "Invalid status value for request",
+          request: undefined,
+        });
+    }
 
     const request = await Request.findById(id);
     if (!request)
       return res
         .status(404)
         .json({ message: "Request not found", request: undefined });
+
     if (category) {
       const searchCategory = await Category.findById(category);
       if (!searchCategory) {
@@ -208,6 +224,19 @@ export const updateRequest: RequestHandler<
           .json({ message: "Category not found", request: undefined });
       }
     }
+
+    if (request.status === "completed" || request.status === "cancelled") {
+      return res
+        .status(400)
+        .json({
+          message: "Cannot update a completed or cancelled request",
+          request: undefined,
+        });
+    }
+
+    const files = req.files as Express.Multer.File[] | undefined;
+    const images = files ? files.map((file) => file.path) : [];
+    const imagesPublicIds = files ? files.map((file) => file.filename) : [];
 
     const priceToUpdate = rewardType === "paid" ? price : 0;
 
@@ -235,6 +264,17 @@ export const updateRequest: RequestHandler<
       },
       { new: true }
     ).populate("category", "name");
+
+    if (status && ["completed", "cancelled"].includes(status as string)) {
+      await HelpSession.updateMany(
+        { requestId: request._id, status: { $in: ["active", "in_progress"] } },
+        {
+          status: status,
+          finalizedBy: "requester",
+          endedAt: new Date(),
+        }
+      );
+    }
 
     res.json({
       message: "Request updated successfully",
