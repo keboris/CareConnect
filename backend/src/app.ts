@@ -11,6 +11,8 @@ import {
   userRoutes,
   helpSessionRoutes,
   langRoutes,
+  notifRoutes,
+  chatMsgRoutes,
 } from "#routes";
 
 import { spec } from "#docs";
@@ -53,6 +55,12 @@ app.use("/requests", requestRoutes);
 
 // Help Sessions
 app.use("/help-sessions", helpSessionRoutes);
+
+// Notifications
+app.use("/notifications", notifRoutes);
+
+// Chat Messages
+app.use("/chat", chatMsgRoutes);
 
 // Docs
 app.use("/docs", swaggerUI.serve, swaggerUI.setup(spec));

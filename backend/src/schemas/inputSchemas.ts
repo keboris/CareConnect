@@ -1,5 +1,6 @@
 import { STATUS_CODES } from "http";
 import { z } from "zod";
+import { is } from "zod/locales";
 
 // User Schemas
 //----------------------------------------------------------------------------
@@ -597,6 +598,41 @@ export const langInputSchema = z
       .string({ error: "name must be a string" })
       .min(2, { message: "name must be at least 2 characters long" })
       .optional(),
+  })
+  .strict();
+
+// Chat Message Schema
+export const chatMessageInputSchema = z
+  .object({
+    sessionId: z
+      .string({ error: "sessionId must be a string" })
+      .min(24, { message: "sessionId must be a valid ID" }),
+    senderId: z
+      .string({ error: "senderId must be a string" })
+      .min(24, { message: "senderId must be a valid ID" }),
+    receiverId: z
+      .string({ error: "receiverId must be a string" })
+      .min(24, { message: "receiverId must be a valid ID" }),
+    content: z
+      .string({ error: "content must be a string" })
+      .min(1, { message: "content cannot be empty" }),
+    attachements: z
+      .array(
+        z
+          .string({ error: "each image must be a string" })
+          .url({ message: "each image must be a valid URL" })
+      )
+      .optional(),
+  })
+  .strict();
+
+export const chatMessageUpdateSchema = z
+  .object({
+    content: z
+      .string({ error: "content must be a string" })
+      .min(1, { message: "content cannot be empty" })
+      .optional(),
+    isRead: z.boolean({ error: "isRead must be a boolean" }).optional(),
   })
   .strict();
 

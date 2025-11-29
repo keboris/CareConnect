@@ -7,6 +7,16 @@ const notificationSchema = new Schema(
       ref: "User",
       required: true,
     },
+    resourceModel: {
+      type: String,
+      enum: ["Offer", "Request", "HelpSession"],
+      default: null,
+    },
+    resourceId: {
+      type: Schema.Types.ObjectId,
+      refPath: "resourceModel",
+      default: null,
+    },
     title: {
       type: String,
       default: "",
@@ -19,6 +29,11 @@ const notificationSchema = new Schema(
       type: String,
       enum: ["request", "offer", "sos", "session", "chat", "system"],
       default: "system",
+    },
+    status: {
+      type: String,
+      enum: ["active", "expired", "cancelled"],
+      default: "active",
     },
     isRead: {
       type: Boolean,

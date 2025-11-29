@@ -5,3 +5,5 @@ export * from "./requestController.ts";
 export * from "./categoryController.ts";
 export * from "./helpSessionController.ts";
 export * from "./langController.ts";
+export * from "./notifController.ts";
+export * from "./chatMsgController.ts";

@@ -75,7 +75,7 @@ export const createOffer: RequestHandler<
 export const getOffers: RequestHandler = async (req, res) => {
   try {
     const offers = await Offer.find({
-      status: { $in: ["active", "in_progress"] },
+      status: { $in: ["active", "in_progress", "completed"] },
     })
       .populate("category", "name")
       .lean();
@@ -227,7 +227,7 @@ export const updateOffer: RequestHandler<
 
     if (status && ["completed", "cancelled"].includes(status as string)) {
       await HelpSession.updateMany(
-        { offerId: offer._id, status: { $in: ["active", "in_progress"] } },
+        { offerId: offer._id, status: { $in: ["active"] } },
         {
           status: status,
           finalizedBy: "helper",
