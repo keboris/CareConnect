@@ -19,8 +19,9 @@ notifRoutes.patch(
   authorize(Notification),
   markNotificationAsRead
 );
+
 notifRoutes.patch(
-  "/read-all",
+  "/readAll",
   authenticate,
   authorize(Notification),
   markAllNotificationsAsRead
@@ -33,7 +34,7 @@ notifRoutes.delete(
   deleteNotification
 );
 notifRoutes.delete(
-  "/delete-all",
+  "/deleteAll",
   authenticate,
   authorize(Notification),
   deleteAllNotifications

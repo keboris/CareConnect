@@ -1,5 +1,3 @@
-export { default as Chat } from "./Chat.ts";
-
 export { default as Category } from "./Category.ts";
 export { default as Offer } from "./Offer.ts";
 export { default as Request } from "./Request.ts";

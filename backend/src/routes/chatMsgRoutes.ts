@@ -22,7 +22,7 @@ chatMsgRoutes.patch(
   markMessageAsRead
 );
 chatMsgRoutes.patch(
-  "/:sessionId/read-all",
+  "/:sessionId/readAll",
   authenticate,
   authorize(ChatMessage),
   markAllMessagesAsRead
