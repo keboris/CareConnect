@@ -1,9 +1,10 @@
-import { Category, HelpSession, Request, User } from "#models";
+import { Category, HelpSession, Notification, Request, User } from "#models";
 import type { requestInputSchema, requestUpdateSchema } from "#schemas";
 import type z from "zod";
 
 import type { RequestHandler } from "express";
 import { v2 as cloudinary } from "cloudinary";
+import { createNotification } from "#controllers";
 
 type RequestDTO = z.infer<typeof requestInputSchema>;
 type RequestUpdateDTO = z.infer<typeof requestUpdateSchema>;
@@ -74,6 +75,16 @@ export const createRequest: RequestHandler<
       images: images,
       imagesPublicIds: imagesPublicIds,
     });
+
+    // If the request is an alert, create a notification for nearby users
+    if (typeRequest === "alert") {
+      await createNotification(userId!, "sos", request._id.toString(), {
+        latitude: request.latitude,
+        longitude: request.longitude,
+      });
+    }
+    //---------------------------------------------
+
     console.log("Next Request:", userId);
     res.status(201).json({
       message: "Request created successfully",
@@ -89,7 +100,7 @@ export const createRequest: RequestHandler<
 export const getRequests: RequestHandler = async (req, res) => {
   try {
     const requests = await Request.find({
-      status: { $in: ["active", "in_progress"] },
+      status: { $in: ["active", "in_progress", "completed"] },
     })
       .populate("category", "name")
       .lean();
@@ -202,12 +213,10 @@ export const updateRequest: RequestHandler<
         status
       )
     ) {
-      return res
-        .status(400)
-        .json({
-          message: "Invalid status value for request",
-          request: undefined,
-        });
+      return res.status(400).json({
+        message: "Invalid status value for request",
+        request: undefined,
+      });
     }
 
     const request = await Request.findById(id);
@@ -226,12 +235,10 @@ export const updateRequest: RequestHandler<
     }
 
     if (request.status === "completed" || request.status === "cancelled") {
-      return res
-        .status(400)
-        .json({
-          message: "Cannot update a completed or cancelled request",
-          request: undefined,
-        });
+      return res.status(400).json({
+        message: "Cannot update a completed or cancelled request",
+        request: undefined,
+      });
     }
 
     const files = req.files as Express.Multer.File[] | undefined;
@@ -267,7 +274,7 @@ export const updateRequest: RequestHandler<
 
     if (status && ["completed", "cancelled"].includes(status as string)) {
       await HelpSession.updateMany(
-        { requestId: request._id, status: { $in: ["active", "in_progress"] } },
+        { requestId: request._id, status: { $in: ["active"] } },
         {
           status: status,
           finalizedBy: "requester",
@@ -297,6 +304,14 @@ export const deleteRequest: RequestHandler<{ id: string }> = async (
 ) => {
   try {
     const { id } = req.params;
+
+    const searchAlert = await Request.findById(id).select("typeRequest");
+    if (searchAlert?.typeRequest === "alert") {
+      await Notification.updateMany(
+        { resourceModel: "Request", resourceId: searchAlert._id },
+        { status: "cancelled" }
+      );
+    }
 
     const imagesToDelete = await Request.findById(id).select("imagesPublicIds");
     if (imagesToDelete) {

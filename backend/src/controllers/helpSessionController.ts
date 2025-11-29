@@ -1,7 +1,8 @@
-import { HelpSession, Offer, Request } from "#models";
+import { HelpSession, Notification, Offer, Request } from "#models";
 import type { helpSessionInputSchema } from "#schemas";
 import type { RequestHandler } from "express";
 import type z from "zod";
+import { createNotification } from "#controllers";
 
 type HelpSessionUpdateDTO = z.infer<typeof helpSessionInputSchema>;
 
@@ -14,6 +15,10 @@ export const createHelpSession: RequestHandler = async (req, res) => {
     const {
       params: { id },
     } = req;
+
+    if (!id) {
+      return res.status(400).json({ message: "Missing id parameter" });
+    }
 
     const userId = req.user?.id;
 
@@ -41,6 +46,18 @@ export const createHelpSession: RequestHandler = async (req, res) => {
       return res
         .status(400)
         .json({ message: `You cannot accept your own ${nameRequest}` });
+    }
+
+    if (resource.typeRequest === "alert") {
+      await Notification.updateMany(
+        {
+          userId: { $ne: userId },
+          resourceModel: "Request",
+          resourceId: resource._id,
+          status: "active",
+        },
+        { status: "expired" }
+      );
     }
 
     if (resource.status === "in_progress") {
@@ -88,6 +105,10 @@ export const createHelpSession: RequestHandler = async (req, res) => {
       .populate("userRequesterId", "firstName lastName email")
       .populate("userHelperId", "firstName lastName email");
 
+    // Create notification for the resource owner
+    await createNotification(resource.userId.toString(), nameRequest, id);
+    //-----------------------------------------
+
     return res.status(201).json({
       message: "Help session created successfully",
       helpSession: fullSession,
@@ -106,38 +127,75 @@ export const getHelpSession: RequestHandler = async (req, res) => {
       $or: [{ userRequesterId: userId }, { userHelperId: userId }],
     })
       .populate("requestId", "title description typeRequest")
-      .populate("offerId", "title description typeRequest")
-      .populate("userRequesterId", "firstName lastName email")
-      .populate("userHelperId", "firstName lastName email");
+      .populate("offerId", "title description typeRequest");
+
     if (!helpSessions.length) {
       return res
         .status(404)
         .json({ message: "No help sessions found for this user" });
     }
+
+    const totalSessions = helpSessions.length;
     // Determine the option based on the first help session (avoid accessing property on the array)
 
-    const sessionsWithOption = helpSessions.map((session) => {
-      const option =
-        session.requestId === null
-          ? "You are accepting an offer"
-          : "You are requesting help";
+    const sessionsWithOption = await Promise.all(
+      helpSessions.map(async (session) => {
+        if (userId === session.userRequesterId.toString()) {
+          await session.populate("userHelperId", "firstName lastName email");
+        } else {
+          await session.populate("userRequesterId", "firstName lastName email");
+        }
 
-      const etat =
-        session.status === "active"
-          ? "In Progress"
-          : session.status === "completed"
-          ? "Completed"
-          : "Cancelled";
+        const option = session.requestId
+          ? "You are requesting help"
+          : "You are accepting an offer";
 
-      return {
-        option,
-        etat,
-        ...session.toObject(), // Convert Mongoose document to plain object
-      };
-    });
+        const etat =
+          session.status === "active"
+            ? "In Progress"
+            : session.status === "completed"
+            ? "Completed"
+            : "Cancelled";
+
+        let final;
+        if (
+          session.finalizedBy === "requester" &&
+          userId === session.userRequesterId.toString()
+        ) {
+          final = "You finalized the session";
+        } else if (
+          session.finalizedBy === "helper" &&
+          userId === session.userHelperId.toString()
+        ) {
+          final = "You finalized the session";
+        } else if (
+          session.finalizedBy === "helper" &&
+          userId !== session.userHelperId.toString()
+        ) {
+          final = "The helper finalized the session";
+        } else if (
+          session.finalizedBy === "requester" &&
+          userId !== session.userRequesterId.toString()
+        ) {
+          final = "The requester finalized the session";
+        } else if (session.finalizedBy === "system") {
+          final = "The system finalized the session";
+        } else {
+          final = "Not finalized yet";
+        }
+
+        return {
+          option,
+          etat,
+          final,
+          ...session.toObject(), // Convert Mongoose document to plain object
+        };
+      })
+    );
 
     res.status(200).json({
       message: "Help Sessions found",
+      totalSessions,
       helpSessions: sessionsWithOption,
     });
   } catch (error) {
@@ -170,21 +228,21 @@ export const updateHelpSession: RequestHandler<
     }
 
     if (helpSession.status !== "active") {
-      return res
-        .status(400)
-        .json({ message: "Only active help sessions can be updated" });
+      return res.status(400).json({
+        message:
+          "This help session is already finalized (completed or cancelled)",
+      });
     }
 
-    helpSession.status = status || helpSession.status;
-    helpSession.result = result || helpSession.result;
-    helpSession.notes = notes || helpSession.notes;
-    helpSession.rating = rating || helpSession.rating;
-
+    helpSession.status = status;
+    helpSession.result = result ?? helpSession.result;
+    helpSession.notes = notes ?? helpSession.notes;
+    helpSession.rating = rating ?? helpSession.rating;
     helpSession.endedAt = new Date();
+
     if (req.user?.id === helpSession.userRequesterId.toString())
       helpSession.finalizedBy = "requester";
-    else if (req.user?.id === helpSession.userHelperId.toString())
-      helpSession.finalizedBy = "helper";
+    else helpSession.finalizedBy = "helper";
 
     helpSession.ratingPending = status === "completed";
 
@@ -205,10 +263,28 @@ export const updateHelpSession: RequestHandler<
 
     await helpSession.save();
 
-    res.status(200).json({ message: "Help session updated", helpSession });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "An error occurred while updating the help session" });
+    let message = "";
+
+    if (status === "completed") {
+      message = "You have completed the help session successfully.\n";
+      if (result === "successful")
+        message += " The help session was successful.\n";
+      else if (result === "unsuccessful")
+        message += " The help session was unsuccessful.\n";
+      else if (result === "partial")
+        message += " The help session was partially successful.\n";
+
+      if (rating) {
+        message += ` You rated the session with ${rating} stars.`;
+      }
+    } else if (status === "cancelled") {
+      message = "You have cancelled the help session.";
+    }
+
+    res.status(200).json({ message, helpSession });
+  } catch (error: any) {
+    res.status(500).json({
+      message: `An error occurred while updating the help session: ${error.message}`,
+    });
   }
 };

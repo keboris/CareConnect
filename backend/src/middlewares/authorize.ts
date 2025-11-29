@@ -26,7 +26,9 @@ const authorize = (Model: any): RequestHandler => {
 
       let ownerId: string | undefined;
       if (Model.modelName != "HelpSession") {
-        ownerId = model.userId?.toString() ?? model._id.toString();
+        if (Model.modelName === "ChatMessage")
+          ownerId = model.senderId?.toString();
+        else ownerId = model.userId?.toString() ?? model._id.toString();
       } else {
         if (model.offerId) {
           ownerId = model.userRequesterId?.toString();

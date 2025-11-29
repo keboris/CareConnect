@@ -5,3 +5,5 @@ export { default as categoryRoutes } from "./categoryRoutes.ts";
 export { default as requestRoutes } from "./requestRoutes.ts";
 export { default as helpSessionRoutes } from "./helpSessionRoutes.ts";
 export { default as langRoutes } from "./langRoutes.ts";
+export { default as notifRoutes } from "./notifRoutes.ts";
+export { default as chatMsgRoutes } from "./chatMsgRoutes.ts";
