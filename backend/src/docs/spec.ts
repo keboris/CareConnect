@@ -1,7 +1,4 @@
-import { Category, HelpSession, Language, Notification, Skill } from "#models";
 import type { OpenAPIV3 } from "openapi-types";
-import { title } from "process";
-import { id } from "zod/locales";
 
 export const spec: OpenAPIV3.Document = {
   openapi: "3.0.0",
@@ -34,10 +31,11 @@ export const spec: OpenAPIV3.Document = {
       name: "Requests",
     },
     { name: "Categories" },
-    { name: "Help Sessions" },
-    { name: "Languages & Skills" },
+    { name: "Languages" },
+    { name: "Skills" },
+    { name: "HelpSessions" },
     { name: "Notifications" },
-    { name: "Chat Messages" },
+    { name: "Chat" },
   ],
   paths: {
     // Auth Routes Documentation
@@ -155,23 +153,13 @@ export const spec: OpenAPIV3.Document = {
 
     // Added logout route documentation
     "/auth/logout": {
-      post: {
+      delete: {
         tags: ["Auth"],
         summary: "Logout the current user",
         security: [{ cookieAuth: [] }],
         responses: {
           "200": {
             description: "User logged out successfully",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    message: { type: "string" },
-                  },
-                },
-              },
-            },
           },
           "401": {
             description: "Unauthorized",
@@ -189,7 +177,7 @@ export const spec: OpenAPIV3.Document = {
 
     // Added refresh route documentation
     "/auth/refresh": {
-      post: {
+      delete: {
         tags: ["Auth"],
         summary: "Refresh authentication token",
         security: [{ cookieAuth: [] }],
@@ -295,6 +283,7 @@ export const spec: OpenAPIV3.Document = {
       put: {
         tags: ["Users"],
         summary: "Update user by ID",
+        security: [{ cookieAuth: [] }],
         parameters: [
           {
             name: "id",
@@ -339,6 +328,7 @@ export const spec: OpenAPIV3.Document = {
       delete: {
         tags: ["Users"],
         summary: "Delete user by ID",
+        security: [{ cookieAuth: [] }],
         parameters: [
           {
             name: "id",
@@ -367,6 +357,7 @@ export const spec: OpenAPIV3.Document = {
       patch: {
         tags: ["Users"],
         summary: "Patch user by ID",
+        security: [{ cookieAuth: [] }],
         parameters: [
           {
             name: "id",
