@@ -49,7 +49,7 @@ export const userInputSchema = z
       .optional(),
     location: z
       .string({ error: "Location must be a string" })
-      .min(2, { message: "Location must be at least 2 chars long" }),
+      .min(2, { message: "Location must be a valid address" }),
     longitude: z.preprocess(
       (val) => parseFloat(val as string),
       z.number({ error: "Longitude must be a number" })
