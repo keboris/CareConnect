@@ -341,10 +341,10 @@ const Register = () => {
                     onSelect={(data) => setFormData({ ...formData, ...data })}
                   />
                 </div>
+                {fieldErrors.location && (
+                  <p className="text-red-500 text-sm">{fieldErrors.location}</p>
+                )}
               </div>
-              {fieldErrors.location && (
-                <p className="text-red-500 text-sm">{fieldErrors.location}</p>
-              )}
             </div>
 
             <div>
