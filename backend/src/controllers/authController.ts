@@ -12,11 +12,10 @@ type LoginDTO = z.infer<typeof authLoginSchema>;
 /*------------------------------- REGISTER ------------------------------*/
 export const register: RequestHandler<
   unknown,
-  { message: string; user?: any; token?: string },
+  { field?: string; message: string; user?: any; token?: string },
   RegisterDTO
 > = async (req, res) => {
   try {
-    console.log("Registering user with data:", req.body);
     const {
       firstName,
       lastName,
@@ -31,12 +30,14 @@ export const register: RequestHandler<
       latitude,
     } = req.body;
 
+    // Parse skills
     const skillsArray = Array.isArray(skills)
       ? skills
       : typeof skills === "string" && (skills as string).length
       ? JSON.parse(skills as string)
       : [];
 
+    // Parse languages
     const languagesArray = Array.isArray(languages)
       ? languages
       : typeof languages === "string" && (languages as string).length
@@ -46,7 +47,17 @@ export const register: RequestHandler<
     const userExist = await User.exists({ email });
 
     if (userExist) {
-      return res.status(400).json({ message: "Email already in use" });
+      return res
+        .status(400)
+        .json({ field: "email", message: "Email already in use" });
+    }
+
+    const phoneExist = await User.exists({ phone });
+
+    if (phoneExist) {
+      return res
+        .status(400)
+        .json({ field: "phone", message: "Phone number already in use" });
     }
 
     const hash = await bcrypt.hash(password, 10);
@@ -69,17 +80,16 @@ export const register: RequestHandler<
       location,
       longitude,
       latitude,
+      role: "user",
     });
 
     const accessToken = signAccessToken({
       jti: user._id.toString(),
-      roles: user.role,
+      roles: "user",
     });
 
-    res.cookie("accessToken", accessToken, accessCookieOpts).status(201).json({
+    res.status(200).json({
       message: "User registered successfully",
-      user,
-      token: accessToken,
     });
   } catch (error: unknown) {
     res.status(500).json({
@@ -102,7 +112,6 @@ export const login: RequestHandler<
 
   console.log("Logging in user with email:", email);
   if (!user) {
-    console.log("User not found");
     return res
       .status(400)
       .json({ message: "Login failed. Invalid Credentials" });
