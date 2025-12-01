@@ -87,7 +87,15 @@ export default function AuthContextProvider({
       if (data.issues) {
         issuesToFieldErrors(data.issues);
       }
-      throw data.message || "An error occurred";
+      const message =
+        data && typeof data.message === "string"
+          ? data.message
+          : "An error occurred";
+      const err = new Error(message);
+      if (data && "field" in data) {
+        (err as any).field = data.field;
+      }
+      throw err;
     }
 
     return data;
@@ -98,6 +106,11 @@ export default function AuthContextProvider({
       method: "POST",
       body: formData,
     });
+
+    // After successful signup, automatically sign in the user
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    await signIn(email, password);
   };
 
   const signIn = async (email: string, password: string) => {

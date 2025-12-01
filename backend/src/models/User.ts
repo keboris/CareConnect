@@ -34,6 +34,7 @@ const userSchema = new Schema(
       type: String,
       required: [true, "Phone number is required"],
       minlength: [10, "Phone number must be at least 10 characters long"],
+      unique: true,
       trim: true,
     },
     profileImage: {

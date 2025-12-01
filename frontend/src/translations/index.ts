@@ -175,9 +175,9 @@ export const translationsMap: Translations = {
     en: "Join our community",
     de: "Werden Sie Teil unserer Community",
   },
-  "auth.accountCreated": {
-    en: "Account created successfully! Please log in.",
-    de: "Konto erfolgreich erstellt! Bitte melden Sie sich an.",
+  "auth.welcomeMsgRegister": {
+    en: "Welcome to your Dashboard! .",
+    de: "Willkommen in Ihrem Dashboard! .",
   },
   "auth.enterValidEmail": {
     en: "Please enter a valid email address.",

@@ -2,12 +2,9 @@ import { useEffect, useState } from "react";
 import { Mail, Lock, LogIn } from "lucide-react";
 
 import { useAuth, useLanguage } from "../contexts";
-import { Navigate, useLocation, useNavigate } from "react-router";
+import { Navigate, useNavigate } from "react-router";
 
 const Login = () => {
-  const location = useLocation();
-  const successMessage = location.state?.successMessage || null;
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -51,11 +48,6 @@ const Login = () => {
     <>
       <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-4">
         <div className="w-full max-w-md mx-auto bg-white rounded-3xl shadow-2xl p-8 border-2 border-gray-100 mt-10 mb-10">
-          {successMessage && (
-            <div className="bg-green-50 text-green-600 font-semibold p-3 rounded-md text-md mb-4">
-              {t(successMessage)}
-            </div>
-          )}
           <div className="text-center mb-8">
             <div className="inline-flex mb-4">
               <img
