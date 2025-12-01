@@ -12,85 +12,108 @@ type LoginDTO = z.infer<typeof authLoginSchema>;
 /*------------------------------- REGISTER ------------------------------*/
 export const register: RequestHandler<
   unknown,
-  { message: string; user: any; token: string },
+  { message: string; user?: any; token?: string },
   RegisterDTO
 > = async (req, res) => {
-  const {
-    firstName,
-    lastName,
-    email,
-    password,
-    phone,
-    bio,
-    skills,
-    languages,
-    location,
-    longitude,
-    latitude,
-  } = req.body;
+  try {
+    console.log("Registering user with data:", req.body);
+    const {
+      firstName,
+      lastName,
+      email,
+      password,
+      phone,
+      bio,
+      skills,
+      languages,
+      location,
+      longitude,
+      latitude,
+    } = req.body;
 
-  const userExist = await User.exists({ email });
+    const skillsArray = Array.isArray(skills)
+      ? skills
+      : typeof skills === "string" && (skills as string).length
+      ? JSON.parse(skills as string)
+      : [];
 
-  if (userExist) {
-    throw new Error("Registration failed", { cause: { status: 400 } });
+    const languagesArray = Array.isArray(languages)
+      ? languages
+      : typeof languages === "string" && (languages as string).length
+      ? JSON.parse(languages as string)
+      : [];
+
+    const userExist = await User.exists({ email });
+
+    if (userExist) {
+      return res.status(400).json({ message: "Email already in use" });
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+
+    const file = req.file as Express.Multer.File | undefined;
+    const profileImage = file?.path || "";
+    const profileImagePublicId = file?.filename || "";
+
+    const user = await User.create({
+      firstName,
+      lastName,
+      email,
+      password: hash,
+      phone,
+      profileImage: profileImage,
+      profileImagePublicId: profileImagePublicId,
+      bio,
+      skills: skillsArray,
+      languages: languagesArray,
+      location,
+      longitude,
+      latitude,
+    });
+
+    const accessToken = signAccessToken({
+      jti: user._id.toString(),
+      roles: user.role,
+    });
+
+    res.cookie("accessToken", accessToken, accessCookieOpts).status(201).json({
+      message: "User registered successfully",
+      user,
+      token: accessToken,
+    });
+  } catch (error: unknown) {
+    res.status(500).json({
+      message: `An error occurred while registering the user: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`,
+    });
   }
-
-  const hash = await bcrypt.hash(password, 10);
-
-  const file = req.file as Express.Multer.File | undefined;
-  const profileImage = file?.path || "";
-  const profileImagePublicId = file?.filename || "";
-
-  const user = await User.create({
-    firstName,
-    lastName,
-    email,
-    password: hash,
-    phone,
-    profileImage: profileImage,
-    profileImagePublicId: profileImagePublicId,
-    bio,
-    skills,
-    languages,
-    location,
-    longitude,
-    latitude,
-  });
-
-  const accessToken = signAccessToken({
-    jti: user._id.toString(),
-    roles: user.role,
-  });
-
-  res.cookie("accessToken", accessToken, accessCookieOpts).status(201).json({
-    message: "User registered successfully",
-    user,
-    token: accessToken,
-  });
 };
 
 /*------------------------------- LOGIN ------------------------------*/
 export const login: RequestHandler<
   unknown,
-  { message: string; user: any; accessToken: string; refreshToken: string },
+  { message: string; user?: any; accessToken?: string; refreshToken?: string },
   LoginDTO
 > = async (req, res) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email }).select("+password");
 
+  console.log("Logging in user with email:", email);
   if (!user) {
-    throw new Error("Login failed. Invalid Credentials", {
-      cause: { status: 400 },
-    });
+    console.log("User not found");
+    return res
+      .status(400)
+      .json({ message: "Login failed. Invalid Credentials" });
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
 
   if (!isMatch) {
-    throw new Error("Login failed. Invalid Credentials", {
-      cause: { status: 400 },
-    });
+    return res
+      .status(400)
+      .json({ message: "Login failed. Invalid Credentials" });
   }
 
   const accessToken = signAccessToken({

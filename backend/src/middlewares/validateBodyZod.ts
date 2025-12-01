@@ -5,6 +5,7 @@ const validateBodyZod =
   (zodSchema: ZodObject): RequestHandler =>
   (req, res, next) => {
     const parsed = zodSchema.safeParse(req.body);
+
     //console.log(parsed?.error?.issues);
 
     if (!parsed.success) {
@@ -13,6 +14,7 @@ const validateBodyZod =
         message: issue.message,
       }));
 
+      console.log("Validation issues:", issues);
       return res.status(400).json({
         message: "Validation failed",
         issues,
