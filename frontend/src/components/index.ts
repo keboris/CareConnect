@@ -11,3 +11,4 @@ export { default as LandingNav } from "./Layout/LandingNav";
 export { default as NavBar } from "./Layout/NavBar";
 export { default as ChatPage } from "./Chat/ChatPage";
 export * from "./ui/card";
+export * as IconMap from "./ui/icons";

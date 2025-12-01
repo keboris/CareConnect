@@ -84,7 +84,11 @@ const Register = () => {
         state: { successMessage: "auth.accountCreated" },
       });
     } catch (errors: any) {
-      setError(errors);
+      if (errors instanceof Error) {
+        setError(errors.message); // string
+      } else {
+        setError(errors); // object
+      }
     } finally {
       setLoading(false);
     }

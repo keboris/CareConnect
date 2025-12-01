@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import { MainLayout, ProtectedLayout } from "./layouts";
 
 import {
+  Categories,
   Chat,
   Dashboard,
   Home,
@@ -20,6 +21,8 @@ function App() {
           <Route index element={<Home />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/categories/:id" element={<Categories />} />
           <Route path="app" element={<ProtectedLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="profile" element={<Profile />} />

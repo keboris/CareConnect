@@ -7,3 +7,4 @@ export { default as Register } from "./Register";
 export { default as NotFound } from "./NotFound";
 export { default as CreateEvent } from "./Map";
 export { default as Events } from "./Messages";
+export { default as Categories } from "./Categories";

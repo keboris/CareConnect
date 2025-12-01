@@ -19,9 +19,15 @@ export type User = {
 export type Category = {
   _id: string;
   name: string;
+  nameDE?: string;
+  nameFR?: string;
   icon?: string;
   color: string;
   description: string;
+  descriptionDE?: string;
+  descriptionFR?: string;
+  offersCount: number;
+  requestsCount: number;
   createdAt: string;
 };
 
@@ -107,10 +113,6 @@ export type LanguageContextType = {
 export type HeroSectionProps = {
   onGetStarted: () => void;
   onOpenMap: () => void;
-};
-
-export type CategoriesSectionProps = {
-  onCategoryClick: () => void;
 };
 
 export type MapModalProps = {

@@ -6,7 +6,9 @@ const MainLayout: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
       <NavBar />
 
-      <Outlet />
+      <div className="pt-20">
+        <Outlet />
+      </div>
 
       <Footer />
     </div>
