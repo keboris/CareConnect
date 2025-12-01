@@ -12,10 +12,25 @@ export const createCategory: RequestHandler<
   CategoryDTO
 > = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const {
+      name,
+      nameDE,
+      nameFR,
+      description,
+      descriptionDE,
+      descriptionFR,
+      icon,
+      color,
+    } = req.body;
     const category = await Category.create({
       name,
+      nameDE,
+      nameFR,
       description,
+      descriptionDE,
+      descriptionFR,
+      icon,
+      color,
     });
     res
       .status(201)
@@ -29,10 +44,41 @@ export const createCategory: RequestHandler<
 
 export const getCategories: RequestHandler = async (req, res) => {
   try {
-    const categories = await Category.find();
+    const categories = await Category.aggregate([
+      {
+        $lookup: {
+          from: "offers",
+          localField: "_id",
+          foreignField: "category",
+          as: "offers",
+        },
+      },
+      {
+        $lookup: {
+          from: "requests",
+          localField: "_id",
+          foreignField: "category",
+          as: "requests",
+        },
+      },
+      {
+        $addFields: {
+          offersCount: { $size: "$offers" },
+          requestsCount: { $size: "$requests" },
+        },
+      },
+      {
+        $project: {
+          offers: 0,
+          requests: 0,
+        },
+      },
+    ]);
+
     if (!categories.length) {
       return res.status(404).json({ message: "No Category found" });
     }
+
     res.status(200).json({ categories });
   } catch (error) {
     res
@@ -71,15 +117,30 @@ export const updateCategory: RequestHandler<
 > = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description } = req.body;
-    if (!name) return res.status(400).json({ error: "name is required" });
+    const {
+      name,
+      nameDE,
+      nameFR,
+      description,
+      descriptionDE,
+      descriptionFR,
+      icon,
+      color,
+    } = req.body;
+    if (!name)
+      return res.status(400).json({ error: "Name in English is required" });
 
     const category = await Category.findById(id);
     if (!category) return res.status(404).json({ error: "Category not found" });
 
     category.name = name;
-    //category.description = description || category.description;
-    category.description = description || "";
+    category.nameDE = nameDE || category.nameDE;
+    category.nameFR = nameFR || category.nameFR;
+    category.description = description || category.description;
+    category.descriptionDE = descriptionDE || category.descriptionDE;
+    category.descriptionFR = descriptionFR || category.descriptionFR;
+    category.icon = icon || category.icon;
+    category.color = color || category.color;
 
     await category.save();
 

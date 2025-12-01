@@ -21,7 +21,7 @@ const Home = () => {
         onOpenMap={() => setShowMap(true)}
       />
       <FeaturesSection />
-      <CategoriesSection onCategoryClick={() => setShowMap(true)} />
+      <CategoriesSection />
       <StatsSection />
 
       {showMap && <MapModal onClose={() => setShowMap(false)} />}

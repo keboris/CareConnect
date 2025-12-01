@@ -2258,7 +2258,11 @@ export const spec: OpenAPIV3.Document = {
         properties: {
           id: { type: "string", pattern: "mongooseValid" },
           name: { type: "string" },
+          nameDE: { type: "string" },
+          nameFR: { type: "string" },
           description: { type: "string" },
+          descriptionDE: { type: "string" },
+          descriptionFR: { type: "string" },
           color: { type: "string" },
           icon: { type: "string", format: "uri" },
         },
@@ -2269,7 +2273,11 @@ export const spec: OpenAPIV3.Document = {
         required: ["name"],
         properties: {
           name: { type: "string" },
+          nameDE: { type: "string" },
+          nameFR: { type: "string" },
           description: { type: "string" },
+          descriptionDE: { type: "string" },
+          descriptionFR: { type: "string" },
           color: { type: "string" },
           icon: { type: "string", format: "uri" },
         },

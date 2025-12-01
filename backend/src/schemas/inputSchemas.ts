@@ -170,8 +170,18 @@ export const changePasswordSchema = z
 // Category Schema
 export const categoryInputSchema = z
   .object({
-    name: z.string({ error: "name must be a string" }),
-    description: z.string({ error: "description must be a string" }).optional(),
+    name: z.string({ error: "Name must be a string" }),
+    nameDE: z.string({ error: "Name in German must be a string" }).optional(),
+    nameFR: z.string({ error: "Name in French must be a string" }).optional(),
+    description: z.string({ error: "Description must be a string" }).optional(),
+    descriptionDE: z
+      .string({ error: "Description in German must be a string" })
+      .optional(),
+    descriptionFR: z
+      .string({ error: "Description in French must be a string" })
+      .optional(),
+    icon: z.string({ error: "Icon must be a string" }).optional(),
+    color: z.string({ error: "Color must be a string" }).optional(),
   })
   .strict();
 

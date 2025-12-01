@@ -8,6 +8,16 @@ const categorySchema = new Schema(
       unique: true,
       trim: true,
     },
+    nameDE: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    nameFR: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     icon: {
       type: String,
       default: "",
@@ -19,6 +29,16 @@ const categorySchema = new Schema(
       trim: true,
     },
     description: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    descriptionDE: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    descriptionFR: {
       type: String,
       default: "",
       trim: true,

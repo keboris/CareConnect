@@ -1,33 +1,50 @@
-import {
-  ShoppingCart,
-  Baby,
-  Hammer,
-  Users,
-  Leaf,
-  Home,
-  Dog,
-  Car,
-} from "lucide-react";
-import type { CategoriesSectionProps } from "../../types";
+import { IconMap } from "../ui/icons";
+import type { Category } from "../../types";
+import { useEffect, useState } from "react";
+import { API_BASE_URL } from "../../config";
+import { useNavigate } from "react-router";
+import { useLanguage } from "../../contexts";
 
-const CategoriesSection: React.FC<CategoriesSectionProps> = ({
-  onCategoryClick,
-}) => {
-  const categories = [
-    {
-      icon: ShoppingCart,
-      name: "Einkaufen",
-      color: "bg-emerald-500",
-      count: "24+",
-    },
-    { icon: Baby, name: "Kinderbetreuung", color: "bg-blue-500", count: "18+" },
-    { icon: Hammer, name: "Heimwerken", color: "bg-amber-500", count: "31+" },
-    { icon: Users, name: "Begleitung", color: "bg-purple-500", count: "15+" },
-    { icon: Leaf, name: "Gartenarbeit", color: "bg-green-500", count: "22+" },
-    { icon: Home, name: "Haushalt", color: "bg-cyan-500", count: "28+" },
-    { icon: Dog, name: "Tierbetreuung", color: "bg-pink-500", count: "19+" },
-    { icon: Car, name: "Fahrdienst", color: "bg-red-500", count: "13+" },
-  ];
+const CategoriesSection = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  const colorMapping: Record<string, string> = {
+    "bg-red-500": "bg-red-500",
+    "bg-blue-500": "bg-blue-500",
+    "bg-green-500": "bg-green-500",
+    "bg-indigo-500": "bg-indigo-500",
+    "bg-amber-500": "bg-amber-500",
+    "bg-purple-500": "bg-purple-500",
+    "bg-cyan-500": "bg-cyan-500",
+    "bg-pink-500": "bg-pink-500",
+  };
+
+  const navigate = useNavigate();
+  const { t } = useLanguage();
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/categories`);
+        const data = await response.json();
+
+        const sortedCategories = data.categories
+          .sort(
+            (a: Category, b: Category) =>
+              (b.offersCount || 0) +
+              (b.requestsCount || 0) -
+              ((a.offersCount || 0) + (a.requestsCount || 0))
+          )
+          .slice(0, 8);
+
+        setCategories(sortedCategories);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   return (
     <div className="py-24 bg-gradient-to-b from-gray-50 to-white">
@@ -42,32 +59,42 @@ const CategoriesSection: React.FC<CategoriesSectionProps> = ({
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {categories.map((category, index) => (
-            <button
-              key={index}
-              onClick={onCategoryClick}
-              className="group relative bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-blue-200 hover:-translate-y-1"
-            >
-              <div
-                className={`${category.color} w-16 h-16 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg`}
-              >
-                <category.icon size={28} className="text-white" />
-              </div>
+          {categories &&
+            categories.map((category) => {
+              const Icon = category.icon ? IconMap[category.icon] : undefined;
+              const bgColor = colorMapping[category.color] || "bg-gray-500";
+              return (
+                <button
+                  key={category._id}
+                  onClick={() => navigate("/categories")}
+                  className="group relative cursor-pointer bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-blue-200 hover:-translate-y-1"
+                >
+                  <div
+                    className={`${bgColor} w-16 h-16 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg`}
+                  >
+                    {Icon && <Icon size={28} className="text-white" />}
+                  </div>
 
-              <h3 className="font-semibold text-gray-900 mb-1">
-                {category.name}
-              </h3>
+                  <h3 className="font-semibold text-gray-900 mb-1">
+                    {category.name}
+                  </h3>
 
-              <p className="text-sm text-gray-500">{category.count} Anzeigen</p>
+                  <p className="text-sm text-gray-500">
+                    {category.offersCount} {t("dashboard.offers")}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {category.requestsCount} {t("dashboard.requests")}
+                  </p>
 
-              <div className="absolute inset-0 bg-gradient-to-t from-blue-50/50 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </button>
-          ))}
+                  <div className="absolute inset-0 bg-gradient-to-t from-blue-50/50 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </button>
+              );
+            })}
         </div>
 
         <div className="text-center mt-12">
           <button
-            onClick={onCategoryClick}
+            onClick={() => navigate("/categories")}
             className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
           >
             Alle Kategorien durchsuchen
