@@ -8,57 +8,63 @@ import { is } from "zod/locales";
 export const userInputSchema = z
   .object({
     firstName: z
-      .string({ error: "firstName must be a string" })
-      .min(2, { message: "firstName must be at least 2 chars long" }),
+      .string({ error: "First Name must be a string" })
+      .min(2, { message: "First Name must be at least 2 chars long" }),
 
     lastName: z
-      .string({ error: "lastName must be a string" })
-      .min(2, { message: "lastName must be at least 2 chars long" }),
+      .string({ error: "Last Name must be a string" })
+      .min(2, { message: "Last Name must be at least 2 chars long" }),
     email: z
-      .string({ error: "email must be a string" })
-      .email({ message: "email must be a valid email address" }),
+      .string({ error: "Email must be a string" })
+      .email({ message: "Email must be a valid email address" }),
     password: z
-      .string({ error: "password must be a string" })
-      .min(6, { message: "password must be at least 6 characters long" })
-      .max(64, { message: "password must be at most 64 characters long" })
+      .string({ error: "Password must be a string" })
+      .min(6, { message: "Password must be at least 6 characters long" })
+      .max(64, { message: "Password must be at most 64 characters long" })
       .regex(/[A-Z]/, {
-        message: "password must contain at least one uppercase letter",
+        message: "Password must contain at least one uppercase letter",
       })
       .regex(/[a-z]/, {
-        message: "password must contain at least one lowercase letter",
+        message: "Password must contain at least one lowercase letter",
       })
-      .regex(/[0-9]/, { message: "password must contain at least one number" })
+      .regex(/[0-9]/, { message: "Password must contain at least one number" })
       .regex(/[^A-Za-z0-9]/, {
-        message: "password must contain at least one special character",
+        message: "Password must contain at least one special character",
       }),
     phone: z
-      .string({ error: "phone must be a string" })
-      .min(10, { message: "phone must be at least 10 chars long" }),
+      .string({ error: "Phone must be a string" })
+      .min(10, { message: "Phone must be at least 10 chars long" }),
     profileImage: z.string().url().optional(),
     profileImagePublicId: z.string().optional(),
     bio: z
-      .string({ error: "bio must be a string" })
-      .max(500, { message: "bio must be at most 500 characters long" })
+      .string({ error: "Bio must be a string" })
+      .max(500, { message: "Bio must be at most 500 characters long" })
       .optional(),
     skills: z
       .array(
         z
-          .string({ error: "skill must be a string" })
-          .min(24, { message: "skill must be a valid ID" })
+          .string({ error: "Skill must be a string" })
+          .min(24, { message: "Skill must be a valid ID" })
       )
       .optional(),
     location: z
-      .string({ error: "location must be a string" })
-      .min(2, { message: "location must be at least 2 chars long" }),
-    longitude: z.number({ error: "longitude must be a number" }),
-    latitude: z.number({ error: "latitude must be a number" }),
+      .string({ error: "Location must be a string" })
+      .min(2, { message: "Location must be at least 2 chars long" }),
+    longitude: z.preprocess(
+      (val) => parseFloat(val as string),
+      z.number({ error: "Longitude must be a number" })
+    ),
+    latitude: z.preprocess(
+      (val) => parseFloat(val as string),
+      z.number({ error: "Latitude must be a number" })
+    ),
     languages: z
       .array(
-        z.string({ error: "language must be a string" }).min(24, {
-          message: "language must be a valid ID",
+        z.string({ error: "Language must be a string" }).min(24, {
+          message: "Language must be a valid ID",
         })
       )
-      .min(1, { message: "at least one language must be selected" })
+      .min(1, { message: "At least one language must be selected" })
       .optional(),
   })
   .strict();
@@ -112,13 +118,13 @@ export const userUpdateSchema = z
 // Login Schema
 export const authLoginSchema = z
   .object({
-    email: z.string({ error: "email must be a string" }).email({
-      message: "email must be a valid email address",
+    email: z.string({ error: "Email must be a string" }).email({
+      message: "Email must be a valid email address",
     }),
     password: z
-      .string({ error: "password must be a string" })
-      .min(6, { message: "password must be at least 6 characters long" })
-      .max(64, { message: "password must be at most 64 characters long" }),
+      .string({ error: "Password must be a string" })
+      .min(6, { message: "Password must be at least 6 characters long" })
+      .max(64, { message: "Password must be at most 64 characters long" }),
   })
   .strict();
 

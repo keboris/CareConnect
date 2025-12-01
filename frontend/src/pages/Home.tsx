@@ -1,12 +1,20 @@
-import { useState } from "react";
-import HeroSection from "../components/Landing/HeroSection";
-import FeaturesSection from "../components/Landing/FeaturesSection";
-import CategoriesSection from "../components/Landing/CategoriesSection";
-import StatsSection from "../components/Landing/StatsSection";
-import MapModal from "../components/Map/MapModal";
+import { useEffect, useState } from "react";
+import {
+  CategoriesSection,
+  FeaturesSection,
+  HeroSection,
+  MapModal,
+  StatsSection,
+} from "../components";
+import { useLanguage } from "../contexts";
 
-const Home: React.FC = () => {
+const Home = () => {
   const [showMap, setShowMap] = useState(false);
+  const { t } = useLanguage();
+
+  useEffect(() => {
+    document.title = `${t("nav.home")} - CareConnect`;
+  }, [t]);
 
   return (
     <>

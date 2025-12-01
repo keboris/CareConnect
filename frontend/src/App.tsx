@@ -1,15 +1,16 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 
-import Home from "./pages/Home";
-
-import Register from "./pages/Register";
-import Login from "./pages/Login";
-
-import Dashboard from "./pages/Dashboard";
-import Profile from "./pages/Profile";
 import { MainLayout, ProtectedLayout } from "./layouts";
-import NotFound from "./pages/NotFound";
-import Conversation from "./pages/Conversation";
+
+import {
+  Chat,
+  Dashboard,
+  Home,
+  Login,
+  NotFound,
+  Profile,
+  Register,
+} from "./pages";
 
 function App() {
   return (
@@ -22,7 +23,7 @@ function App() {
           <Route path="app" element={<ProtectedLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="profile" element={<Profile />} />
-            <Route path="chat" element={<Conversation />} />
+            <Route path="chat" element={<Chat />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Route>
