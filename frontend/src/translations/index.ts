@@ -279,7 +279,7 @@ export const translationsMap: Translations = {
     de: "Erstellen oder anzeigen von Hilfsanfragen der Gemeinschaft.",
   },
 
-  "dashboard.chatRealtime": {
+  "dashboard.manageChat": {
     en: "Chat in real-time with users.",
     de: "Chatten Sie in Echtzeit mit Benutzern.",
   },
