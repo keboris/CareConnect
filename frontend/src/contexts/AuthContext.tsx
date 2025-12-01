@@ -64,43 +64,48 @@ export default function AuthContextProvider({
       }
     };
     initAuth();
-  }, [accessToken]);
+  }, []);
 
-  const signUp = async (formData: FormData) => {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
-      method: "POST",
-      body: formData,
+  const issuesToFieldErrors = (issues: any[]) => {
+    const fieldErrors: Record<string, string> = {};
+    issues.forEach((issue) => {
+      fieldErrors[issue.field] = issue.message;
+    });
+    throw fieldErrors;
+  };
+
+  const apiAuthRequest = async (url: string, options: RequestInit) => {
+    const response = await fetch(url, {
       credentials: "include",
+      ...options,
     });
 
+    const data = await response.json().catch(() => ({}));
+
+    // Error handling
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Registration failed");
+      if (data.issues) {
+        issuesToFieldErrors(data.issues);
+      }
+      throw data.message || "An error occurred";
     }
 
-    const data = await response.json();
+    return data;
+  };
 
-    setAccessToken(data.accessToken);
-
-    setUser(data.user);
+  const signUp = async (formData: FormData) => {
+    await apiAuthRequest(`${API_BASE_URL}/auth/register`, {
+      method: "POST",
+      body: formData,
+    });
   };
 
   const signIn = async (email: string, password: string) => {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    const data = await apiAuthRequest(`${API_BASE_URL}/auth/login`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
-      credentials: "include",
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Login failed");
-    }
-
-    const data = await response.json();
 
     setAccessToken(data.accessToken);
 
@@ -128,7 +133,9 @@ export default function AuthContextProvider({
   const refreshUser = async (input: RequestInfo, init: RequestInit = {}) => {
     if (!init.headers) init.headers = {};
     if (accessToken) {
-      (init.headers as any)["Authorization"] = `Bearer ${accessToken}`;
+      const headers = new Headers(init.headers);
+      headers.set("Authorization", `Bearer ${accessToken}`);
+      init.headers = headers;
     }
 
     init.credentials = "include"; // to send the refreshToken cookie
@@ -147,7 +154,10 @@ export default function AuthContextProvider({
         setAccessToken(data.accessToken); // new token in memory
 
         // Refaire la requête initiale avec le nouveau token
-        (init.headers as any)["Authorization"] = `Bearer ${data.accessToken}`;
+        const headers = new Headers(init.headers);
+        headers.set("Authorization", `Bearer ${data.accessToken}`);
+        init.headers = headers;
+
         res = await fetch(input, init);
       } else {
         // refreshToken invalid → logout
@@ -158,6 +168,8 @@ export default function AuthContextProvider({
     return res;
   };
 
+  const isAuthenticated = Boolean(accessToken && user);
+
   return (
     <AuthContext.Provider
       value={{
@@ -166,6 +178,7 @@ export default function AuthContextProvider({
         signUp,
         signIn,
         signOut,
+        isAuthenticated,
         refreshUser,
       }}
     >

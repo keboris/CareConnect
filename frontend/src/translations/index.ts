@@ -8,6 +8,7 @@ export const translationsMap: Translations = {
   "nav.messages": { en: "Messages", de: "Nachrichten" },
   "nav.profile": { en: "Profile", de: "Profil" },
   "nav.logout": { en: "Logout", de: "Abmelden" },
+  "nav.dashboard": { en: "Dashboard", de: "Dashboard" },
 
   // Hero Section
   "hero.tagline": {
@@ -174,11 +175,28 @@ export const translationsMap: Translations = {
     en: "Join our community",
     de: "Werden Sie Teil unserer Community",
   },
+  "auth.accountCreated": {
+    en: "Account created successfully! Please log in.",
+    de: "Konto erfolgreich erstellt! Bitte melden Sie sich an.",
+  },
+  "auth.enterValidEmail": {
+    en: "Please enter a valid email address.",
+    de: "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
+  },
+  "auth.passwordMin": {
+    en: "Must be more than 8 characters, including number, lowercase letter, uppercase letter",
+    de: "Muss mehr als 8 Zeichen enthalten, einschließlich Zahl, Kleinbuchstabe, Großbuchstabe",
+  },
+  "auth.passwordCriteria": {
+    en: "Password must be at least 8 characters and include a number, a lowercase and an uppercase letter.",
+    de: "Das Passwort muss mindestens 8 Zeichen lang sein und eine Zahl, einen Klein- und einen Großbuchstaben enthalten.",
+  },
   "auth.email": { en: "Email", de: "E-Mail" },
   "auth.password": { en: "Password", de: "Passwort" },
   "auth.firstName": { en: "First Name", de: "Vorname" },
   "auth.lastName": { en: "Last Name", de: "Nachname" },
   "auth.phone": { en: "Phone Number", de: "Telefonnummer" },
+  "auth.address": { en: "Address", de: "Adresse" },
   "auth.location": { en: "Location", de: "Standort" },
   "auth.skills": { en: "Skills", de: "Fähigkeiten" },
   "auth.languages": { en: "Languages", de: "Sprachen" },
@@ -203,10 +221,6 @@ export const translationsMap: Translations = {
   "auth.secureData": {
     en: "Your data is safe and transmitted encrypted",
     de: "Ihre Daten sind bei uns sicher und werden verschlüsselt übertragen",
-  },
-  "auth.passwordMin": {
-    en: "At least 6 characters",
-    de: "Mindestens 6 Zeichen",
   },
   "auth.passwordError": {
     en: "Password must be at least 6 characters",
@@ -233,4 +247,45 @@ export const translationsMap: Translations = {
   "common.create": { en: "Create", de: "Erstellen" },
   "common.error": { en: "Error", de: "Fehler" },
   "common.success": { en: "Success", de: "Erfolg" },
+
+  // Dashboard translations
+  "dashboard.offers": {
+    en: "Offers",
+    de: "Angebote",
+  },
+
+  "dashboard.requests": {
+    en: "Requests",
+    de: "Anfragen",
+  },
+
+  "dashboard.chat": {
+    en: "Chat",
+    de: "Chat",
+  },
+
+  "dashboard.notifications": {
+    en: "Notifications",
+    de: "Benachrichtigungen",
+  },
+
+  "dashboard.manageOffers": {
+    en: "Manage your offers, track status, and connect with those in need.",
+    de: "Geben Sie Ihre Angebote ein, verfolgen Sie den Status und verbinden Sie sich mit Bedürftigen.",
+  },
+
+  "dashboard.manageRequests": {
+    en: "Create or view community help requests.",
+    de: "Erstellen oder anzeigen von Hilfsanfragen der Gemeinschaft.",
+  },
+
+  "dashboard.chatRealtime": {
+    en: "Chat in real-time with users.",
+    de: "Chatten Sie in Echtzeit mit Benutzern.",
+  },
+
+  "dashboard.stayInformed": {
+    en: "Stay informed about all your activities.",
+    de: "Bleiben Sie über alle Ihre Aktivitäten informiert.",
+  },
 };

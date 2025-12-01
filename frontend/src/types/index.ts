@@ -85,6 +85,7 @@ export type AuthContextType = {
   signUp: (formData: FormData) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  isAuthenticated: boolean;
   refreshUser: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
 };
 
@@ -108,27 +109,8 @@ export type HeroSectionProps = {
   onOpenMap: () => void;
 };
 
-export type RegisterFormProps = {
-  onRegisterSuccess: () => void;
-};
-
-export type LoginFormProps = {
-  onLoginSuccess: () => void;
-};
-
 export type CategoriesSectionProps = {
   onCategoryClick: () => void;
-};
-
-export type LandingNavProps = {
-  onHome?: () => void;
-  onLogin: () => void;
-  onRegister: () => void;
-};
-
-export type HeaderProps = {
-  currentView: "map" | "messages";
-  onViewChange: (view: "map" | "messages") => void;
 };
 
 export type MapModalProps = {
@@ -140,4 +122,62 @@ export type Lang = {
   en: string;
   de: string;
   fr: string;
+};
+
+export type NotificationProps = {
+  _id: string;
+  model: "Offer" | "Request" | "HelpSession";
+  resourceId: string;
+  type: "request" | "offer" | "sos" | "session" | "chat" | "system";
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+};
+
+export type AddressInputProps = {
+  locationValue: string;
+  onSelect: (data: {
+    location: string;
+    latitude: number;
+    longitude: number;
+  }) => void;
+};
+
+export type SuggestionAddress = {
+  place_id: string;
+  display_name: string;
+  lat: string;
+  lon: string;
+  address: {
+    road?: string;
+    house_number?: string;
+    city?: string;
+    postcode?: string;
+    [key: string]: any;
+  };
+};
+
+export type ChatSessionProps = {
+  _id: string;
+  requestId: string;
+  offerId: string;
+  userRequesterId: string;
+  userHelperId: string;
+  status: "active" | "completed" | "cancelled";
+  createdAt: string;
+  offer?: OfferProps;
+  request?: RequestProps;
+};
+
+export type ChatMessageProps = {
+  _id: string;
+  sessionId: string;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  attachements: string[];
+  createdAt: string;
+  sender?: User;
+  receiver?: User;
 };
