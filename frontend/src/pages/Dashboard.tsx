@@ -4,9 +4,13 @@ import { useLanguage } from "../contexts";
 import { Card, CardContent } from "../components";
 import { motion } from "framer-motion";
 import { MessageCircle, Bell, Handshake, FilePlus2 } from "lucide-react";
+import { useLocation } from "react-router";
 
 const Dashboard = () => {
   const { t } = useLanguage();
+
+  const location = useLocation();
+  const successMessage = location.state?.successMessage || null;
 
   useEffect(() => {
     document.title = `${t("nav.dashboard")} - CareConnect`;
@@ -40,6 +44,11 @@ const Dashboard = () => {
   ];
   return (
     <div className="min-h-screen py-10 px-6 bg-gradient-to-br from-blue-50 to-blue-100">
+      {successMessage && (
+        <div className="bg-green-50 text-green-600 text-center font-semibold p-3 rounded-md text-md mb-4">
+          {t(successMessage)}
+        </div>
+      )}
       <div className="max-w-6xl mx-auto">
         <motion.h1
           initial={{ opacity: 0, y: -20 }}

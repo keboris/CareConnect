@@ -1,6 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 
-import { MainLayout, ProtectedLayout } from "./layouts";
+import { MainLayout, ProtectedLayout, ScrollToTop } from "./layouts";
 
 import {
   Categories,
@@ -16,6 +16,7 @@ import {
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Home />} />

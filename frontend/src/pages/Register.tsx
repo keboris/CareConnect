@@ -31,7 +31,8 @@ const Register = () => {
     languages: "",
   });
 
-  const [error, setError] = useState<string | Record<string, string>>("");
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   const skillsModalRef = useRef<HTMLDivElement | null>(null);
@@ -80,14 +81,22 @@ const Register = () => {
     try {
       console.log("Form Data:", Array.from(form.entries()));
       await signUp(form);
-      navigate("/login", {
-        state: { successMessage: "auth.accountCreated" },
+      navigate("/app", {
+        state: { successMessage: "auth.welcomeMsgRegister" },
       });
-    } catch (errors: any) {
-      if (errors instanceof Error) {
-        setError(errors.message); // string
-      } else {
-        setError(errors); // object
+    } catch (error: any) {
+      if (typeof error === "object" && !("message" in error)) {
+        setFieldErrors(error);
+        return;
+      }
+
+      if (error instanceof Error && (error as any).field) {
+        setFieldErrors({ [(error as any).field]: error.message });
+        return;
+      }
+
+      if (error instanceof Error) {
+        setError(error.message);
       }
     } finally {
       setLoading(false);
@@ -189,8 +198,10 @@ const Register = () => {
                     required
                   />
                 </div>
-                {typeof error !== "string" && error.firstName && (
-                  <p className="text-red-500 text-sm">{error.firstName}</p>
+                {fieldErrors.firstName && (
+                  <p className="text-red-500 text-sm">
+                    {fieldErrors.firstName}
+                  </p>
                 )}
               </div>
 
@@ -212,8 +223,8 @@ const Register = () => {
                   required
                 />
               </div>
-              {typeof error !== "string" && error.lastName && (
-                <p className="text-red-500 text-sm">{error.lastName}</p>
+              {fieldErrors.lastName && (
+                <p className="text-red-500 text-sm">{fieldErrors.lastName}</p>
               )}
             </div>
 
@@ -241,8 +252,11 @@ const Register = () => {
                     required
                   />
                 </div>
-                {typeof error !== "string" && error.email && (
-                  <p className="text-red-500 text-sm">{error.email}</p>
+                {fieldErrors.email && (
+                  <p className="text-red-500 text-sm">{fieldErrors.email}</p>
+                )}
+                {error && typeof error === "string" && (
+                  <p className="text-red-500 text-sm mt-1">{error}</p>
                 )}
               </div>
 
@@ -272,8 +286,8 @@ const Register = () => {
                 <p className="mt-1 text-xs text-gray-500">
                   {t("auth.passwordMin")}
                 </p>
-                {typeof error !== "string" && error.password && (
-                  <p className="text-red-500 text-sm">{error.password}</p>
+                {fieldErrors.password && (
+                  <p className="text-red-500 text-sm">{fieldErrors.password}</p>
                 )}
               </div>
             </div>
@@ -302,8 +316,11 @@ const Register = () => {
                     required
                   />
                 </div>
-                {typeof error !== "string" && error.phone && (
-                  <p className="text-red-500 text-sm">{error.phone}</p>
+                {fieldErrors.phone && (
+                  <p className="text-red-500 text-sm">{fieldErrors.phone}</p>
+                )}
+                {error && typeof error === "string" && (
+                  <p className="text-red-500 text-sm mt-1">{error}</p>
                 )}
               </div>
 
@@ -325,6 +342,9 @@ const Register = () => {
                   />
                 </div>
               </div>
+              {fieldErrors.location && (
+                <p className="text-red-500 text-sm">{fieldErrors.location}</p>
+              )}
             </div>
 
             <div>
