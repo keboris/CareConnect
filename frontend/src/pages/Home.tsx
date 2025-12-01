@@ -6,15 +6,13 @@ import {
   MapModal,
   StatsSection,
 } from "../components";
-import { useLanguage } from "../contexts";
 
 const Home = () => {
   const [showMap, setShowMap] = useState(false);
-  const { t } = useLanguage();
 
   useEffect(() => {
-    document.title = `${t("nav.home")} - CareConnect`;
-  }, [t]);
+    document.title = `CareConnect`;
+  }, []);
 
   return (
     <>
