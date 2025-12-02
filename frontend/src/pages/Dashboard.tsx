@@ -103,12 +103,6 @@ const Dashboard = () => {
     fetchNotifications();
   }, [loading]);
 
-  const recentNotifications = [
-    { message: "New offer from John", time: "2h ago" },
-    { message: "New request posted", time: "4h ago" },
-    { message: "Chat message from Anna", time: "6h ago" },
-  ];
-
   useEffect(() => {
     document.title = `${t("nav.dashboard")} - CareConnect`;
     window.scrollTo(0, 0);
