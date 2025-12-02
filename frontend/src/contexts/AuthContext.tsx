@@ -184,6 +184,7 @@ export default function AuthContextProvider({
   // Function for secure fetch with auto-refresh
   const refreshUser = async (input: RequestInfo, init: RequestInit = {}) => {
     if (!init.headers) init.headers = {};
+    console.log("refreshUser called with:", input, init);
     console.log("Using token in refreshUser:", accessToken);
     if (accessToken) {
       const headers = new Headers(init.headers);
