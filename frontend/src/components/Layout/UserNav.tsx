@@ -13,7 +13,7 @@ import { NOTIFICATION_API_URL } from "../../config";
 import { useNavigate } from "react-router";
 
 const UserNav = () => {
-  const { user, signOut, isAuthenticated, loading, refreshUser } = useAuth();
+  const { user, signOut, loading, refreshUser } = useAuth();
   const { language, setLanguage, t } = useLanguage();
 
   const navigate = useNavigate();
@@ -29,9 +29,6 @@ const UserNav = () => {
     if (loading) return;
     const fetchNotifications = async () => {
       try {
-        if (loading) return;
-        if (!isAuthenticated) return;
-
         const response = await refreshUser(`${NOTIFICATION_API_URL}`);
         const data = await response.json();
 
