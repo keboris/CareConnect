@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth, useLanguage } from "../contexts";
-import { Card, CardContent } from "../components";
+import { Card, CardContent, Loading } from "../components";
 import { motion } from "framer-motion";
 import { MessageCircle, Bell, Handshake, FilePlus2 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router";
@@ -115,6 +115,8 @@ const Dashboard = () => {
       count: stats ? stats.notifications : 0,
     },
   ];
+
+  if (loading) return <Loading />;
 
   return (
     <div className="min-h-screen py-10 px-6 bg-gradient-to-br from-blue-50 to-blue-100">
