@@ -1,4 +1,5 @@
 import { IconMap } from "../ui/icons";
+import { colorMapping } from "../ui/colors";
 import type { Category } from "../../types";
 import { useEffect, useState } from "react";
 import { API_BASE_URL } from "../../config";
@@ -8,19 +9,8 @@ import { useLanguage } from "../../contexts";
 const CategoriesSection = () => {
   const [categories, setCategories] = useState<Category[]>([]);
 
-  const colorMapping: Record<string, string> = {
-    "bg-red-500": "bg-red-500",
-    "bg-blue-500": "bg-blue-500",
-    "bg-green-500": "bg-green-500",
-    "bg-indigo-500": "bg-indigo-500",
-    "bg-amber-500": "bg-amber-500",
-    "bg-purple-500": "bg-purple-500",
-    "bg-cyan-500": "bg-cyan-500",
-    "bg-pink-500": "bg-pink-500",
-  };
-
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -76,7 +66,7 @@ const CategoriesSection = () => {
                   </div>
 
                   <h3 className="font-semibold text-gray-900 mb-1">
-                    {category.name}
+                    {language === "de" ? category.nameDE : category.name}
                   </h3>
 
                   <p className="text-sm text-gray-500">

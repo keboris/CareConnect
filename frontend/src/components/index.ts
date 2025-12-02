@@ -12,3 +12,4 @@ export { default as NavBar } from "./Layout/NavBar";
 export { default as ChatPage } from "./Chat/ChatPage";
 export * from "./ui/card";
 export * as IconMap from "./ui/icons";
+export * as colorMapping from "./ui/colors";

@@ -31,6 +31,13 @@ export type Category = {
   createdAt: string;
 };
 
+export type StatsProps = {
+  offers: number;
+  requests: number;
+  chats: number;
+  notifications: number;
+};
+
 export type OfferProps = {
   _id: string;
   userId: string;

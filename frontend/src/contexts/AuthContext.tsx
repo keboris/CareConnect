@@ -44,19 +44,40 @@ export default function AuthContextProvider({
     }
   };
 
+  const isAuthenticated = Boolean(accessToken && user);
+
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
-          method: "POST",
+        const meRes = await fetch(`${API_BASE_URL}/auth/me`, {
           credentials: "include",
+          headers: accessToken
+            ? { Authorization: `Bearer ${accessToken}` }
+            : {},
         });
 
-        if (res.ok) {
-          const data = await res.json();
-          setAccessToken(data.accessToken);
-          await fetchUser();
+        if (meRes.ok) {
+          const data = await meRes.json();
+          setUser(data.user);
+          return;
         }
+
+        if (meRes.status === 401) {
+          const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
+            method: "POST",
+            credentials: "include",
+          });
+
+          if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            setAccessToken(data.accessToken);
+
+            const user = await fetchUser();
+            if (user) return;
+          }
+        }
+
+        setUser(null);
       } catch (error) {
         console.error("Error during auth initialization:", error);
       } finally {
@@ -180,8 +201,6 @@ export default function AuthContextProvider({
 
     return res;
   };
-
-  const isAuthenticated = Boolean(accessToken && user);
 
   return (
     <AuthContext.Provider
