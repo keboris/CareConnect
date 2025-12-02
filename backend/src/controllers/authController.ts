@@ -205,8 +205,8 @@ export const refresh: RequestHandler<
 /*------------------------------- LOGOUT & ME ------------------------------*/
 export const logout: RequestHandler = async (req, res) => {
   res
-    .clearCookie("accessToken")
-    .clearCookie("refreshToken")
+    .clearCookie("accessToken", accessCookieOpts)
+    .clearCookie("refreshToken", refreshCookieOpts)
     .json({ message: "Logout successfuly" });
 };
 

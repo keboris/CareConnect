@@ -104,6 +104,22 @@ export const getNotifications: RequestHandler = async (req, res) => {
       createdAt: -1,
     });
 
+    /*const populatedNotifications = await Promise.all(
+  notifications.map(async (notif) => {
+    const Model = notif.resourceModel === "Request"
+      ? notif.resourceModel === "Request"
+      : (notif.resourceModel === "Offer" ? notif.resourceModel === "Offer"
+        : notif.resourceModel === "HelpSession");
+
+    const resource = await Model.findById(notif.resourceId);
+
+    return {
+      ...notif.toObject(),
+      resource,
+    };
+  })
+);*/
+
     res.status(200).json({
       message: `You have ${notifications.length} notifications`,
       notifications,
