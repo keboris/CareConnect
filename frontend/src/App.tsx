@@ -24,10 +24,13 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/categories/:id" element={<Categories />} />
+
+          {/* Dashboard routes */}
           <Route path="app" element={<ProtectedLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="profile" element={<Profile />} />
             <Route path="chat" element={<Chat />} />
+            <Route path="settings" element={<Profile />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Route>
