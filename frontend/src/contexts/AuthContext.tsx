@@ -50,28 +50,26 @@ export default function AuthContextProvider({
     const initAuth = async () => {
       try {
         console.log("Initializing authentication...");
-        if (accessToken) {
-          const userLoaded = await fetchUser();
-          if (userLoaded) {
-            setLoading(false);
-            return;
+        if (!accessToken) {
+          const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
+            method: "POST",
+            credentials: "include",
+          });
+
+          if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            setAccessToken(data.accessToken);
           }
         }
 
-        const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
-          method: "POST",
-          credentials: "include",
-        });
-
-        if (!refreshRes.ok) {
+        if (accessToken) {
+          const userLoaded = await fetchUser();
+          if (!userLoaded) {
+            setUser(null);
+          }
+        } else {
           setUser(null);
-          return setLoading(false);
         }
-
-        const refreshData = await refreshRes.json();
-        setAccessToken(refreshData.accessToken);
-
-        await fetchUser();
       } catch (error) {
         console.error("Error during auth initialization:", error);
         setUser(null);
