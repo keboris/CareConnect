@@ -1,4 +1,4 @@
-import { User } from "#models";
+import { ChatMessage, Notification, Offer, Request, User } from "#models";
 import bcrypt from "bcrypt";
 import {
   changePasswordSchema,
@@ -39,6 +39,45 @@ export const getUserById: RequestHandler = async (req, res) => {
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      res.status(500).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: "An unknown error occurred" });
+    }
+  }
+};
+
+export const getUserStatsById: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = await User.findById(userId).lean();
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const [offersCount, requestsCount, notificationsCount] = await Promise.all([
+      Offer.countDocuments({ userId }),
+      Request.countDocuments({ userId }),
+      Notification.countDocuments({ userId }),
+    ]);
+
+    const chatsCount = await ChatMessage.distinct("sessionId", {
+      $or: [{ senderId: userId }, { receiverId: userId }],
+    }).then((sessions) => sessions.length);
+
+    return res.json({
+      user,
+      stats: {
+        offers: offersCount,
+        requests: requestsCount,
+        chats: chatsCount,
+        notifications: notificationsCount,
+      },
+    });
   } catch (error: unknown) {
     if (error instanceof Error) {
       res.status(500).json({ message: error.message });
