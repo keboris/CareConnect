@@ -2,13 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth, useLanguage } from "../contexts";
 import { Card, CardContent } from "../components";
 import { motion } from "framer-motion";
-import {
-  MessageCircle,
-  Bell,
-  Handshake,
-  FilePlus2,
-  ShoppingCart,
-} from "lucide-react";
+import { MessageCircle, Bell, Handshake, FilePlus2 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router";
 import {
   BarChart,
