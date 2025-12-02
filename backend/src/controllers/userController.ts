@@ -52,6 +52,7 @@ export const getUserStatsById: RequestHandler = async (req, res) => {
   try {
     const userId = req.user?.id;
 
+    console.log(`Fetching stats for user: ${userId}`);
     if (!userId) {
       console.log(`Unauthorized access attempt to user stats by ${userId}`);
       return res.status(401).json({ message: "Unauthorized" });
