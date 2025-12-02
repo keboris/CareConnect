@@ -49,6 +49,7 @@ export default function AuthContextProvider({
   useEffect(() => {
     const initAuth = async () => {
       try {
+        console.log("Initializing authentication...");
         const meRes = await fetch(`${API_BASE_URL}/auth/me`, {
           credentials: "include",
           headers: accessToken
