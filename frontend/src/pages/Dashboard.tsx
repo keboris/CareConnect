@@ -12,8 +12,13 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import type { Category, StatsProps } from "../types";
-import { CAT_USER_API_URL, STAT_USER_API_URL } from "../config";
+import type { Category, NotificationProps, StatsProps } from "../types";
+import {
+  CAT_USER_API_URL,
+  NOTIFICATION_API_URL,
+  STAT_USER_API_URL,
+} from "../config";
+import { timeAgo } from "../lib";
 
 const Dashboard = () => {
   const { loading, refreshUser } = useAuth();
@@ -30,6 +35,7 @@ const Dashboard = () => {
     chats: 0,
     notifications: 0,
   });
+  const [notifications, setNotifications] = useState<NotificationProps[]>([]);
 
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -79,6 +85,22 @@ const Dashboard = () => {
     };
 
     fetchStats();
+  }, [loading]);
+
+  useEffect(() => {
+    if (loading) return;
+    const fetchNotifications = async () => {
+      try {
+        const response = await refreshUser(`${NOTIFICATION_API_URL}`);
+        const data = await response.json();
+
+        setNotifications(data.notifications);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
+
+    fetchNotifications();
   }, [loading]);
 
   const recentNotifications = [
@@ -241,15 +263,23 @@ const Dashboard = () => {
             Recent Notifications
           </h3>
           <ul className="divide-y divide-gray-200">
-            {recentNotifications.map((notif, idx) => (
-              <li
-                key={idx}
-                className="py-3 hover:bg-blue-50 px-4 cursor-pointer flex justify-between"
-              >
-                <span>{notif.message}</span>
-                <span className="text-gray-400 text-xs">{notif.time}</span>
-              </li>
-            ))}
+            {notifications &&
+              notifications.map((notif) => (
+                <li
+                  key={notif._id}
+                  className="py-3 hover:bg-blue-50 px-4 cursor-pointer flex justify-between"
+                >
+                  <span>
+                    {notif.title}{" "}
+                    <span className="text-gray-600 text-sm">
+                      ({notif.message})
+                    </span>
+                  </span>
+                  <span className="text-gray-400 text-xs">
+                    {timeAgo(notif.createdAt)}
+                  </span>
+                </li>
+              ))}
           </ul>
         </div>
 
