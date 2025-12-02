@@ -54,8 +54,6 @@ export default function AuthContextProvider({
 
   useEffect(() => {
     const initAuth = async () => {
-      console.log(user);
-      console.log("AccessToken:", accessToken);
       if (hasLoggedOut) {
         setLoading(false);
         return; // ne tente pas le refresh
@@ -73,7 +71,6 @@ export default function AuthContextProvider({
         });
 
         if (res.status === 401 || !res.ok) {
-          console.log("Status 401 on refresh or not ok", res?.status);
           setUser(null);
           setAccessToken(null);
           setHasLoggedOut(true);
@@ -82,10 +79,6 @@ export default function AuthContextProvider({
         }
 
         const data = await res.json();
-        console.log(
-          "Refreshed access token:",
-          data.accessToken + "..." + data.message
-        );
 
         setAccessToken(data.accessToken);
         await fetchUser(data.accessToken);
@@ -184,8 +177,7 @@ export default function AuthContextProvider({
   // Function for secure fetch with auto-refresh
   const refreshUser = async (input: RequestInfo, init: RequestInit = {}) => {
     if (!init.headers) init.headers = {};
-    console.log("refreshUser called with:", input, init);
-    console.log("Using token in refreshUser:", accessToken);
+
     if (accessToken) {
       const headers = new Headers(init.headers);
       headers.set("Authorization", `Bearer ${accessToken}`);
@@ -198,7 +190,6 @@ export default function AuthContextProvider({
 
     // If 401, try to get a new accessToken via refreshToken
     if (res.status === 401) {
-      console.log("Access token expired, attempting to refresh...");
       const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
         method: "POST",
         credentials: "include", // to send the refreshToken cookie
