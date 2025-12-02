@@ -51,16 +51,9 @@ export default function AuthContextProvider({
       try {
         console.log("Initializing authentication...");
         if (accessToken) {
-          const meRes = await fetch(`${API_BASE_URL}/auth/me`, {
-            credentials: "include",
-            headers: accessToken
-              ? { Authorization: `Bearer ${accessToken}` }
-              : {},
-          });
-
-          if (meRes.ok) {
-            const data = await meRes.json();
-            setUser(data.user);
+          const userLoaded = await fetchUser();
+          if (userLoaded) {
+            setLoading(false);
             return;
           }
         }
@@ -78,19 +71,7 @@ export default function AuthContextProvider({
         const refreshData = await refreshRes.json();
         setAccessToken(refreshData.accessToken);
 
-        const meRes = await fetch(`${API_BASE_URL}/auth/me`, {
-          credentials: "include",
-          headers: {
-            Authorization: `Bearer ${refreshData.accessToken}`,
-          },
-        });
-
-        if (meRes.ok) {
-          const data = await meRes.json();
-          setUser(data.user);
-        } else {
-          setUser(null);
-        }
+        await fetchUser();
       } catch (error) {
         console.error("Error during auth initialization:", error);
         setUser(null);
@@ -99,7 +80,7 @@ export default function AuthContextProvider({
       }
     };
     initAuth();
-  }, [accessToken]);
+  }, []);
 
   const issuesToFieldErrors = (issues: any[]) => {
     const fieldErrors: Record<string, string> = {};
