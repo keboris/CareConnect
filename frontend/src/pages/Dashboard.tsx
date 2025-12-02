@@ -16,7 +16,7 @@ import type { Category, StatsProps } from "../types";
 import { API_BASE_URL } from "../config";
 
 const Dashboard = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { loading, refreshUser } = useAuth();
 
   const { language, t } = useLanguage();
   const navigate = useNavigate();
@@ -33,13 +33,10 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (loading) return;
-    if (!isAuthenticated) return;
 
     const fetchCategories = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/categories/user`, {
-          credentials: "include",
-        });
+        const response = await refreshUser(`${API_BASE_URL}/categories/user`);
         const data = await response.json();
 
         const sortedCategories = data.categories
@@ -58,11 +55,10 @@ const Dashboard = () => {
     };
 
     fetchCategories();
-  }, [loading, isAuthenticated]);
+  }, [loading]);
 
   useEffect(() => {
     if (loading) return;
-    if (!isAuthenticated) return;
 
     const fetchStats = async () => {
       try {
@@ -78,7 +74,7 @@ const Dashboard = () => {
     };
 
     fetchStats();
-  }, [loading, isAuthenticated]);
+  }, [loading]);
 
   const recentNotifications = [
     { message: "New offer from John", time: "2h ago" },
