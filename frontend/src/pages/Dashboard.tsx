@@ -32,14 +32,15 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    if (loading) return;
+    if (loading) return; // On attend que l'auth soit prête
 
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
-        const response = await refreshUser(`${API_BASE_URL}/categories/user`);
-        const data = await response.json();
-
-        const sortedCategories = data.categories
+        // Categories
+        const catRes = await refreshUser(`${API_BASE_URL}/categories/user`);
+        const catJson = await catRes.json();
+        const categoriesData = catJson.categories || [];
+        const sortedCategories = categoriesData
           .sort(
             (a: Category, b: Category) =>
               (b.offersCount || 0) +
@@ -47,34 +48,26 @@ const Dashboard = () => {
               ((a.offersCount || 0) + (a.requestsCount || 0))
           )
           .slice(0, 8);
-
         setCategories(sortedCategories);
+
+        // Stats
+        const statsRes = await refreshUser(`${API_BASE_URL}/users/stats`);
+        const statsJson = await statsRes.json();
+        setStats(
+          statsJson.stats || {
+            offers: 0,
+            requests: 0,
+            chats: 0,
+            notifications: 0,
+          }
+        );
       } catch (error) {
-        console.error("Error fetching categories:", error);
+        console.error("Error fetching dashboard data:", error);
       }
     };
 
-    fetchCategories();
-  }, [loading]);
-
-  useEffect(() => {
-    if (loading) return;
-
-    const fetchStats = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/users/stats`, {
-          credentials: "include",
-        });
-        const data = await response.json();
-
-        setStats(data.stats);
-      } catch (error) {
-        console.error("Error fetching stats:", error);
-      }
-    };
-
-    fetchStats();
-  }, [loading]);
+    fetchData();
+  }, [loading, refreshUser]);
 
   const recentNotifications = [
     { message: "New offer from John", time: "2h ago" },
