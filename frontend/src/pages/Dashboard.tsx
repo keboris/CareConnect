@@ -31,6 +31,9 @@ const Dashboard = () => {
     notifications: 0,
   });
 
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loadingStats, setLoadingStats] = useState(true);
+
   useEffect(() => {
     if (loading) return;
 
@@ -51,6 +54,8 @@ const Dashboard = () => {
         setCategories(sortedCategories);
       } catch (error) {
         console.error("Error fetching categories:", error);
+      } finally {
+        setLoadingCategories(false);
       }
     };
 
@@ -68,6 +73,8 @@ const Dashboard = () => {
         setStats(data.stats);
       } catch (error) {
         console.error("Error fetching stats:", error);
+      } finally {
+        setLoadingStats(false);
       }
     };
 
@@ -116,7 +123,7 @@ const Dashboard = () => {
     },
   ];
 
-  if (loading) return <Loading />;
+  if (loading || loadingCategories || loadingStats) return <Loading />;
 
   return (
     <div className="min-h-screen py-10 px-6 bg-gradient-to-br from-blue-50 to-blue-100">
