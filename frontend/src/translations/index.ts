@@ -259,6 +259,11 @@ export const translationsMap: Translations = {
     de: "Anfragen",
   },
 
+  "dashboard.offersRequestsByCategory": {
+    en: "Offers & Requests by Category",
+    de: "Angebote & Anfragen nach Kategorie",
+  },
+
   "dashboard.chat": {
     en: "Chat",
     de: "Chat",

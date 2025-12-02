@@ -104,10 +104,6 @@ export const getNotifications: RequestHandler = async (req, res) => {
       createdAt: -1,
     });
 
-    if (!notifications.length) {
-      return res.status(404).json({ message: "You have no notifications" });
-    }
-
     res.status(200).json({
       message: `You have ${notifications.length} notifications`,
       notifications,

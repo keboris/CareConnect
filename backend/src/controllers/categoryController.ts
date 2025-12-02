@@ -1,4 +1,4 @@
-import { Category } from "#models";
+import { Category, Offer, Request } from "#models";
 import type { categoryInputSchema } from "#schemas";
 import type z from "zod";
 
@@ -100,7 +100,18 @@ export const getCategoryById: RequestHandler = async (req, res) => {
         .json({ error: `Category with id:${id} not found` });
     }
 
-    res.status(200).json(category);
+    const [offers, requests] = await Promise.all([
+      Offer.find({ category: id }),
+      Request.find({ category: id }),
+    ]);
+
+    res.status(200).json({
+      category,
+      offersCount: offers.length,
+      requestsCount: requests.length,
+      offers,
+      requests,
+    });
   } catch (error: unknown) {
     if (error instanceof Error) {
       res.status(500).json({ message: error.message });
@@ -172,6 +183,41 @@ export const deleteCategory: RequestHandler<{ id: string }> = async (
       res.status(500).json({ message: error.message });
     } else {
       res.status(500).json({ message: "An unknown error occurred" });
+    }
+  }
+};
+
+export const getUserCategories: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const categories = await Category.find();
+
+    const categoriesWithCounts = await Promise.all(
+      categories.map(async (category) => {
+        const [offersCount, requestsCount] = await Promise.all([
+          Offer.countDocuments({ category: category._id, userId }),
+          Request.countDocuments({ category: category._id, userId }),
+        ]);
+
+        return {
+          ...category.toObject(),
+          offersCount,
+          requestsCount,
+        };
+      })
+    );
+
+    res.status(200).json({ categories: categoriesWithCounts });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      res.status(500).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: "Unknown error" });
     }
   }
 };

@@ -13,7 +13,7 @@ import { API_BASE_URL } from "../../config";
 import { useNavigate } from "react-router";
 
 const UserNav = () => {
-  const { user, signOut, refreshUser } = useAuth();
+  const { user, signOut, isAuthenticated, loading } = useAuth();
   const { language, setLanguage, t } = useLanguage();
 
   const navigate = useNavigate();
@@ -28,7 +28,12 @@ const UserNav = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/notifications`);
+        if (loading) return;
+        if (!isAuthenticated) return;
+
+        const response = await fetch(`${API_BASE_URL}/notifications`, {
+          credentials: "include",
+        });
         const data = await response.json();
 
         setNotifications(data.notifications);
@@ -38,7 +43,7 @@ const UserNav = () => {
     };
 
     fetchNotifications();
-  }, [refreshUser]);
+  }, [isAuthenticated, loading]);
 
   return (
     <>
