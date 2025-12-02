@@ -22,6 +22,7 @@ export default function AuthContextProvider({
 
   const fetchUser = async () => {
     try {
+      if (!accessToken) return null;
       const response = await fetch(`${API_BASE_URL}/auth/me`, {
         headers: accessToken
           ? {
@@ -40,6 +41,7 @@ export default function AuthContextProvider({
       return data.user;
     } catch (error) {
       console.error("Error fetching user:", error);
+      setUser(null);
       return null;
     }
   };
@@ -63,16 +65,12 @@ export default function AuthContextProvider({
         }
 
         if (accessToken) {
-          const userLoaded = await fetchUser();
-          if (!userLoaded) {
-            setUser(null);
-          }
-        } else {
-          setUser(null);
+          await fetchUser();
         }
       } catch (error) {
         console.error("Error during auth initialization:", error);
         setUser(null);
+        setAccessToken(null);
       } finally {
         setLoading(false);
       }
