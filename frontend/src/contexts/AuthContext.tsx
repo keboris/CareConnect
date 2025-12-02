@@ -8,7 +8,6 @@ import {
 import { API_BASE_URL } from "../config/api";
 
 import type { AuthContextType, User } from "../types";
-import { tr } from "framer-motion/client";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
