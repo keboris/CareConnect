@@ -8,6 +8,7 @@ import {
 import { API_BASE_URL } from "../config/api";
 
 import type { AuthContextType, User } from "../types";
+import { tr } from "framer-motion/client";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -19,15 +20,20 @@ export default function AuthContextProvider({
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasLoggedOut, setHasLoggedOut] = useState(false);
 
-  const fetchUser = async () => {
+  const isAuthenticated = !!user && !!accessToken;
+
+  const fetchUser = async (token?: string) => {
+    const tokenToUse = token || accessToken;
+
+    if (!tokenToUse) {
+      setUser(null);
+      return null;
+    }
     try {
       const response = await fetch(`${API_BASE_URL}/auth/me`, {
-        headers: accessToken
-          ? {
-              Authorization: `Bearer ${accessToken}`,
-            }
-          : {},
+        headers: { Authorization: `Bearer ${tokenToUse}` },
         credentials: "include",
       });
 
@@ -37,34 +43,64 @@ export default function AuthContextProvider({
 
       const data = await response.json();
       setUser(data.user);
+      setHasLoggedOut(false);
       return data.user;
     } catch (error) {
       console.error("Error fetching user:", error);
+      setUser(null);
+      setHasLoggedOut(true);
       return null;
     }
   };
 
   useEffect(() => {
     const initAuth = async () => {
+      console.log(user);
+      console.log("AccessToken:", accessToken);
+      if (hasLoggedOut) {
+        setLoading(false);
+        return; // ne tente pas le refresh
+      }
+
+      if (user || accessToken) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
           method: "POST",
           credentials: "include",
         });
 
-        if (res.ok) {
-          const data = await res.json();
-          setAccessToken(data.accessToken);
-          await fetchUser();
+        if (res.status === 401 || !res.ok) {
+          console.log("Status 401 on refresh or not ok", res?.status);
+          setUser(null);
+          setAccessToken(null);
+          setHasLoggedOut(true);
+          setLoading(false);
+          return;
         }
+
+        const data = await res.json();
+        console.log(
+          "Refreshed access token:",
+          data.accessToken + "..." + data.message
+        );
+
+        setAccessToken(data.accessToken);
+        await fetchUser(data.accessToken);
       } catch (error) {
         console.error("Error during auth initialization:", error);
+        setUser(null);
+        setAccessToken(null);
+        setHasLoggedOut(true);
       } finally {
         setLoading(false);
       }
     };
     initAuth();
-  }, []);
+  }, [hasLoggedOut]);
 
   const issuesToFieldErrors = (issues: any[]) => {
     const fieldErrors: Record<string, string> = {};
@@ -123,22 +159,26 @@ export default function AuthContextProvider({
     setAccessToken(data.accessToken);
 
     setUser(data.user);
+    setHasLoggedOut(false);
   };
 
   const signOut = async () => {
     try {
-      await fetch(`${API_BASE_URL}/auth/logout`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        credentials: "include",
-      });
+      if (accessToken) {
+        await fetch(`${API_BASE_URL}/auth/logout`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          credentials: "include",
+        });
+      }
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
       setUser(null);
       setAccessToken(null);
+      setHasLoggedOut(true);
     }
   };
 
@@ -166,7 +206,6 @@ export default function AuthContextProvider({
         const data = await refreshRes.json();
         setAccessToken(data.accessToken); // new token in memory
 
-        // Refaire la requête initiale avec le nouveau token
         const headers = new Headers(init.headers);
         headers.set("Authorization", `Bearer ${data.accessToken}`);
         init.headers = headers;
@@ -180,8 +219,6 @@ export default function AuthContextProvider({
 
     return res;
   };
-
-  const isAuthenticated = Boolean(accessToken && user);
 
   return (
     <AuthContext.Provider
@@ -202,8 +239,7 @@ export default function AuthContextProvider({
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+
   return context;
 }

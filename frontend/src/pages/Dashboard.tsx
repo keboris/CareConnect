@@ -13,10 +13,10 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { Category, StatsProps } from "../types";
-import { API_BASE_URL } from "../config";
+import { CAT_USER_API_URL, STAT_USER_API_URL } from "../config";
 
 const Dashboard = () => {
-  const { loading } = useAuth();
+  const { loading, refreshUser } = useAuth();
 
   const { language, t } = useLanguage();
   const navigate = useNavigate();
@@ -36,9 +36,7 @@ const Dashboard = () => {
 
     const fetchCategories = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/categories/user`, {
-          credentials: "include",
-        });
+        const response = await refreshUser(`${CAT_USER_API_URL}`);
         const data = await response.json();
 
         const sortedCategories = data.categories
@@ -64,9 +62,7 @@ const Dashboard = () => {
 
     const fetchStats = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/users/stats`, {
-          credentials: "include",
-        });
+        const response = await refreshUser(`${STAT_USER_API_URL}`);
         const data = await response.json();
 
         setStats(data.stats);
