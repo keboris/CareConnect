@@ -26,13 +26,15 @@ const isProd = process.env.NODE_ENV === "production";
 export const accessCookieOpts = {
   httpOnly: true,
   maxAge: ACCESS_TTL_SEC * 1000,
-  sameSite: "lax" as const,
+  //sameSite: "lax" as const,
+  sameSite: isProd ? ("none" as const) : ("lax" as const),
   secure: isProd,
 };
 
 export const refreshCookieOpts = {
   httpOnly: true,
   maxAge: REFRESH_TTL_SEC * 1000,
-  sameSite: "lax" as const,
+  sameSite: isProd ? ("none" as const) : ("lax" as const),
+  //sameSite: "lax" as const,
   secure: isProd,
 };
