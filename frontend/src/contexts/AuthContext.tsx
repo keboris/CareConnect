@@ -22,7 +22,6 @@ export default function AuthContextProvider({
 
   const fetchUser = async () => {
     try {
-      if (!accessToken) return null;
       const response = await fetch(`${API_BASE_URL}/auth/me`, {
         headers: accessToken
           ? {
@@ -41,36 +40,25 @@ export default function AuthContextProvider({
       return data.user;
     } catch (error) {
       console.error("Error fetching user:", error);
-      setUser(null);
       return null;
     }
   };
 
-  const isAuthenticated = Boolean(accessToken && user);
-
   useEffect(() => {
     const initAuth = async () => {
       try {
-        console.log("Initializing authentication...");
-        if (!accessToken) {
-          const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
-            method: "POST",
-            credentials: "include",
-          });
+        const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: "POST",
+          credentials: "include",
+        });
 
-          if (refreshRes.ok) {
-            const data = await refreshRes.json();
-            setAccessToken(data.accessToken);
-          }
-        }
-
-        if (accessToken) {
+        if (res.ok) {
+          const data = await res.json();
+          setAccessToken(data.accessToken);
           await fetchUser();
         }
       } catch (error) {
         console.error("Error during auth initialization:", error);
-        setUser(null);
-        setAccessToken(null);
       } finally {
         setLoading(false);
       }
@@ -192,6 +180,8 @@ export default function AuthContextProvider({
 
     return res;
   };
+
+  const isAuthenticated = Boolean(accessToken && user);
 
   return (
     <AuthContext.Provider

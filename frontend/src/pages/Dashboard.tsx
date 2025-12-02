@@ -16,7 +16,7 @@ import type { Category, StatsProps } from "../types";
 import { API_BASE_URL } from "../config";
 
 const Dashboard = () => {
-  const { loading, refreshUser } = useAuth();
+  const { loading } = useAuth();
 
   const { language, t } = useLanguage();
   const navigate = useNavigate();
@@ -32,15 +32,16 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    if (loading) return; // On attend que l'auth soit prête
+    if (loading) return;
 
-    const fetchData = async () => {
+    const fetchCategories = async () => {
       try {
-        // Categories
-        const catRes = await refreshUser(`${API_BASE_URL}/categories/user`);
-        const catJson = await catRes.json();
-        const categoriesData = catJson.categories || [];
-        const sortedCategories = categoriesData
+        const response = await fetch(`${API_BASE_URL}/categories/user`, {
+          credentials: "include",
+        });
+        const data = await response.json();
+
+        const sortedCategories = data.categories
           .sort(
             (a: Category, b: Category) =>
               (b.offersCount || 0) +
@@ -48,26 +49,34 @@ const Dashboard = () => {
               ((a.offersCount || 0) + (a.requestsCount || 0))
           )
           .slice(0, 8);
-        setCategories(sortedCategories);
 
-        // Stats
-        const statsRes = await refreshUser(`${API_BASE_URL}/users/stats`);
-        const statsJson = await statsRes.json();
-        setStats(
-          statsJson.stats || {
-            offers: 0,
-            requests: 0,
-            chats: 0,
-            notifications: 0,
-          }
-        );
+        setCategories(sortedCategories);
       } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        console.error("Error fetching categories:", error);
       }
     };
 
-    fetchData();
-  }, [loading, refreshUser]);
+    fetchCategories();
+  }, [loading]);
+
+  useEffect(() => {
+    if (loading) return;
+
+    const fetchStats = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/users/stats`, {
+          credentials: "include",
+        });
+        const data = await response.json();
+
+        setStats(data.stats);
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      }
+    };
+
+    fetchStats();
+  }, [loading]);
 
   const recentNotifications = [
     { message: "New offer from John", time: "2h ago" },
