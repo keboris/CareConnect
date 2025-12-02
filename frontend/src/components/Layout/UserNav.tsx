@@ -9,11 +9,11 @@ import ReactCountryFlag from "react-country-flag";
 import { useAuth, useLanguage } from "../../contexts";
 import { useEffect, useState } from "react";
 import type { NotificationProps } from "../../types";
-import { API_BASE_URL } from "../../config";
+import { NOTIFICATION_API_URL } from "../../config";
 import { useNavigate } from "react-router";
 
 const UserNav = () => {
-  const { user, signOut, isAuthenticated, loading } = useAuth();
+  const { user, signOut, isAuthenticated, loading, refreshUser } = useAuth();
   const { language, setLanguage, t } = useLanguage();
 
   const navigate = useNavigate();
@@ -26,14 +26,13 @@ const UserNav = () => {
   const isChatActive = location.pathname === "/app/chat";
 
   useEffect(() => {
+    if (loading) return;
     const fetchNotifications = async () => {
       try {
         if (loading) return;
         if (!isAuthenticated) return;
 
-        const response = await fetch(`${API_BASE_URL}/notifications`, {
-          credentials: "include",
-        });
+        const response = await refreshUser(`${NOTIFICATION_API_URL}`);
         const data = await response.json();
 
         setNotifications(data.notifications);
@@ -43,7 +42,7 @@ const UserNav = () => {
     };
 
     fetchNotifications();
-  }, [isAuthenticated, loading]);
+  }, [loading]);
 
   return (
     <>
