@@ -50,43 +50,56 @@ export default function AuthContextProvider({
     const initAuth = async () => {
       try {
         console.log("Initializing authentication...");
+        if (accessToken) {
+          const meRes = await fetch(`${API_BASE_URL}/auth/me`, {
+            credentials: "include",
+            headers: accessToken
+              ? { Authorization: `Bearer ${accessToken}` }
+              : {},
+          });
+
+          if (meRes.ok) {
+            const data = await meRes.json();
+            setUser(data.user);
+            return;
+          }
+        }
+
+        const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: "POST",
+          credentials: "include",
+        });
+
+        if (!refreshRes.ok) {
+          setUser(null);
+          return setLoading(false);
+        }
+
+        const refreshData = await refreshRes.json();
+        setAccessToken(refreshData.accessToken);
+
         const meRes = await fetch(`${API_BASE_URL}/auth/me`, {
           credentials: "include",
-          headers: accessToken
-            ? { Authorization: `Bearer ${accessToken}` }
-            : {},
+          headers: {
+            Authorization: `Bearer ${refreshData.accessToken}`,
+          },
         });
 
         if (meRes.ok) {
           const data = await meRes.json();
           setUser(data.user);
-          return;
+        } else {
+          setUser(null);
         }
-
-        if (meRes.status === 401) {
-          const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
-            method: "POST",
-            credentials: "include",
-          });
-
-          if (refreshRes.ok) {
-            const data = await refreshRes.json();
-            setAccessToken(data.accessToken);
-
-            const user = await fetchUser();
-            if (user) return;
-          }
-        }
-
-        setUser(null);
       } catch (error) {
         console.error("Error during auth initialization:", error);
+        setUser(null);
       } finally {
         setLoading(false);
       }
     };
     initAuth();
-  }, []);
+  }, [accessToken]);
 
   const issuesToFieldErrors = (issues: any[]) => {
     const fieldErrors: Record<string, string> = {};
