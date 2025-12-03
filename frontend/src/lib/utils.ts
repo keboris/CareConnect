@@ -29,3 +29,12 @@ export function timeAgo(dateString: string): string {
 
   return "just now";
 }
+
+export function extractPostalAndCity(address: string): string | null {
+  const regex = /(\d{5})\s+([A-Za-zÀ-ÖØ-öø-ÿ\s-]+)/;
+  const match = address.match(regex);
+
+  if (!match) return null;
+
+  return `${match[1]} ${match[2].trim()}`;
+}

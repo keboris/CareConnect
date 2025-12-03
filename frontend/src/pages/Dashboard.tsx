@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth, useLanguage } from "../contexts";
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,12 +15,14 @@ import {
   LogOut,
   ChevronRight,
   Menu,
+  ChevronDown,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router";
 
 import type { StatsProps } from "../types";
 import { STAT_USER_API_URL } from "../config";
 import { ChatPage, Loading, Offers, Requests, Start } from "../components";
+import { extractPostalAndCity } from "../lib";
 
 const Dashboard = () => {
   const { user, loading, refreshUser, signOut } = useAuth();
@@ -34,6 +36,9 @@ const Dashboard = () => {
   // Sidebar state
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [loadingStats, setLoadingStats] = useState(true);
 
@@ -67,6 +72,19 @@ const Dashboard = () => {
     document.title = `${t("nav.dashboard")} - CareConnect`;
     window.scrollTo(0, 0);
   }, [t]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Navigation items configuration
   const navigationItems = [
@@ -353,6 +371,44 @@ const Dashboard = () => {
                   )}
                 </p>
               </div>
+            </div>
+
+            <div className="relative inline-block" ref={dropdownRef}>
+              <motion.button
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: 1 * 0.05 }}
+                onClick={() => setIsOpen(!isOpen)}
+                className={`w-full flex items-center cursor-pointer gap-3 px-4 py-3 rounded-xl transition-all group
+                       ${
+                         isOpen
+                           ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                           : "hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white hover:shadow-lg"
+                       }`}
+              >
+                <MapPin className="w-5 h-5 flex-shrink-0" />
+                <span className="flex-1 text-left font-medium">
+                  {user?.location ? extractPostalAndCity(user.location) : "N/A"}
+                </span>
+
+                <ChevronDown className="w-4 h-4" />
+              </motion.button>
+
+              <AnimatePresence>
+                {isOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute left-0 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-50 p-4"
+                  >
+                    <p className="font-semibold text-gray-800">
+                      {user && user.firstName} {user && user.lastName}
+                    </p>
+                    <p className="text-gray-600">{user && user.location}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <div className="flex items-center gap-3">

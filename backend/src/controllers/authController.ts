@@ -60,6 +60,18 @@ export const register: RequestHandler<
         .json({ field: "phone", message: "Phone number already in use" });
     }
 
+    const regex = /^.+\s\d+\s*,?\s*\d{3,}\s+[A-Za-zÀ-ÖØ-öø-ÿ\s-]+$/;
+
+    if (!regex.test(location)) {
+      return res
+        .status(400)
+        .json({
+          field: "location",
+          message:
+            "Address must contain a street with number, a postal code, and a city",
+        });
+    }
+
     const hash = await bcrypt.hash(password, 10);
 
     const file = req.file as Express.Multer.File | undefined;
