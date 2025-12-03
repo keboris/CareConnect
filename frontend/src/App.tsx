@@ -4,12 +4,10 @@ import { MainLayout, ProtectedLayout, ScrollToTop } from "./layouts";
 
 import {
   Categories,
-  Chat,
   Dashboard,
   Home,
   Login,
   NotFound,
-  Profile,
   Register,
 } from "./pages";
 

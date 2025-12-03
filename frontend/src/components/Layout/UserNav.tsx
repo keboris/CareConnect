@@ -1,10 +1,4 @@
-import {
-  AlertCircle,
-  Bell,
-  LayoutDashboard,
-  LogOut,
-  MessageSquare,
-} from "lucide-react";
+import { AlertCircle, Bell, LayoutDashboard, LogOut } from "lucide-react";
 import ReactCountryFlag from "react-country-flag";
 import { useAuth, useLanguage } from "../../contexts";
 import { useEffect, useState } from "react";
