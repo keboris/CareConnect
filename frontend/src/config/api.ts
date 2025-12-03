@@ -11,3 +11,6 @@ export const CATEGORIE_API_URL = `${API_BASE_URL}/categories`;
 export const CAT_USER_API_URL = `${API_BASE_URL}/categories/user`;
 export const CHAT_API_URL = `${API_BASE_URL}/chats`;
 export const STAT_USER_API_URL = `${API_BASE_URL}/users/stats`;
+
+export const SESSION_API_URL = `${API_BASE_URL}/help-sessions`;
+export const CHAT_MESSAGE_API_URL = `${API_BASE_URL}/chat`;

@@ -118,7 +118,7 @@ const Start = ({ stats }: { stats: StatsProps }) => {
     <>
       {/* Overview Statistics */}
 
-      <motion.h1
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -226,7 +226,7 @@ const Start = ({ stats }: { stats: StatsProps }) => {
             </Card>
           </motion.div>
         </div>
-      </motion.h1>
+      </motion.div>
 
       {/* Quick Actions */}
       <motion.div

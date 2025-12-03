@@ -13,6 +13,8 @@ export { default as ChatPage } from "./Chat/ChatPage";
 export { default as Start } from "./Landing/Start";
 export { default as Requests } from "./Care/Requests";
 export { default as Offers } from "./Care/Offers";
+export { default as OrtMap } from "./Map/OrtMap";
+export { default as MapList } from "./Map/MapList";
 
 export * from "./ui/card";
 export * as IconMap from "./ui/icons";

@@ -38,6 +38,12 @@ export type StatsProps = {
   notifications: number;
 };
 
+export type LocationProps = {
+  location: string;
+  latitude: number;
+  longitude: number;
+};
+
 export type OfferProps = {
   _id: string;
   userId: string;
@@ -90,6 +96,17 @@ export type RequestProps = {
   category?: Category;
   createdAt: string;
   updatedAt: string;
+};
+
+export type mapcenterProps = {
+  lat: number;
+  lng: number;
+};
+
+export type OrtMapProps = {
+  orts: OfferProps[] | RequestProps[];
+  mapCenter: mapcenterProps | null;
+  onMarkerClick: (ort: OfferProps | RequestProps) => void;
 };
 
 export type AuthContextType = {
@@ -186,7 +203,29 @@ export type ChatMessageProps = {
   receiverId: string;
   content: string;
   attachements: string[];
+  isRead: boolean;
+  edited: boolean;
   createdAt: string;
   sender?: User;
   receiver?: User;
+};
+
+export type HelpSessionProps = {
+  _id: string;
+  option: string;
+  etat: string;
+  final: string;
+  unreadCount: number;
+  rating: number;
+  offerId: OfferProps | null;
+  requestId: RequestProps | null;
+  userRequesterId: User | string;
+  userHelperId: User | string;
+  status: "active" | "completed" | "cancelled";
+  startedAt: string;
+  endedAt: string;
+  finalizedAt: string;
+  notes: string;
+  ratingPending: boolean;
+  result: string;
 };
