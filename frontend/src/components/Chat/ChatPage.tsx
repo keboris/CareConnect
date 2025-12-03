@@ -14,136 +14,105 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../contexts";
-import { API_BASE_URL } from "../../config";
-
-// Types matching backend models
-interface User {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  profileImage?: string;
-  email: string;
-}
-
-interface ChatSession {
-  _id: string;
-  userRequesterId: string;
-  userHelperId: string;
-  status: "active" | "completed" | "cancelled";
-  createdAt: string;
-  updatedAt: string;
-  userRequester?: User;
-  userHelper?: User;
-  lastMessage?: string;
-  unreadCount?: number;
-}
-
-interface ChatMessage {
-  _id: string;
-  sessionId: string;
-  senderId: string;
-  receiverId: string;
-  content: string;
-  attachements: string[];
-  isRead: boolean;
-  edited: boolean;
-  createdAt: string;
-  sender?: User;
-  receiver?: User;
-}
+import { CHAT_MESSAGE_API_URL, SESSION_API_URL } from "../../config";
+import type { ChatMessageProps, HelpSessionProps, User } from "../../types";
+import Loading from "../Landing/Loading";
 
 const ChatPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // State management
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [selectedSession, setSelectedSession] = useState<ChatSession | null>(
-    null
-  );
+  const [sessions, setSessions] = useState<HelpSessionProps[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(true);
+
+  const [selectedSession, setSelectedSession] =
+    useState<HelpSessionProps | null>(null);
+
+  const [messages, setMessages] = useState<ChatMessageProps[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+
   const [newMessage, setNewMessage] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
-  // Fetch all chat sessions
+  const [searchQuery, setSearchQuery] = useState("");
+
   useEffect(() => {
+    if (loading) return;
+
+    const fetchSessions = async () => {
+      try {
+        const response = await refreshUser(`${SESSION_API_URL}`);
+        const data = await response.json();
+
+        console.log("Fetched sessions:", data.helpSessions);
+        setSessions(data.helpSessions);
+      } catch (error) {
+        console.error("Error fetching sessions:", error);
+      } finally {
+        setLoadingSessions(false);
+      }
+    };
+
     fetchSessions();
-  }, []);
+  }, [loading]);
 
   // Fetch messages when session is selected
   useEffect(() => {
+    if (loading) return;
+
     if (selectedSession) {
       fetchMessages(selectedSession._id);
     }
-  }, [selectedSession]);
+  }, [loading, selectedSession]);
 
   // Auto scroll to bottom when new messages arrive
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const fetchSessions = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/help-sessions`, {
-        credentials: "include",
-      });
-      const data = await response.json();
-      setSessions(data.sessions || []);
-    } catch (error) {
-      console.error("Error fetching sessions:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchMessages = async (sessionId: string) => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/chat-messages/${sessionId}`,
-        {
-          credentials: "include",
-        }
+      const response = await refreshUser(
+        `${CHAT_MESSAGE_API_URL}/${sessionId}`
       );
       const data = await response.json();
-      setMessages(data.messages || []);
 
-      // Mark messages as read
-      await markMessagesAsRead(sessionId);
+      setMessages(data.messages);
+      setLoadingMessages(true);
     } catch (error) {
       console.error("Error fetching messages:", error);
+    } finally {
+      setLoadingMessages(false);
     }
   };
 
-  const markMessagesAsRead = async (sessionId: string) => {
+  /*const markMessagesAsRead = async (sessionId: string) => {
     try {
-      await fetch(`${API_BASE_URL}/chat-messages/${sessionId}/read`, {
+      await refreshUser(`${CHAT_MESSAGE_API_URL}/${sessionId}/read`, {
         method: "PUT",
-        credentials: "include",
       });
     } catch (error) {
       console.error("Error marking messages as read:", error);
     }
-  };
+  };*/
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedSession || sending) return;
 
     try {
       setSending(true);
-      const response = await fetch(`${API_BASE_URL}/chat-messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          sessionId: selectedSession._id,
-          receiverId: getOtherUserId(selectedSession),
-          content: newMessage.trim(),
-        }),
-      });
+      const response = await refreshUser(
+        `${CHAT_MESSAGE_API_URL}/${selectedSession._id}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content: newMessage.trim(),
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -169,18 +138,22 @@ const ChatPage = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const getOtherUser = (session: ChatSession): User | null => {
-    if (!user) return null;
-    return session.userRequesterId === user._id
-      ? session.userHelper || null
-      : session.userRequester || null;
-  };
+  const getOtherUser = (session: any): User | null => {
+    if (!user || !session) return null;
+    const helper = session.userHelperId;
+    const requester = session.userRequesterId;
 
-  const getOtherUserId = (session: ChatSession): string => {
-    if (!user) return "";
-    return session.userRequesterId === user._id
-      ? session.userHelperId
-      : session.userRequesterId;
+    // session.userHelperId / session.userRequesterId may be either a string id or a populated User object.
+    // Only return when they are populated User objects; otherwise return null.
+    if (requester === user._id) {
+      return typeof helper === "object" && helper !== null
+        ? (helper as User)
+        : null;
+    } else {
+      return typeof requester === "object" && requester !== null
+        ? (requester as User)
+        : null;
+    }
   };
 
   const formatTime = (dateString: string) => {
@@ -205,20 +178,23 @@ const ChatPage = () => {
       });
     }
   };
-
-  const filteredSessions = sessions.filter((session) => {
-    const otherUser = getOtherUser(session);
-    if (!otherUser) return false;
-    const fullName =
-      `${otherUser.firstName} ${otherUser.lastName}`.toLowerCase();
-    return fullName.includes(searchQuery.toLowerCase());
-  });
+  let filteredSessions: HelpSessionProps[] = [];
+  if (sessions && sessions.length > 0) {
+    filteredSessions = sessions.filter((session) => {
+      const otherUser = getOtherUser(session);
+      const fullName = otherUser
+        ? `${otherUser.firstName} ${otherUser.lastName}`.toLowerCase()
+        : "";
+      return fullName.includes(searchQuery.toLowerCase());
+    });
+  }
 
   const getUserInitials = (user: User | null) => {
     if (!user) return "?";
     return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
   };
 
+  if (loading || loadingSessions || loadingMessages) return <Loading />;
   return (
     <div className="flex h-[calc(100vh-80px)] bg-gray-50">
       {/* Sessions Sidebar */}
@@ -301,13 +277,13 @@ const ChatPage = () => {
                         <h3 className="font-semibold text-gray-900 truncate">
                           {otherUser.firstName} {otherUser.lastName}
                         </h3>
-                        <span className="text-xs text-gray-500">
+                        {/*<span className="text-xs text-gray-500">
                           {formatTime(session.updatedAt)}
-                        </span>
+                        </span>*/}
                       </div>
-                      <p className="text-sm text-gray-600 truncate">
+                      {/*<p className="text-sm text-gray-600 truncate">
                         {session.lastMessage || "No messages yet"}
-                      </p>
+                      </p>*/}
                     </div>
 
                     {/* Unread Badge */}

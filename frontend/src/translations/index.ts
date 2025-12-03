@@ -261,6 +261,11 @@ export const translationsMap: Translations = {
     de: "Anfragen",
   },
 
+  "dashboard.alerts": {
+    en: "Alerts",
+    de: "Warnungen",
+  },
+
   "dashboard.offersRequestsByCategory": {
     en: "Offers & Requests by Category",
     de: "Angebote & Anfragen nach Kategorie",
@@ -360,4 +365,7 @@ export const translationsMap: Translations = {
     en: "Get Support",
     de: "Support erhalten",
   },
+
+  "dashboard.mainAddress": { en: "Main Address", de: "Hauptadresse" },
+  "dashboard.otherAddress": { en: "Other Address", de: "Andere Adresse" },
 };

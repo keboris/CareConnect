@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useAuth, useLanguage } from "../contexts";
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -19,8 +19,8 @@ import {
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router";
 
-import type { StatsProps } from "../types";
-import { STAT_USER_API_URL } from "../config";
+import type { LocationProps, StatsProps } from "../types";
+import { STAT_USER_API_URL, USER_API_URL } from "../config";
 import { ChatPage, Loading, Offers, Requests, Start } from "../components";
 import { extractPostalAndCity } from "../lib";
 
@@ -41,6 +41,7 @@ const Dashboard = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [loadingStats, setLoadingStats] = useState(true);
+  const [loadingOtherLocations, setLoadingOtherLocations] = useState(true);
 
   const [stats, setStats] = useState<StatsProps>({
     offers: 0,
@@ -48,6 +49,8 @@ const Dashboard = () => {
     chats: 0,
     notifications: 0,
   });
+
+  const [otherLocations, setOtherLocations] = useState<LocationProps[]>([]);
 
   useEffect(() => {
     if (loading) return;
@@ -67,6 +70,66 @@ const Dashboard = () => {
 
     fetchStats();
   }, [loading]);
+
+  useEffect(() => {
+    if (loading) return;
+
+    const fetchOtherLocations = async () => {
+      try {
+        if (!user) return;
+
+        const response = await refreshUser(
+          `${USER_API_URL}/${user._id}/locations`
+        );
+        const data = await response.json();
+
+        setOtherLocations(data.locations);
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      } finally {
+        setLoadingOtherLocations(false);
+      }
+    };
+
+    fetchOtherLocations();
+  }, [loading]);
+
+  const allLocations = useMemo(() => {
+    if (!user) return [];
+    const main =
+      typeof user.location === "object" && user.location !== null
+        ? {
+            ...(user.location as LocationProps),
+            type: t("dashboard.mainAddress"),
+          }
+        : { location: user.location, type: t("dashboard.mainAddress") };
+
+    const others =
+      otherLocations?.map((loc) =>
+        typeof loc === "object" && loc !== null
+          ? { ...(loc as LocationProps), type: t("dashboard.otherAddress") }
+          : { location: loc, type: t("dashboard.otherAddress") }
+      ) || [];
+
+    console.log("ALL LOCATIONS:", [main, ...others]);
+
+    return [main, ...others];
+  }, [user]);
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const current = allLocations[currentIndex];
+
+  const next = () => {
+    if (currentIndex < allLocations.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const prev = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
 
   useEffect(() => {
     document.title = `${t("nav.dashboard")} - CareConnect`;
@@ -155,7 +218,7 @@ const Dashboard = () => {
     return location.pathname === path;
   };
 
-  if (loading || loadingStats) return <Loading />;
+  if (loading || loadingStats || loadingOtherLocations) return <Loading />;
   return (
     <>
       <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -382,8 +445,8 @@ const Dashboard = () => {
                 className={`w-full flex items-center cursor-pointer gap-3 px-4 py-3 rounded-xl transition-all group
                        ${
                          isOpen
-                           ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                           : "hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white hover:shadow-lg"
+                           ? "bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white shadow-lg"
+                           : "hover:bg-gradient-to-b hover:from-gray-900 hover:via-gray-800 hover:to-gray-900 hover:text-white hover:shadow-lg"
                        }`}
               >
                 <MapPin className="w-5 h-5 flex-shrink-0" />
@@ -403,9 +466,52 @@ const Dashboard = () => {
                     className="absolute left-0 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-50 p-4"
                   >
                     <p className="font-semibold text-gray-800">
-                      {user && user.firstName} {user && user.lastName}
+                      Your Locations
                     </p>
-                    <p className="text-gray-600">{user && user.location}</p>
+
+                    {/* LOCATION CARD */}
+                    {current && (
+                      <div className="mt-3 border rounded-lg p-3 bg-gray-50">
+                        <p className="font-bold text-gray-800 mb-4">
+                          {user && user.firstName} {user && user.lastName}
+                        </p>
+
+                        <p className="text-gray-700 mt-1 text-sm mb-4">
+                          {current.location}
+                        </p>
+
+                        <p className="font-semibold text-gray-700 mt-1 text-sm">
+                          {current.type}
+                        </p>
+
+                        {/* Pagination */}
+                        {allLocations.length > 1 && (
+                          <div className="flex justify-between items-center mt-3">
+                            <button
+                              onClick={prev}
+                              disabled={currentIndex === 0}
+                              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-30"
+                            >
+                              Prev
+                            </button>
+
+                            <p className="text-sm text-gray-600">
+                              {currentIndex + 1} / {allLocations.length}
+                            </p>
+
+                            <button
+                              onClick={next}
+                              disabled={
+                                currentIndex === allLocations.length - 1
+                              }
+                              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-30"
+                            >
+                              Next
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
