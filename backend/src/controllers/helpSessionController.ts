@@ -1,4 +1,10 @@
-import { HelpSession, Notification, Offer, Request } from "#models";
+import {
+  ChatMessage,
+  HelpSession,
+  Notification,
+  Offer,
+  Request,
+} from "#models";
 import type { helpSessionInputSchema } from "#schemas";
 import type { RequestHandler } from "express";
 import type z from "zod";
@@ -150,6 +156,12 @@ export const getHelpSession: RequestHandler = async (req, res) => {
           ? "You are requesting help"
           : "You are accepting an offer";
 
+        const unreadCount = await ChatMessage.countDocuments({
+          sessionId: session._id,
+          receiverId: userId,
+          isRead: false,
+        });
+
         const etat =
           session.status === "active"
             ? "In Progress"
@@ -188,6 +200,7 @@ export const getHelpSession: RequestHandler = async (req, res) => {
           option,
           etat,
           final,
+          unreadCount,
           ...session.toObject(), // Convert Mongoose document to plain object
         };
       })

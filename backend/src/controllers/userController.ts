@@ -9,6 +9,7 @@ import type { RequestHandler } from "express";
 import { v2 as cloudinary } from "cloudinary";
 
 import type { z } from "zod/v4";
+import mongoose from "mongoose";
 
 type UserInputDTO = z.infer<typeof userInputSchema>;
 type UserUpdateDTO = z.infer<typeof userUpdateSchema>;
@@ -79,6 +80,97 @@ export const getUserStatsById: RequestHandler = async (req, res) => {
         chats: chatsCount,
         notifications: notificationsCount,
       },
+    });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      res.status(500).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: "An unknown error occurred" });
+    }
+  }
+};
+
+export const getLocationsByUser: RequestHandler = async (req, res) => {
+  try {
+    const {
+      params: { id },
+    } = req;
+
+    const userLocation = await User.findById(id).select(
+      "location latitude longitude"
+    );
+
+    if (!userLocation) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Fin all unique offer
+    const offerLocations = await Offer.aggregate([
+      { $match: { userId: new mongoose.Types.ObjectId(id) } },
+      {
+        $group: {
+          _id: {
+            latitude: "$latitude",
+            longitude: "$longitude",
+            location: "$location",
+          },
+        },
+      },
+      {
+        $match: {
+          $expr: {
+            $not: [
+              {
+                $and: [
+                  { $eq: ["$_id.latitude", userLocation.latitude] },
+                  { $eq: ["$_id.longitude", userLocation.longitude] },
+                ],
+              },
+            ],
+          },
+        },
+      },
+    ]);
+    console.log(offerLocations);
+    // Find all unique request locations
+    const requestLocations = await Request.aggregate([
+      { $match: { userId: new mongoose.Types.ObjectId(id) } },
+      {
+        $group: {
+          _id: {
+            latitude: "$latitude",
+            longitude: "$longitude",
+            location: "$location",
+          },
+        },
+      },
+      {
+        $match: {
+          $expr: {
+            $not: {
+              $and: [
+                { $eq: ["$_id.latitude", userLocation.latitude] },
+                { $eq: ["$_id.longitude", userLocation.longitude] },
+              ],
+            },
+          },
+        },
+      },
+    ]);
+
+    // Merge and remove duplicates
+    const merged = [...offerLocations, ...requestLocations].map(
+      (loc) => loc._id
+    );
+
+    const uniqueLocations = Array.from(
+      new Map(
+        merged.map((loc) => [`${loc.latitude},${loc.longitude}`, loc])
+      ).values()
+    );
+
+    res.status(200).json({
+      locations: uniqueLocations,
     });
   } catch (error: unknown) {
     if (error instanceof Error) {

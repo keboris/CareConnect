@@ -7,6 +7,7 @@ import {
   deleteUser,
   deleteProfileImage,
   getUserStatsById,
+  getLocationsByUser,
 } from "#controllers";
 import { authenticate, authorize, upload, validateBodyZod } from "#middlewares";
 import { User } from "#models";
@@ -38,6 +39,8 @@ userRoutes.patch(
 );
 
 userRoutes.delete("/:id", authenticate, authorize(User), deleteUser);
+
+userRoutes.get("/:id/locations", getLocationsByUser);
 
 userRoutes.delete(
   "/:id/image",
