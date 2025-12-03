@@ -344,6 +344,9 @@ const Register = () => {
                 {fieldErrors.location && (
                   <p className="text-red-500 text-sm">{fieldErrors.location}</p>
                 )}
+                {error && typeof error === "string" && (
+                  <p className="text-red-500 text-sm mt-1">{error}</p>
+                )}
               </div>
             </div>
 
