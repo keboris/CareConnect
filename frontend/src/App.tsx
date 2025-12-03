@@ -4,12 +4,10 @@ import { MainLayout, ProtectedLayout, ScrollToTop } from "./layouts";
 
 import {
   Categories,
-  Chat,
   Dashboard,
   Home,
   Login,
   NotFound,
-  Profile,
   Register,
 } from "./pages";
 
@@ -28,9 +26,14 @@ function App() {
           {/* Dashboard routes */}
           <Route path="app" element={<ProtectedLayout />}>
             <Route index element={<Dashboard />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="chat" element={<Chat />} />
-            <Route path="settings" element={<Profile />} />
+            <Route path="offers" element={<Dashboard />} />
+            <Route path="requests" element={<Dashboard />} />
+            <Route path="profile" element={<Dashboard />} />
+            <Route path="chat" element={<Dashboard />} />
+            <Route path="notifications" element={<Dashboard />} />
+            <Route path="map" element={<Dashboard />} />
+            <Route path="settings" element={<Dashboard />} />
+            <Route path="support" element={<Dashboard />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Route>

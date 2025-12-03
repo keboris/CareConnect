@@ -9,6 +9,8 @@ export const translationsMap: Translations = {
   "nav.profile": { en: "Profile", de: "Profil" },
   "nav.logout": { en: "Logout", de: "Abmelden" },
   "nav.dashboard": { en: "Dashboard", de: "Dashboard" },
+  "nav.settings": { en: "Settings", de: "Einstellungen" },
+  "nav.support": { en: "Support", de: "Support" },
 
   // Hero Section
   "hero.tagline": {
@@ -292,5 +294,70 @@ export const translationsMap: Translations = {
   "dashboard.stayInformed": {
     en: "Stay informed about all your activities.",
     de: "Bleiben Sie über alle Ihre Aktivitäten informiert.",
+  },
+
+  "dashboard.createOffer": {
+    en: "Create New Offer",
+    de: "Neues Angebot erstellen",
+  },
+
+  "dashboard.postRequest": {
+    en: "Post a Request",
+    de: "Anfrage posten",
+  },
+
+  "dashboard.browseMap": {
+    en: "Browse Map",
+    de: "Karte durchsuchen",
+  },
+
+  "dashboard.viewMessages": {
+    en: "View Messages",
+    de: "Nachrichten anzeigen",
+  },
+
+  "dashboard.overview": {
+    en: "Overview",
+    de: "Übersicht",
+  },
+
+  "dashboard.totalActivity": {
+    en: "Total Activity",
+    de: "Gesamtaktivität",
+  },
+
+  "dashboard.activeChats": {
+    en: "Active Chats",
+    de: "Aktive Chats",
+  },
+
+  "dashboard.pendingRequests": {
+    en: "Pending Requests",
+    de: "Ausstehende Anfragen",
+  },
+
+  "dashboard.activeOffers": {
+    en: "Active Offers",
+    de: "Aktive Angebote",
+  },
+
+  "dashboard.recentNotifications": {
+    en: "Recent Notifications",
+    de: "Neueste Benachrichtigungen",
+  },
+
+  "dashboard.needHelpGettingStarted": {
+    en: "Need Help Getting Started?",
+    de: "Brauchen Sie Hilfe beim Einstieg?",
+  },
+
+  "dashboard.helpGettingStartedDescription": {
+    en: "Check out our guide or contact support for assistance.",
+    de: "Schauen Sie sich unseren Leitfaden an oder kontaktieren Sie den Support für Hilfe.",
+  },
+
+  "dashboard.getSupport": {
+    en: "Get Support",
+    de: "Support erhalten",
   },
 };

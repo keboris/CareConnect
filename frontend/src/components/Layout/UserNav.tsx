@@ -1,10 +1,4 @@
-import {
-  AlertCircle,
-  Bell,
-  LayoutDashboard,
-  LogOut,
-  MessageSquare,
-} from "lucide-react";
+import { AlertCircle, Bell, LayoutDashboard, LogOut } from "lucide-react";
 import ReactCountryFlag from "react-country-flag";
 import { useAuth, useLanguage } from "../../contexts";
 import { useEffect, useState } from "react";
@@ -23,7 +17,6 @@ const UserNav = () => {
   const [notifications, setNotifications] = useState<NotificationProps[]>([]);
 
   const isDashboardActive = location.pathname === "/app";
-  const isChatActive = location.pathname === "/app/chat";
 
   useEffect(() => {
     if (loading) return;
@@ -57,7 +50,7 @@ const UserNav = () => {
           <span>{t("nav.dashboard")}</span>
         </button>
 
-        {/* MESSAGES */}
+        {/* MESSAGES }
         <button
           onClick={() => navigate("/app/chat")}
           className={`inline-flex px-4 py-2 rounded-lg cursor-pointer transition-all duration-150 ease-in-out items-center space-x-2
@@ -69,7 +62,7 @@ const UserNav = () => {
         >
           <MessageSquare size={18} />
           <span>{t("nav.messages")}</span>
-        </button>
+        </button>*/}
 
         {/* NOTIFICATIONS */}
         <div className="relative">
