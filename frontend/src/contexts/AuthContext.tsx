@@ -187,7 +187,6 @@ export default function AuthContextProvider({
     init.credentials = "include"; // to send the refreshToken cookie
 
     let res = await fetch(input, init);
-
     // If 401, try to get a new accessToken via refreshToken
     if (res.status === 401) {
       const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {

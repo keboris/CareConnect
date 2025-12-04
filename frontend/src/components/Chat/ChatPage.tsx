@@ -11,17 +11,22 @@ import {
   Check,
   CheckCheck,
   ArrowLeft,
+  Edit,
+  Trash,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../contexts";
 import { CHAT_MESSAGE_API_URL, SESSION_API_URL } from "../../config";
 import type { ChatMessageProps, HelpSessionProps, User } from "../../types";
 import Loading from "../Landing/Loading";
+import SessionDetail from "./SessionDetail";
 
 const ChatPage = () => {
   const navigate = useNavigate();
   const { user, loading, refreshUser } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const chatRef = useRef<HTMLDivElement>(null);
 
   // State management
   const [sessions, setSessions] = useState<HelpSessionProps[]>([]);
@@ -36,8 +41,20 @@ const ChatPage = () => {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
 
+  const [editingMessage, setEditingMessage] = useState<ChatMessageProps | null>(
+    null
+  );
+
+  const [isUserAtBottom, setIsUserAtBottom] = useState(true);
+  const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState("");
 
+  const [isShowDetails, setIsShowDetails] = useState(false);
+
+  const MAX_HEIGHT = 150;
+  /* USE EFFECTS */
+  // Fetch sessions on mount
   useEffect(() => {
     if (loading) return;
 
@@ -46,7 +63,6 @@ const ChatPage = () => {
         const response = await refreshUser(`${SESSION_API_URL}`);
         const data = await response.json();
 
-        console.log("Fetched sessions:", data.helpSessions);
         setSessions(data.helpSessions);
       } catch (error) {
         console.error("Error fetching sessions:", error);
@@ -55,7 +71,12 @@ const ChatPage = () => {
       }
     };
 
-    fetchSessions();
+    const interval = setInterval(() => {
+      fetchSessions();
+    }, 3000);
+
+    return () => clearInterval(interval);
+    //fetchSessions();
   }, [loading]);
 
   // Fetch messages when session is selected
@@ -64,14 +85,54 @@ const ChatPage = () => {
 
     if (selectedSession) {
       fetchMessages(selectedSession._id);
+
+      scrollToBottom();
+      markAllMessagesAsRead(selectedSession._id);
     }
   }, [loading, selectedSession]);
 
   // Auto scroll to bottom when new messages arrive
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (isUserAtBottom) {
+      scrollToBottom();
+    }
+  }, [messages, isUserAtBottom]);
 
+  // Mark messages as read when user is at bottom
+  useEffect(() => {
+    if (!messages || messages.length === 0) return;
+
+    const unreadFromOtherUser = messages.filter(
+      (msg) => !msg.isRead && msg.senderId !== user?._id
+    );
+    if (selectedSession && isUserAtBottom && unreadFromOtherUser.length > 0) {
+      markAllMessagesAsRead(selectedSession._id);
+
+      setShowNewMessageIndicator(false);
+    }
+  }, [isUserAtBottom, messages]);
+
+  // Polling to refresh messages every 3 seconds
+  useEffect(() => {
+    if (!selectedSession) return;
+
+    const interval = setInterval(() => {
+      refreshMessages();
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [selectedSession]);
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, MAX_HEIGHT)}px`;
+  }, [newMessage]);
+
+  /* FUNCTIONS */
+  // Fetch messages for a session
   const fetchMessages = async (sessionId: string) => {
     try {
       const response = await refreshUser(
@@ -80,7 +141,9 @@ const ChatPage = () => {
       const data = await response.json();
 
       setMessages(data.messages);
+
       setLoadingMessages(true);
+      return data.messages;
     } catch (error) {
       console.error("Error fetching messages:", error);
     } finally {
@@ -88,37 +151,76 @@ const ChatPage = () => {
     }
   };
 
-  /*const markMessagesAsRead = async (sessionId: string) => {
+  // Mark message as read
+  const markMessageAsRead = async (messageId: string) => {
     try {
-      await refreshUser(`${CHAT_MESSAGE_API_URL}/${sessionId}/read`, {
-        method: "PUT",
+      await refreshUser(`${CHAT_MESSAGE_API_URL}/${messageId}/read`, {
+        method: "PATCH",
+        body: JSON.stringify({ messageId }),
+      });
+    } catch (error) {
+      console.error("Error marking message as read:", error);
+    }
+  };
+
+  // Mark all messages as read in a session
+  const markAllMessagesAsRead = async (sessionId: string) => {
+    try {
+      await refreshUser(`${CHAT_MESSAGE_API_URL}/${sessionId}/readAll`, {
+        method: "PATCH",
+        body: JSON.stringify({}),
       });
     } catch (error) {
       console.error("Error marking messages as read:", error);
     }
-  };*/
+  };
 
+  // Send a new message
   const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedSession || sending) return;
+    if (!user || !newMessage.trim() || !selectedSession || sending) return;
+
+    setSending(true);
 
     try {
-      setSending(true);
-      const response = await refreshUser(
-        `${CHAT_MESSAGE_API_URL}/${selectedSession._id}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            content: newMessage.trim(),
-          }),
-        }
-      );
+      let res;
 
-      const data = await response.json();
+      if (editingMessage) {
+        res = await refreshUser(
+          `${CHAT_MESSAGE_API_URL}/${editingMessage._id}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: newMessage.trim() }),
+          }
+        );
 
-      if (data.messageData) {
-        setMessages((prev) => [...prev, data.messageData]);
+        setMessages((prev) =>
+          prev.map((m) =>
+            m._id === editingMessage._id
+              ? { ...m, content: newMessage.trim(), edited: true }
+              : m
+          )
+        );
         setNewMessage("");
+        setEditingMessage(null);
+      } else {
+        res = await refreshUser(
+          `${CHAT_MESSAGE_API_URL}/${selectedSession._id}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              content: newMessage.trim(),
+            }),
+          }
+        );
+
+        const data = await res.json();
+
+        if (data.messageData) {
+          setMessages((prev) => [...prev, data.messageData]);
+          setNewMessage("");
+        }
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -127,6 +229,43 @@ const ChatPage = () => {
     }
   };
 
+  // Edit message
+  const handleEditMessage = (msg: ChatMessageProps) => {
+    setEditingMessage(msg);
+    setNewMessage(msg.content);
+  };
+
+  // Delete message
+  const handleDeleteMessage = async (messageId: string) => {
+    await fetch(`${CHAT_MESSAGE_API_URL}/${messageId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+
+    refreshMessages();
+  };
+
+  // Refresh messages
+  const refreshMessages = async () => {
+    if (selectedSession) {
+      const oldLastMessageId = messages[messages.length - 1]?._id;
+
+      const newMessages = await fetchMessages(selectedSession._id);
+
+      const newLastMessageId = newMessages[newMessages.length - 1]?._id;
+
+      if (newLastMessageId && newLastMessageId !== oldLastMessageId) {
+        if (isUserAtBottom) {
+          //scrollToBottom();
+          markAllMessagesAsRead(selectedSession._id);
+        } else {
+          setShowNewMessageIndicator(true);
+        }
+      }
+    }
+  };
+
+  // Handle Enter key press in message input
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -134,10 +273,29 @@ const ChatPage = () => {
     }
   };
 
+  // Scroll to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = chatRef.current;
+    if (el) {
+      el.scrollTo({
+        top: el.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   };
 
+  const handleScroll = () => {
+    const el = chatRef.current;
+    if (!el) return;
+    const target = el;
+    const isBottom =
+      target.scrollHeight - target.scrollTop - target.clientHeight < 50;
+
+    setIsUserAtBottom(isBottom);
+  };
+
+  // Get the other user in the session
   const getOtherUser = (session: any): User | null => {
     if (!user || !session) return null;
     const helper = session.userHelperId;
@@ -156,6 +314,7 @@ const ChatPage = () => {
     }
   };
 
+  // Format time for message timestamps
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -178,23 +337,90 @@ const ChatPage = () => {
       });
     }
   };
-  let filteredSessions: HelpSessionProps[] = [];
-  if (sessions && sessions.length > 0) {
-    filteredSessions = sessions.filter((session) => {
-      const otherUser = getOtherUser(session);
-      const fullName = otherUser
-        ? `${otherUser.firstName} ${otherUser.lastName}`.toLowerCase()
-        : "";
-      return fullName.includes(searchQuery.toLowerCase());
-    });
-  }
 
-  const getUserInitials = (user: User | null) => {
-    if (!user) return "?";
-    return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+  // Get user initials for avatar
+  const getUserInitials = (userName: User | null) => {
+    if (!userName) return "?";
+    return `${userName.firstName[0]}${userName.lastName[0]}`.toUpperCase();
   };
 
+  /* END FUNCTIONS */
+
+  // Filter sessions based on search query
+  let filteredSessions: HelpSessionProps[] = [];
+
+  if (sessions && sessions.length > 0) {
+    const groupedSessions = sessions.reduce((acc, session) => {
+      const otherUser = getOtherUser(session);
+      const otherUserId = otherUser?._id;
+
+      if (!otherUserId) return acc;
+
+      const fullName =
+        `${otherUser.firstName} ${otherUser.lastName}`.toLowerCase();
+
+      const unread = session.unreadCount || 0;
+      const currentLastMsg = session.lastMessage || null;
+
+      // if group for this user doesn't exist yet, create it
+      if (!acc[otherUserId]) {
+        acc[otherUserId] = {
+          user: otherUser,
+          fullName: fullName,
+          lastMessage: currentLastMsg,
+          unreadCount: unread,
+          sessions: [session],
+        };
+      } else {
+        const group = acc[otherUserId];
+
+        const groupLastDate = group.lastMessage?.createdAt
+          ? new Date(group.lastMessage.createdAt).getTime()
+          : 0;
+
+        const sessionLastDate = currentLastMsg?.createdAt
+          ? new Date(currentLastMsg.createdAt).getTime()
+          : 0;
+
+        // Update the last message
+        if (sessionLastDate > groupLastDate) {
+          group.lastMessage = currentLastMsg;
+        }
+
+        // Update unread count
+        group.unreadCount += unread;
+
+        // Add the session to the group
+        group.sessions.push(session);
+      }
+
+      return acc;
+    }, {} as Record<string, any>);
+
+    const statusOrder: Record<string, number> = {
+      active: 0,
+      completed: 1,
+      cancelled: 2,
+    };
+
+    Object.values(groupedSessions).forEach((group) => {
+      group.sessions.sort(
+        (a: HelpSessionProps, b: HelpSessionProps) =>
+          (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99)
+      );
+    });
+
+    const displaySessions = Object.values(groupedSessions);
+
+    console.log("Grouped Sessions:", displaySessions);
+
+    filteredSessions = displaySessions.filter((item) =>
+      item.fullName.includes(searchQuery.toLowerCase())
+    );
+  }
+
   if (loading || loadingSessions || loadingMessages) return <Loading />;
+
   return (
     <div className="flex h-[calc(100vh-80px)] bg-gray-50">
       {/* Sessions Sidebar */}
@@ -238,18 +464,35 @@ const ChatPage = () => {
           ) : (
             <AnimatePresence>
               {filteredSessions.map((session) => {
-                const otherUser = getOtherUser(session);
+                console.log("Rendering session:", session);
+
+                // Determine the actual HelpSessionProps object to select:
+                // prefer the session that matches the lastMessage.sessionId, otherwise fall back to the first session in the group.
+                const targetSession: HelpSessionProps | null =
+                  (session.sessions && session.lastMessage?.sessionId
+                    ? (session.sessions as unknown as HelpSessionProps[]).find(
+                        (s) => s._id === session.lastMessage?.sessionId
+                      ) || null
+                    : null) ??
+                  (session.sessions?.[0] as HelpSessionProps | undefined) ??
+                  null;
+
+                const otherUser = getOtherUser(targetSession);
+
+                //const otherUser = getOtherUser(session);
                 if (!otherUser) return null;
 
                 return (
                   <motion.div
-                    key={session._id}
+                    key={targetSession?._id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    onClick={() => setSelectedSession(session)}
-                    className={`flex items-center gap-3 p-4 cursor-pointer transition-colors border-b border-gray-100 ${
-                      selectedSession?._id === session._id
+                    onClick={() => setSelectedSession(targetSession)}
+                    onMouseEnter={() => setIsShowDetails(true)}
+                    onMouseLeave={() => setIsShowDetails(false)}
+                    className={`relative flex items-center gap-3 p-4 cursor-pointer transition-colors border-b border-gray-100 ${
+                      selectedSession?._id === targetSession?._id
                         ? "bg-blue-50 border-l-4 border-l-blue-600"
                         : "hover:bg-gray-50"
                     }`}
@@ -276,21 +519,45 @@ const ChatPage = () => {
                       <div className="flex items-center justify-between mb-1">
                         <h3 className="font-semibold text-gray-900 truncate">
                           {otherUser.firstName} {otherUser.lastName}
+                          {Array.isArray(session.sessions) &&
+                            session.sessions.length > 0 && (
+                              <span className="ml-1 font-normal text-gray-500">
+                                {`(${session.sessions.length} sessions)`}
+                              </span>
+                            )}
                         </h3>
-                        {/*<span className="text-xs text-gray-500">
-                          {formatTime(session.updatedAt)}
-                        </span>*/}
+                        {
+                          <span className="text-xs text-gray-500">
+                            {session.lastMessage
+                              ? formatTime(session.lastMessage?.createdAt)
+                              : ""}
+                          </span>
+                        }
                       </div>
-                      {/*<p className="text-sm text-gray-600 truncate">
-                        {session.lastMessage || "No messages yet"}
-                      </p>*/}
+                      {
+                        <p className="text-sm text-gray-600 truncate">
+                          {session.lastMessage?.content || "No messages yet"}
+                        </p>
+                      }
                     </div>
 
                     {/* Unread Badge */}
-                    {session.unreadCount && session.unreadCount > 0 && (
+
+                    {session.unreadCount > 0 && (
                       <div className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
                         {session.unreadCount}
                       </div>
+                    )}
+
+                    {isShowDetails && (
+                      <SessionDetail
+                        sessions={
+                          Array.isArray(session.sessions)
+                            ? (session.sessions as HelpSessionProps[])
+                            : []
+                        }
+                        setIsShowDetails={setIsShowDetails}
+                      />
                     )}
                   </motion.div>
                 );
@@ -348,7 +615,11 @@ const ChatPage = () => {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div
+              ref={chatRef}
+              onScroll={handleScroll}
+              className="flex-1 overflow-y-auto p-6 space-y-4"
+            >
               <AnimatePresence>
                 {messages.map((msg, index) => {
                   const isMyMessage = msg.senderId === user?._id;
@@ -375,6 +646,21 @@ const ChatPage = () => {
                         </div>
                       )}
 
+                      {showNewMessageIndicator && (
+                        <button
+                          className="absolute bottom-16 right-4 bg-blue-600 text-white px-3 py-2 rounded-full shadow-lg animate-bounce"
+                          onClick={() => {
+                            scrollToBottom();
+                            setShowNewMessageIndicator(false);
+                            markMessageAsRead(
+                              messages[messages.length - 1]._id
+                            );
+                          }}
+                        >
+                          New message ↓
+                        </button>
+                      )}
+
                       {/* Message Bubble */}
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
@@ -387,42 +673,74 @@ const ChatPage = () => {
                         {/* Other user avatar */}
                         {!isMyMessage && (
                           <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
-                            {getUserInitials(msg.sender || null)}
+                            {getUserInitials(getOtherUser(selectedSession))}
                           </div>
                         )}
 
                         {/* Message Content */}
                         <div
-                          className={`max-w-md px-4 py-2.5 rounded-2xl shadow-sm ${
-                            isMyMessage
-                              ? "bg-blue-600 text-white rounded-br-none"
-                              : "bg-white text-gray-900 rounded-bl-none"
+                          className={`relative group max-w-md ${
+                            isMyMessage ? "ml-auto" : "mr-auto"
                           }`}
                         >
-                          <p className="text-sm leading-relaxed break-words">
-                            {msg.content}
-                          </p>
                           <div
-                            className={`flex items-center gap-1 mt-1 text-xs ${
-                              isMyMessage ? "text-blue-100" : "text-gray-500"
+                            className={`px-4 py-2.5 rounded-2xl shadow-sm transition-colors duration-200 ${
+                              isMyMessage
+                                ? !msg.isRead &&
+                                  new Date().getTime() -
+                                    new Date(msg.createdAt).getTime() <=
+                                    5 * 60 * 1000
+                                  ? "bg-blue-600 text-white rounded-br-none group-hover:bg-blue-600/30"
+                                  : "bg-blue-600 text-white rounded-br-none hover:bg-blue-500"
+                                : "bg-white text-gray-900 rounded-bl-none hover:bg-gray-100"
                             }`}
                           >
-                            <span>{formatTime(msg.createdAt)}</span>
-                            {isMyMessage && (
-                              <>
-                                {msg.isRead ? (
-                                  <CheckCheck className="w-4 h-4 text-blue-200" />
-                                ) : (
-                                  <Check className="w-4 h-4 text-blue-200" />
-                                )}
-                              </>
-                            )}
-                            {msg.edited && (
-                              <span className="ml-1">(edited)</span>
-                            )}
+                            <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
+                              {msg.content}
+                            </p>
+                            <div
+                              className={`flex items-center gap-1 mt-1 text-xs ${
+                                isMyMessage ? "text-blue-100" : "text-gray-500"
+                              }`}
+                            >
+                              <span>{formatTime(msg.createdAt)}</span>
+                              {isMyMessage && (
+                                <>
+                                  {msg.isRead ? (
+                                    <CheckCheck className="w-4 h-4 text-blue-200" />
+                                  ) : (
+                                    <Check className="w-4 h-4 text-blue-200" />
+                                  )}
+                                </>
+                              )}
+                              {msg.edited && (
+                                <span className="ml-1">(edited)</span>
+                              )}
+                            </div>
                           </div>
-                        </div>
 
+                          {/* Hover Buttons - Edit & Delete */}
+                          {isMyMessage &&
+                            !msg.isRead &&
+                            new Date().getTime() -
+                              new Date(msg.createdAt).getTime() <=
+                              5 * 60 * 1000 && (
+                              <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => handleEditMessage(msg)}
+                                  className="cursor-pointer p-2 bg-white/70 rounded-full hover:bg-white text-blue-600 hover:text-blue-800 shadow-md transition"
+                                >
+                                  <Edit className="w-5 h-5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteMessage(msg._id)}
+                                  className="cursor-pointer p-2 bg-white/70 rounded-full hover:bg-white text-red-600 hover:text-red-800 shadow-md transition"
+                                >
+                                  <Trash className="w-5 h-5" />
+                                </button>
+                              </div>
+                            )}
+                        </div>
                         {/* My avatar */}
                         {isMyMessage && (
                           <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
@@ -445,14 +763,17 @@ const ChatPage = () => {
                 </button>
 
                 <div className="flex-1 bg-gray-100 rounded-2xl px-4 py-2.5 flex items-center gap-2">
-                  <input
-                    type="text"
+                  <textarea
+                    ref={textareaRef}
+                    rows={1}
                     placeholder="Type a message..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    className="flex-1 bg-transparent border-none outline-none text-sm"
+                    style={{ maxHeight: MAX_HEIGHT }}
+                    className="flex-1 bg-transparent border-none outline-none text-sm resize-none max-h-32"
                   />
+
                   <button className="p-1 hover:bg-gray-200 rounded-full transition-colors">
                     <Smile className="w-5 h-5 text-gray-600" />
                   </button>

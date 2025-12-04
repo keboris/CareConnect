@@ -27,6 +27,7 @@ function App() {
           <Route path="app" element={<ProtectedLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="offers" element={<Dashboard />} />
+            <Route path="offers2" element={<Dashboard />} />
             <Route path="requests" element={<Dashboard />} />
             <Route path="profile" element={<Dashboard />} />
             <Route path="chat" element={<Dashboard />} />
@@ -34,6 +35,7 @@ function App() {
             <Route path="map" element={<Dashboard />} />
             <Route path="settings" element={<Dashboard />} />
             <Route path="support" element={<Dashboard />} />
+            <Route path="offers/create" element={<Dashboard />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Route>

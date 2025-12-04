@@ -35,6 +35,7 @@ export type StatsProps = {
   offers: number;
   requests: number;
   chats: number;
+  unRead: number;
   notifications: number;
 };
 
@@ -168,6 +169,7 @@ export type AddressInputProps = {
     latitude: number;
     longitude: number;
   }) => void;
+  error?: string;
 };
 
 export type SuggestionAddress = {
@@ -211,11 +213,13 @@ export type ChatMessageProps = {
 };
 
 export type HelpSessionProps = {
+  sessions: string | undefined;
   _id: string;
   option: string;
   etat: string;
   final: string;
   unreadCount: number;
+  lastMessage?: ChatMessageProps;
   rating: number;
   offerId: OfferProps | null;
   requestId: RequestProps | null;

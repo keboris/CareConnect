@@ -23,6 +23,8 @@ import type { LocationProps, StatsProps } from "../types";
 import { STAT_USER_API_URL, USER_API_URL } from "../config";
 import { ChatPage, Loading, Offers, Requests, Start } from "../components";
 import { extractPostalAndCity } from "../lib";
+import OldOff from "../components/Care/OldOff";
+import CreateCare from "../components/Care/CreateCare";
 
 const Dashboard = () => {
   const { user, loading, refreshUser, signOut } = useAuth();
@@ -43,12 +45,7 @@ const Dashboard = () => {
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingOtherLocations, setLoadingOtherLocations] = useState(true);
 
-  const [stats, setStats] = useState<StatsProps>({
-    offers: 0,
-    requests: 0,
-    chats: 0,
-    notifications: 0,
-  });
+  const [stats, setStats] = useState<StatsProps | null>(null);
 
   const [otherLocations, setOtherLocations] = useState<LocationProps[]>([]);
 
@@ -94,8 +91,26 @@ const Dashboard = () => {
     fetchOtherLocations();
   }, [loading]);
 
+  useEffect(() => {
+    document.title = `${t("nav.dashboard")} - CareConnect`;
+    window.scrollTo(0, 0);
+  }, [t]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const allLocations = useMemo(() => {
-    if (!user) return [];
+    if (!user || loadingOtherLocations) return [];
     const main =
       typeof user.location === "object" && user.location !== null
         ? {
@@ -114,7 +129,7 @@ const Dashboard = () => {
     console.log("ALL LOCATIONS:", [main, ...others]);
 
     return [main, ...others];
-  }, [user]);
+  }, [user, loadingOtherLocations]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const current = allLocations[currentIndex];
@@ -130,24 +145,6 @@ const Dashboard = () => {
       setCurrentIndex(currentIndex - 1);
     }
   };
-
-  useEffect(() => {
-    document.title = `${t("nav.dashboard")} - CareConnect`;
-    window.scrollTo(0, 0);
-  }, [t]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   // Navigation items configuration
   const navigationItems = [
@@ -176,7 +173,7 @@ const Dashboard = () => {
       icon: MessageCircle,
       description: t("dashboard.manageChat"),
       link: "/app/chat",
-      count: stats ? stats.chats : 0,
+      count: stats ? stats.unRead : 0,
     },
     {
       title: t("dashboard.notifications"),
@@ -523,7 +520,7 @@ const Dashboard = () => {
                 className="relative p-2 hover:bg-gray-100 rounded-lg transition-all"
               >
                 <Bell className="w-6 h-6 text-gray-700" />
-                {stats.notifications > 0 && (
+                {stats && stats.notifications > 0 && (
                   <span className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
                     {stats.notifications}
                   </span>
@@ -534,9 +531,11 @@ const Dashboard = () => {
 
           {/* Scrollable Content */}
           <main className="flex-1 overflow-y-auto p-6">
-            {isActivePath("/app") && <Start stats={stats} />}
+            {isActivePath("/app") && stats && <Start stats={stats} />}
             {isActivePath("/app/chat") && <ChatPage />}
             {isActivePath("/app/offers") && <Offers />}
+            {isActivePath("/app/offers2") && <OldOff />}
+            {isActivePath("/app/offers/create") && <CreateCare type="offer" />}
             {isActivePath("/app/requests") && <Requests />}
           </main>
         </div>
