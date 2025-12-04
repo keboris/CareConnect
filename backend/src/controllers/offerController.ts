@@ -74,12 +74,14 @@ export const createOffer: RequestHandler<
 
 export const getOffers: RequestHandler = async (req, res) => {
   try {
-    const offers = await Offer.find({
+    /*const offers = await Offer.find({
       status: { $in: ["active", "in_progress", "completed"] },
-    })
+    })*/
+    const offers = await Offer.find()
       .populate("category", "name nameDE")
       .populate("userId", "firstName lastName rating location")
       .lean();
+
     if (!offers.length) {
       return res.status(404).json({ message: "No Offer found" });
     }

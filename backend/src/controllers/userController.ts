@@ -1,4 +1,11 @@
-import { ChatMessage, Notification, Offer, Request, User } from "#models";
+import {
+  ChatMessage,
+  HelpSession,
+  Notification,
+  Offer,
+  Request,
+  User,
+} from "#models";
 import bcrypt from "bcrypt";
 import {
   changePasswordSchema,
@@ -77,6 +84,12 @@ export const getUserStatsById: RequestHandler = async (req, res) => {
       isRead: false,
     });
 
+    const helpSessions = await HelpSession.find({
+      $or: [{ userRequesterId: userId }, { userHelperId: userId }],
+    }).lean();
+
+    const helpSessionsCount = helpSessions.length;
+
     return res.json({
       user,
       stats: {
@@ -84,6 +97,7 @@ export const getUserStatsById: RequestHandler = async (req, res) => {
         requests: requestsCount,
         chats: chatsCount,
         unRead: unreadCount,
+        sessions: helpSessionsCount,
         notifications: notificationsCount,
       },
     });
