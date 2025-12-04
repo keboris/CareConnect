@@ -153,8 +153,8 @@ export const getHelpSession: RequestHandler = async (req, res) => {
     const helpSessions = await HelpSession.find({
       $or: [{ userRequesterId: userId }, { userHelperId: userId }],
     })
-      .populate("requestId", "title description typeRequest")
-      .populate("offerId", "title description typeRequest");
+      .populate("requestId", "category title description typeRequest")
+      .populate("offerId", "category title description typeRequest");
 
     if (!helpSessions.length) {
       return res

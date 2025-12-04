@@ -12,6 +12,24 @@ import {
 } from "./pages";
 
 function App() {
+  const dashboardRoutes = [
+    "offers",
+    "offers2",
+    "requests",
+    "sessions",
+    "profile",
+    "chat",
+    "notifications",
+    "map",
+    "settings",
+    "support",
+    "offers/create",
+    "offers/:id",
+    "offers/:id/edit",
+    "requests/:id",
+    "requests/:id/edit",
+  ];
+
   return (
     <BrowserRouter>
       <ScrollToTop />
@@ -26,16 +44,9 @@ function App() {
           {/* Dashboard routes */}
           <Route path="app" element={<ProtectedLayout />}>
             <Route index element={<Dashboard />} />
-            <Route path="offers" element={<Dashboard />} />
-            <Route path="offers2" element={<Dashboard />} />
-            <Route path="requests" element={<Dashboard />} />
-            <Route path="profile" element={<Dashboard />} />
-            <Route path="chat" element={<Dashboard />} />
-            <Route path="notifications" element={<Dashboard />} />
-            <Route path="map" element={<Dashboard />} />
-            <Route path="settings" element={<Dashboard />} />
-            <Route path="support" element={<Dashboard />} />
-            <Route path="offers/create" element={<Dashboard />} />
+            {dashboardRoutes.map((path) => (
+              <Route key={path} path={path} element={<Dashboard />} />
+            ))}
           </Route>
           <Route path="*" element={<NotFound />} />
         </Route>

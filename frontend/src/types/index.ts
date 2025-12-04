@@ -36,6 +36,7 @@ export type StatsProps = {
   requests: number;
   chats: number;
   unRead: number;
+  sessions: number;
   notifications: number;
 };
 

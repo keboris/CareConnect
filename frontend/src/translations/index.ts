@@ -242,6 +242,7 @@ export const translationsMap: Translations = {
   "common.cancel": { en: "Cancel", de: "Abbrechen" },
   "common.edit": { en: "Edit", de: "Bearbeiten" },
   "common.delete": { en: "Delete", de: "Löschen" },
+  "common.deleting": { en: "Deleting...", de: "Löschen..." },
   "common.search": { en: "Search", de: "Suchen" },
   "common.filter": { en: "Filter", de: "Filter" },
   "common.send": { en: "Send", de: "Senden" },
@@ -373,4 +374,135 @@ export const translationsMap: Translations = {
     en: "Create New Offer",
     de: "Neues Angebot erstellen",
   },
+
+  "dashboard.allOffers": {
+    en: "All Offers",
+    de: "Alle Angebote",
+  },
+
+  "dashboard.myOffers": {
+    en: "My Offers",
+    de: "Meine Angebote",
+  },
+
+  "dashboard.noOffers": {
+    en: "No offers found yet.",
+    de: "Noch keine Angebote gefunden.",
+  },
+
+  "dashboard.noOffersCriteria": {
+    en: "No offers match your criteria.",
+    de: "Keine Angebote entsprechen Ihren Kriterien.",
+  },
+
+  "dashboard.createRequest": {
+    en: "Create Request",
+    de: "Anfrage erstellen",
+  },
+
+  "dashboard.myRequests": {
+    en: "My Requests",
+    de: "Meine Anfragen",
+  },
+
+  "dashboard.allRequests": {
+    en: "All Requests",
+    de: "Alle Anfragen",
+  },
+
+  "dashboard.noRequests": {
+    en: "No requests found yet.",
+    de: "Noch keine Anfragen gefunden.",
+  },
+
+  "dashboard.noRequestsCriteria": {
+    en: "No requests match your criteria.",
+    de: "Keine Anfragen entsprechen Ihren Kriterien.",
+  },
+
+  "dashboard.category": { en: "Category", de: "Kategorie" },
+  "dashboard.price": { en: "Price", de: "Preis" },
+  "dashboard.free": { en: "Free", de: "Kostenlos" },
+  "dashboard.paid": { en: "Paid", de: "Bezahlt" },
+  "dashboard.location": { en: "Location", de: "Standort" },
+  "dashboard.rating": { en: "Rating", de: "Bewertung" },
+  "dashboard.urgency": { en: "Urgency", de: "Dringlichkeit" },
+  "dashboard.status": { en: "Status", de: "Status" },
+  "dashboard.createdAt": { en: "Created At", de: "Erstellt am" },
+  "dashboard.title": { en: "Title", de: "Titel" },
+  "dashboard.images": { en: "Images", de: "Bilder" },
+  "dashboard.description": { en: "Description", de: "Beschreibung" },
+  "dashboard.typeRequest": { en: "Type of Request", de: "Art der Anfrage" },
+
+  "dashboard.welcomeBack": {
+    en: "Welcome back,",
+    de: "Willkommen zurück,",
+  },
+
+  "dashboard.yourLocations": {
+    en: "Your Locations",
+    de: "Ihre Standorte",
+  },
+
+  "dashboard.next": { en: "Next", de: "Weiter" },
+  "dashboard.previous": { en: "Prev", de: "Zurück" },
+
+  "dashboard.helpYourNeighbors": {
+    en: "Share your skills and help others in your community",
+    de: "Teilen Sie Ihre Fähigkeiten und helfen Sie anderen in Ihrer Gemeinschaft",
+  },
+
+  "dashboard.getHelpFromCommunity": {
+    en: "Ask for help from your neighbors",
+    de: "Bitten Sie Ihre Nachbarn um Hilfe",
+  },
+
+  "dashboard.exploreHelpOffers": {
+    en: "Explore help offers and requests near you",
+    de: "Entdecken Sie Hilfeangebote und Anfragen in Ihrer Nähe",
+  },
+
+  "dashboard.msgOffers": {
+    en: "Browse and manage available offers in your community",
+    de: "Durchsuchen und verwalten Sie verfügbare Angebote in Ihrer Gemeinschaft",
+  },
+
+  "dashboard.msgRequests": {
+    en: "Browse and manage available requests in your community",
+    de: "Durchsuchen und verwalten Sie verfügbare Anfragen in Ihrer Gemeinschaft",
+  },
+
+  "dashboard.stayConnected": {
+    en: "Check your conversations and respond to messages",
+    de: "Überprüfen Sie Ihre Unterhaltungen und antworten Sie auf Nachrichten",
+  },
+
+  "dashboard.sessions": { en: "Sessions", de: "Sitzungen" },
+
+  "dashboard.msgSessions": {
+    en: "Manage your help sessions and appointments",
+    de: "Verwalten Sie Ihre Hilfesitzungen und Termine",
+  },
+
+  "dashboard.noSessions": {
+    en: "No sessions found yet.",
+    de: "Noch keine Sitzungen gefunden.",
+  },
+
+  "dashboard.noSessionsCriteria": {
+    en: "No sessions match your criteria.",
+    de: "Keine Sitzungen entsprechen Ihren Kriterien.",
+  },
+
+  "dashboard.markAsCompleted": {
+    en: "Mark as Completed",
+    de: "Als abgeschlossen markieren",
+  },
+
+  "dashboard.markAsCancelled": {
+    en: "Mark as Cancelled",
+    de: "Als abgebrochen markieren",
+  },
+
+  "dashboard.quickActions": { en: "Quick Actions", de: "Schnellaktionen" },
 };

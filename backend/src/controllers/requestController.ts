@@ -99,10 +99,12 @@ export const createRequest: RequestHandler<
 
 export const getRequests: RequestHandler = async (req, res) => {
   try {
-    const requests = await Request.find({
+    /*const requests = await Request.find({
       status: { $in: ["active", "in_progress", "completed"] },
-    })
-      .populate("category", "name")
+    })*/
+    const requests = await Request.find()
+      .populate("category", "name nameDE")
+      .populate("userId", "firstName lastName")
       .lean();
     if (!requests.length) {
       return res.status(404).json({ message: "No Request found" });
