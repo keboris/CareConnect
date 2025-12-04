@@ -54,7 +54,36 @@ export const createHelpSession: RequestHandler = async (req, res) => {
         .json({ message: `You cannot accept your own ${nameRequest}` });
     }
 
-    if (resource.typeRequest === "alert") {
+    // Prevent duplicate sessions except alerts
+    const isAlert =
+      requestBase === "requests" && resource.typeRequest === "alert";
+
+    if (!isAlert) {
+      // Check if a session already exists between the same users
+      const existingSession = await HelpSession.findOne({
+        $or: [
+          {
+            userRequesterId: userId,
+            userHelperId: resource.userId,
+            status: "active",
+          },
+          {
+            userRequesterId: resource.userId,
+            userHelperId: userId,
+            status: "active",
+          },
+        ],
+      });
+
+      if (existingSession) {
+        return res.status(400).json({
+          message: "You already have an active session with this user.",
+        });
+      }
+    }
+
+    // Expire notifications for alerts
+    if (isAlert) {
       await Notification.updateMany(
         {
           userId: { $ne: userId },
@@ -72,31 +101,23 @@ export const createHelpSession: RequestHandler = async (req, res) => {
         .json({ message: `${nameRequest} is already taken` });
     }
 
-    resource.status = "in_progress";
-    await resource.save();
-
-    let requestId;
-    let offerId;
     let userRequesterId;
     let userHelperId;
 
     if (requestBase === "offers") {
-      requestId = undefined;
-      offerId = id;
-
       userRequesterId = userId; // The user who needs help
       userHelperId = resource.userId; // The author of the offer
     } else {
-      requestId = id;
-      offerId = undefined;
-
       userRequesterId = resource.userId; // The author of the request who needs help
       userHelperId = userId; // The user who is helping
     }
 
+    resource.status = "in_progress";
+    await resource.save();
+
     const helpSession = await HelpSession.create({
-      requestId: requestId,
-      offerId: offerId,
+      requestId: requestBase === "requests" ? id : undefined,
+      offerId: requestBase === "offers" ? id : undefined,
 
       userRequesterId: userRequesterId,
       userHelperId: userHelperId,
@@ -162,6 +183,12 @@ export const getHelpSession: RequestHandler = async (req, res) => {
           isRead: false,
         });
 
+        const lastMessage = await ChatMessage.findOne({
+          sessionId: session._id,
+        })
+          .sort({ createdAt: -1 })
+          .lean();
+
         const etat =
           session.status === "active"
             ? "In Progress"
@@ -201,6 +228,7 @@ export const getHelpSession: RequestHandler = async (req, res) => {
           etat,
           final,
           unreadCount,
+          lastMessage,
           ...session.toObject(), // Convert Mongoose document to plain object
         };
       })

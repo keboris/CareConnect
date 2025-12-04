@@ -72,12 +72,18 @@ export const getUserStatsById: RequestHandler = async (req, res) => {
       $or: [{ senderId: userId }, { receiverId: userId }],
     }).then((sessions) => sessions.length);
 
+    const unreadCount = await ChatMessage.countDocuments({
+      receiverId: userId,
+      isRead: false,
+    });
+
     return res.json({
       user,
       stats: {
         offers: offersCount,
         requests: requestsCount,
         chats: chatsCount,
+        unRead: unreadCount,
         notifications: notificationsCount,
       },
     });

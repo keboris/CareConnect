@@ -77,7 +77,8 @@ export const getOffers: RequestHandler = async (req, res) => {
     const offers = await Offer.find({
       status: { $in: ["active", "in_progress", "completed"] },
     })
-      .populate("category", "name")
+      .populate("category", "name nameDE")
+      .populate("userId", "firstName lastName rating location")
       .lean();
     if (!offers.length) {
       return res.status(404).json({ message: "No Offer found" });
@@ -119,7 +120,9 @@ export const myOffers: RequestHandler = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const offers = await Offer.find({ userId }).populate("category", "name");
+    const offers = await Offer.find({ userId })
+      .populate("category", "name nameDE")
+      .populate("userId", "rating");
 
     if (!offers.length) {
       return res.status(404).json({ message: "No offers found for this user" });
