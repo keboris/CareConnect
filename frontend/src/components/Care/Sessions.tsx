@@ -1,51 +1,45 @@
 import { useState, useEffect } from "react";
 import { useAuth, useLanguage } from "../../contexts";
-import { CATEGORIE_API_URL, OFFER_API_URL } from "../../config";
-import type { Category, OfferProps } from "../../types";
+import { CATEGORIE_API_URL, SESSION_API_URL } from "../../config";
+import type { Category, HelpSessionProps } from "../../types";
 import { Card, CardContent, Loading } from "../../components";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Trash2,
-  Edit2,
   MapPin,
   DollarSign,
-  User,
-  Plus,
   X,
   Handshake,
   Search,
   Clock,
   Star,
-  List,
-  Folder,
+  CalendarClock,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import { timeAgo } from "../../lib";
-import { useNavigate } from "react-router";
 
 /**
- * Offers Component
- * Displays all available offers with filtering, sorting, and management features
- * Includes inline modal for creating new offers
+ * Sessions Component
+ * Displays all available sessions with filtering, sorting, and management features
  */
-const Offers = () => {
-  const { user, refreshUser, loading } = useAuth();
+const Sessions = () => {
+  const { refreshUser, loading } = useAuth();
   const { t, language } = useLanguage();
 
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
   // State management
-  const [offers, setOffers] = useState<OfferProps[]>([]);
-  const [filteredOffers, setFilteredOffers] = useState<OfferProps[]>([]);
+  const [sessions, setSessions] = useState<HelpSessionProps[]>([]);
+  const [filteredSessions, setFilteredSessions] = useState<HelpSessionProps[]>(
+    []
+  );
   const [categories, setCategories] = useState<Category[]>([]);
 
-  const [titleSet, setTitleSet] = useState<string>(t("dashboard.offers"));
-  const [loadingOffers, setLoadingOffers] = useState(true);
+  const [loadingSessions, setLoadingSessions] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [chooseOffers, setChooseOffers] = useState<string>("all");
-
-  const [selectedOffer, setSelectedOffer] = useState<OfferProps | null>(null);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const [selectedSession, setSelectedSession] =
+    useState<HelpSessionProps | null>(null);
 
   /**
    * Fetch all offers from the API
@@ -54,27 +48,27 @@ const Offers = () => {
   useEffect(() => {
     if (loading) return;
 
-    const fetchOffers = async () => {
+    const fetchSessions = async () => {
       try {
-        // Make API request to get all offers
-        const response = await fetch(`${OFFER_API_URL}`, {
+        // Make API request to get all sessions
+        const response = await fetch(`${SESSION_API_URL}`, {
           method: "GET",
           credentials: "include",
         });
         const data = await response.json();
 
-        // Update state with fetched offers
-        if (data.offers) {
-          setOffers(data.offers);
+        // Update state with fetched sessions
+        if (data.helpSessions) {
+          setSessions(data.helpSessions);
         }
       } catch (error) {
-        console.error("Error fetching offers:", error);
+        console.error("Error fetching sessions:", error);
       } finally {
-        setLoadingOffers(false);
+        setLoadingSessions(false);
       }
     };
 
-    fetchOffers();
+    fetchSessions();
   }, [loading]);
 
   // Fetch categories
@@ -97,88 +91,69 @@ const Offers = () => {
     fetchCategories();
   }, [loading, refreshUser]);
 
-  // Filter offers
+  // Filter sessions
   useEffect(() => {
-    let filtered = offers;
+    let filtered = sessions;
 
     if (selectedCategory !== "all") {
-      filtered = filtered.filter((offer) => {
-        const cat = offer.category;
+      filtered = filtered.filter((session) => {
+        const cat = session.requestId
+          ? session.requestId?.category
+          : session.offerId?.category;
         if (!cat) return false;
         if (typeof cat === "string") return cat === selectedCategory;
         return (cat as Category)._id === selectedCategory;
       });
     }
 
-    if (chooseOffers === "my") {
-      filtered = filtered.filter((offer) => {
-        const offerUserId =
-          typeof offer.userId === "string"
-            ? offer.userId
-            : (offer.userId as any)?._id;
-        return offerUserId === user?._id;
-      });
-    } else {
-      filtered = filtered.filter((offer) => {
-        const offerStatus = offer.status;
-        return ["active"].includes(offerStatus);
-      });
-    }
-
     if (selectedStatus !== "all") {
-      filtered = filtered.filter((offer) => offer.status === selectedStatus);
+      filtered = filtered.filter(
+        (session) => session.status === selectedStatus
+      );
     }
 
     if (searchTerm) {
       filtered = filtered.filter(
-        (offer) =>
-          offer.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          offer.description.toLowerCase().includes(searchTerm.toLowerCase())
+        (session) =>
+          (session.requestId?.title ?? "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (session.requestId?.description ?? "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (session.offerId?.title ?? "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (session.offerId?.description ?? "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
       );
     }
 
-    setFilteredOffers(filtered);
-  }, [offers, chooseOffers, selectedCategory, selectedStatus, searchTerm]);
+    setFilteredSessions(filtered);
+  }, [sessions, selectedCategory, selectedStatus, searchTerm]);
 
-  /**
-   * Filter offers based on selected status
-   * Returns filtered array of offers
-   */
-  /*const filteredOffers_ = offers.filter((offer) => {
-    if (filterStatus === "all") return true;
-    return offer.status === filterStatus;
-  });*/
-
-  /**
-   * Delete an offer by ID
-   * Removes the offer from the database and updates UI
-   */
-  const handleDeleteOffer = async (offerId: string) => {
-    // Confirm deletion with user
-    if (!window.confirm("Are you sure you want to delete this offer?")) return;
-
+  const markAsCompleted = async (sessionId: string) => {
     try {
-      setDeleting(offerId);
-
-      // Send DELETE request to API
-      const response = await refreshUser(`${OFFER_API_URL}/${offerId}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete offer");
+      const response = await refreshUser(
+        `${SESSION_API_URL}/${sessionId}/complete`,
+        {
+          method: "PUT",
+        }
+      );
+      const data = await response.json();
+      if (data.message) {
+        // Refresh sessions
+        setSessions((prev) =>
+          prev.map((session) =>
+            session._id === sessionId
+              ? { ...session, status: "completed" }
+              : session
+          )
+        );
       }
-
-      // Update state by removing deleted offer
-      setOffers((prev) => prev.filter((offer) => offer._id !== offerId));
-      setSelectedOffer(null);
-
-      console.log("Offer deleted successfully");
     } catch (error) {
-      console.error("Error deleting offer:", error);
-      alert("Failed to delete offer. Please try again.");
-    } finally {
-      setDeleting(null);
+      console.error("Error marking session as completed:", error);
     }
   };
 
@@ -186,8 +161,6 @@ const Offers = () => {
     switch (status) {
       case "active":
         return "bg-green-100 text-green-800";
-      case "in_progress":
-        return "bg-blue-100 text-blue-800";
       case "completed":
         return "bg-purple-100 text-purple-800";
       case "cancelled":
@@ -198,7 +171,7 @@ const Offers = () => {
   };
 
   // Show loading spinner while fetching data
-  if (loading || loadingOffers) return <Loading />;
+  if (loading || loadingSessions) return <Loading />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6">
@@ -213,97 +186,48 @@ const Offers = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-blue-100 rounded-lg">
-                <Handshake className="w-6 h-6 text-blue-600" />
+                <CalendarClock className="w-6 h-6 text-blue-600" />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  {titleSet}
+                  {t("dashboard.sessions")}
                   <span className="ml-2 text-sm font-medium text-gray-500">
-                    ({filteredOffers.length})
+                    ({filteredSessions.length})
                   </span>
                 </h1>
-                <p className="text-gray-600">{t("dashboard.msgOffers")}</p>
+                <p className="text-gray-600">{t("dashboard.msgSessions")}</p>
               </div>
             </div>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                setChooseOffers("all");
-                setTitleSet(t("dashboard.offers"));
-              }}
-              className={`flex items-center cursor-pointer gap-2 px-6 py-3 rounded-lg font-semibold shadow-lg transition-all
-    ${
-      chooseOffers === "all"
-        ? "bg-blue-600 text-white shadow-xl"
-        : "bg-gradient-to-r from-gray-500 to-blue-500 text-white hover:shadow-xl"
-    }`}
-            >
-              <List className="w-5 h-5" />
-              {t("dashboard.allOffers")}
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                setChooseOffers("my");
-                setTitleSet(t("dashboard.myOffers"));
-              }}
-              className={`flex items-center cursor-pointer gap-2 px-6 py-3 rounded-lg font-semibold shadow-lg transition-all
-    ${
-      chooseOffers === "my"
-        ? "bg-purple-600 text-white shadow-xl"
-        : "bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:shadow-xl"
-    }
-  `}
-            >
-              <Folder className="w-5 h-5" />
-              {t("dashboard.myOffers")}
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate("/app/offers/create")}
-              className="flex items-center gap-2 cursor-pointer px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all w-full md:w-auto justify-center md:justify-start"
-            >
-              <Plus className="w-5 h-5" />
-              {t("dashboard.createOffer")}
-            </motion.button>
           </div>
 
           {/* Filters */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-6">
             {/* Filter Controls */}
-            {chooseOffers === "my" && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-                className="flex gap-2 flex-wrap flex-wrap col-span-3 lg:col-span-4"
-              >
-                {["all", "active", "in_progress", "completed", "cancelled"].map(
-                  (status) => (
-                    <button
-                      key={status}
-                      onClick={() => setSelectedStatus(status)}
-                      className={`px-3 py-2 rounded-lg cursor-pointer font-semibold transition-all text-sm ${
-                        selectedStatus === status
-                          ? "bg-blue-600 text-white shadow-lg"
-                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }`}
-                    >
-                      {status.charAt(0).toUpperCase() +
-                        status.slice(1).replace(/_/g, " ")}
-                    </button>
-                  )
-                )}
-              </motion.div>
-            )}
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              className="flex gap-2 flex-wrap flex-wrap col-span-3 lg:col-span-4"
+            >
+              {["all", "active", "completed", "cancelled"].map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setSelectedStatus(status)}
+                  className={`px-3 py-2 rounded-lg cursor-pointer font-semibold transition-all text-sm ${
+                    selectedStatus === status
+                      ? "bg-blue-600 text-white shadow-lg"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  {status.charAt(0).toUpperCase() +
+                    status.slice(1).replace(/_/g, " ")}
+                </button>
+              ))}
+            </motion.div>
+
             {/* Search */}
-            {filteredOffers.length > 0 && (
+            {filteredSessions.length > 0 && (
               <>
                 <div className="relative col-span-3 lg:col-span-1">
                   <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
@@ -336,14 +260,14 @@ const Offers = () => {
 
         {/* Main Content Grid */}
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 min-h-0">
-          {/* Offers List - Takes 3/4 of space */}
+          {/* Help Sessions List - Takes 3/4 of space */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}
             className="lg:col-span-3 flex flex-col gap-4 min-h-0"
           >
-            {/* Offers Grid */}
+            {/* Help Sessions Grid */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -351,7 +275,7 @@ const Offers = () => {
               className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1 overflow-y-auto"
             >
               <AnimatePresence>
-                {filteredOffers.length === 0 ? (
+                {filteredSessions.length === 0 ? (
                   // Empty State
                   <motion.div
                     initial={{ opacity: 0 }}
@@ -359,22 +283,23 @@ const Offers = () => {
                     exit={{ opacity: 0 }}
                     className="col-span-full text-center py-12"
                   >
-                    {chooseOffers &&
-                    selectedCategory === "all" &&
+                    {selectedCategory === "all" &&
                     selectedStatus === "all" &&
                     !searchTerm ? (
-                      <p className="text-gray-600">{t("dashboard.noOffers")}</p>
+                      <p className="text-gray-600">
+                        {t("dashboard.noSessions")}
+                      </p>
                     ) : (
                       <p className="text-gray-600">
-                        {t("dashboard.noOffersCriteria")}
+                        {t("dashboard.noSessionsCriteria")}
                       </p>
                     )}
                   </motion.div>
                 ) : (
                   // Offer Cards
-                  filteredOffers.map((offer) => (
+                  filteredSessions.map((session) => (
                     <motion.div
-                      key={offer._id}
+                      key={session._id}
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
@@ -382,18 +307,22 @@ const Offers = () => {
                     >
                       <Card
                         className="h-full cursor-pointer hover:shadow-lg transition-all"
-                        onClick={() => setSelectedOffer(offer)}
+                        onClick={() => setSelectedSession(session)}
                       >
                         <CardContent className="px-4 md:px-6">
                           <div className="flex flex-col md:flex-row items-start justify-between gap-4">
                             <div className="flex-1 w-full">
                               <div className="flex flex-col md:flex-row items-start md:items-center gap-3 mb-2">
                                 <h3 className="text-xl font-bold text-gray-900">
-                                  {offer.title}
+                                  {session.requestId
+                                    ? session.requestId?.title
+                                    : session.offerId?.title}
                                 </h3>
                               </div>
                               <p className="text-gray-600 mb-3">
-                                {offer.description}
+                                {session.requestId
+                                  ? session.requestId?.description
+                                  : session.offerId?.description}
                               </p>
 
                               {/* Details Grid */}
@@ -408,12 +337,13 @@ const Offers = () => {
                                       {t("dashboard.category")}
                                     </p>
                                     <p className="text-sm font-semibold text-gray-900">
-                                      {offer.category
+                                      {session.requestId &&
+                                      session.requestId.category
                                         ? language === "de"
-                                          ? offer.category.nameDE ||
-                                            offer.category.name
-                                          : offer.category.name ||
-                                            offer.category.nameDE
+                                          ? session.requestId.category.nameDE ||
+                                            session.requestId.category.name
+                                          : session.requestId.category.name ||
+                                            session.requestId.category.nameDE
                                         : "-"}
                                     </p>
                                   </div>
@@ -429,8 +359,12 @@ const Offers = () => {
                                       {t("dashboard.price")}
                                     </p>
                                     <p className="text-sm font-semibold text-gray-900">
-                                      {offer.isPaid
-                                        ? `$${offer.price}`
+                                      {session.requestId &&
+                                      session.requestId.rewardType === "paid"
+                                        ? `$${session.requestId.price}`
+                                        : session.offerId &&
+                                          session.offerId.isPaid
+                                        ? `$${session.offerId.price}`
                                         : t("dashboard.free")}
                                     </p>
                                   </div>
@@ -447,42 +381,39 @@ const Offers = () => {
                                       {t("dashboard.location")}
                                     </p>
                                     <p className="text-sm font-semibold text-gray-900 truncate">
-                                      {offer.location}
+                                      {session.requestId
+                                        ? session.requestId.location
+                                        : session.offerId?.location}
                                     </p>
                                   </div>
                                 </div>
 
                                 {/* Rating */}
-                                {offer.userId &&
-                                  typeof offer.userId !== "string" &&
-                                  (offer.userId as any)._id &&
-                                  (offer.userId as any).rating != null && (
-                                    <div className="flex items-center gap-2">
-                                      <div className="p-2 bg-yellow-100 rounded">
-                                        <Star className="w-4 h-4 text-yellow-600 fill-yellow-600" />
-                                      </div>
-                                      <div>
-                                        <p className="text-xs text-gray-500">
-                                          {t("dashboard.rating")}
-                                        </p>
-                                        <p className="text-sm font-semibold text-gray-900">
-                                          {(offer.userId as any).rating.toFixed(
-                                            1
-                                          )}
-                                        </p>
-                                      </div>
+                                {session.rating && (
+                                  <div className="flex items-center gap-2">
+                                    <div className="p-2 bg-yellow-100 rounded">
+                                      <Star className="w-4 h-4 text-yellow-600 fill-yellow-600" />
                                     </div>
-                                  )}
+                                    <div>
+                                      <p className="text-xs text-gray-500">
+                                        {t("dashboard.rating")}
+                                      </p>
+                                      <p className="text-sm font-semibold text-gray-900">
+                                        {session.rating.toFixed(1)}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
 
                               {/* Time */}
                               <div className="flex items-center gap-2 text-xs text-gray-500">
                                 <Clock size={16} className="text-gray-400" />
-                                <span>{timeAgo(offer.createdAt)}</span>
+                                <span>{timeAgo(session.startedAt)}</span>
                               </div>
 
                               {/* Creator */}
-                              <div className="flex items-center gap-2 text-gray-600 mt-2">
+                              {/*<div className="flex items-center gap-2 text-gray-600 mt-2">
                                 <User size={16} className="text-gray-400" />
                                 <span>
                                   {(() => {
@@ -497,85 +428,43 @@ const Offers = () => {
                                     return "Unknown";
                                   })()}
                                 </span>
-                              </div>
+                              </div>*/}
                             </div>
-
-                            {/* Actions */}
-                            {/*{typeof user?._id === "string" &&
-                              user._id ===
-                                (typeof offer.userId === "string"
-                                  ? offer.userId
-                                  : (offer.userId as any) &&
-                                    (offer.userId as any)._id) && (
-                                <div className="flex gap-2 ml-0 md:ml-4 w-full md:w-auto">
-                                  <motion.button
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    onClick={() =>
-                                      navigate(`/app/offers/${offer._id}/edit`)
-                                    }
-                                    className="flex-1 md:flex-none p-2 cursor-pointer hover:bg-blue-100 rounded-lg transition-all"
-                                    title="Edit"
-                                  >
-                                    <Edit2 className="w-5 h-5 text-blue-600 mx-auto md:mx-0" />
-                                  </motion.button>
-                                  <motion.button
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    onClick={() => handleDeleteOffer(offer._id)}
-                                    className="flex-1 md:flex-none p-2 cursor-pointer hover:bg-red-100 rounded-lg transition-all"
-                                    title="Delete"
-                                  >
-                                    <Trash2 className="w-5 h-5 text-red-600 mx-auto md:mx-0" />
-                                  </motion.button>
-                                </div>
-                              )}*/}
                           </div>
                           <div className="mt-4">
                             <span
                               className={`px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap ${getStatusColor(
-                                offer.status
+                                session.status
                               )}`}
                             >
-                              {offer.status}
+                              {session.status}
                             </span>
                           </div>
 
                           {/* Action Buttons - Only show for user's own offers */}
-                          {typeof user?._id === "string" &&
-                            user._id ===
-                              (typeof offer.userId === "string"
-                                ? offer.userId
-                                : (offer.userId as any) &&
-                                  (offer.userId as any)._id) && (
-                              <div className="flex gap-2 mt-5 pt-2 border-t">
-                                {offer.status === "active" && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      navigate(`/app/offers/${offer._id}/edit`);
-                                    }}
-                                    className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all text-sm font-semibold"
-                                  >
-                                    <Edit2 size={16} />
-                                    {t("common.edit")}
-                                  </button>
-                                )}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteOffer(offer._id);
-                                  }}
-                                  disabled={deleting === offer._id}
-                                  className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all text-sm font-semibold disabled:opacity-50"
-                                >
-                                  <Trash2 size={16} />
-                                  {deleting === offer._id
-                                    ? t("common.deleting")
-                                    : t("common.delete")}
-                                </button>
-                              </div>
-                            )}
+                          {session.status === "active" && (
+                            <div className="flex gap-2 mt-5 pt-2 border-t">
+                              <button
+                                onClick={() => {
+                                  markAsCompleted(session._id);
+                                }}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-all text-sm font-semibold"
+                              >
+                                <CheckCircle2 size={16} />
+                                {t("dashboard.markAsCompleted")}
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  markAsCompleted(session._id);
+                                }}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all text-sm font-semibold"
+                              >
+                                <XCircle size={16} />
+                                {t("dashboard.markAsCancelled")}
+                              </button>
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
                     </motion.div>
@@ -587,8 +476,8 @@ const Offers = () => {
 
           {/* Create Form Panel - Takes 1/4 of space */}
 
-          {/* Selected Offer Details - Takes 1/4 of space */}
-          {selectedOffer && (
+          {/* Selected Session Details - Takes 1/4 of space */}
+          {selectedSession && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -597,9 +486,9 @@ const Offers = () => {
             >
               <Card className="flex-1 overflow-hidden flex flex-col">
                 <div className="flex items-center justify-between p-4 border-b">
-                  <h3 className="font-bold text-gray-800">Offer Details</h3>
+                  <h3 className="font-bold text-gray-800">Session Details</h3>
                   <button
-                    onClick={() => setSelectedOffer(null)}
+                    onClick={() => setSelectedSession(null)}
                     className="p-1 hover:bg-gray-100 cursor-pointer rounded-lg transition-all"
                   >
                     <X className="w-5 h-5 text-gray-600" />
@@ -612,7 +501,9 @@ const Offers = () => {
                       {t("dashboard.title")}
                     </p>
                     <p className="text-sm text-gray-800 font-semibold">
-                      {selectedOffer.title}
+                      {selectedSession.requestId
+                        ? selectedSession.requestId.title
+                        : selectedSession.offerId?.title}
                     </p>
                   </div>
 
@@ -622,7 +513,9 @@ const Offers = () => {
                       {t("dashboard.description")}
                     </p>
                     <p className="text-sm text-gray-700">
-                      {selectedOffer.description}
+                      {selectedSession.requestId
+                        ? selectedSession.requestId.description
+                        : selectedSession.offerId?.description}
                     </p>
                   </div>
 
@@ -632,7 +525,9 @@ const Offers = () => {
                       {t("dashboard.location")}
                     </p>
                     <p className="text-sm text-gray-800">
-                      {selectedOffer.location}
+                      {selectedSession.requestId
+                        ? selectedSession.requestId.location
+                        : selectedSession.offerId?.location}
                     </p>
                   </div>
 
@@ -642,18 +537,24 @@ const Offers = () => {
                       {t("dashboard.category")}
                     </p>
                     <p className="text-sm text-gray-800">
-                      {selectedOffer.category?.name || "N/A"}
+                      {selectedSession.requestId
+                        ? selectedSession.requestId.category?.name
+                        : selectedSession.offerId?.category?.name}
                     </p>
                   </div>
 
                   {/* Price */}
-                  {selectedOffer.isPaid && (
+                  {(selectedSession.offerId?.isPaid ||
+                    selectedSession.requestId?.rewardType === "paid") && (
                     <div>
                       <p className="text-xs font-medium text-gray-600 mb-1">
                         {t("dashboard.price")}
                       </p>
                       <p className="text-sm font-bold text-green-600">
-                        ${selectedOffer.price}
+                        $
+                        {selectedSession.offerId
+                          ? selectedSession.offerId.price
+                          : selectedSession.requestId?.price}
                       </p>
                     </div>
                   )}
@@ -665,16 +566,14 @@ const Offers = () => {
                     </p>
                     <span
                       className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                        selectedOffer.status === "active"
+                        selectedSession.status === "active"
                           ? "bg-green-100 text-green-800"
-                          : selectedOffer.status === "in_progress"
-                          ? "bg-blue-100 text-blue-800"
-                          : selectedOffer.status === "completed"
+                          : selectedSession.status === "completed"
                           ? "bg-gray-100 text-gray-800"
                           : "bg-red-100 text-red-800"
                       }`}
                     >
-                      {selectedOffer.status}
+                      {selectedSession.status}
                     </span>
                   </div>
 
@@ -684,28 +583,9 @@ const Offers = () => {
                       {t("dashboard.createdAt")}
                     </p>
                     <p className="text-sm text-gray-800">
-                      {timeAgo(selectedOffer.createdAt)}
+                      {timeAgo(selectedSession.startedAt)}
                     </p>
                   </div>
-
-                  {/* Images */}
-                  {selectedOffer.images && selectedOffer.images.length > 0 && (
-                    <div>
-                      <p className="text-xs font-medium text-gray-600 mb-2">
-                        {t("dashboard.images")}
-                      </p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {selectedOffer.images.slice(0, 4).map((img, i) => (
-                          <img
-                            key={i}
-                            src={img}
-                            alt={`Offer ${i + 1}`}
-                            className="w-full h-20 object-cover rounded"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             </motion.div>
@@ -738,4 +618,4 @@ const Offers = () => {
   );
 };
 
-export default Offers;
+export default Sessions;

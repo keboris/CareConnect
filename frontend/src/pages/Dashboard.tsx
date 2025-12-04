@@ -16,15 +16,23 @@ import {
   ChevronRight,
   Menu,
   ChevronDown,
+  CalendarClock,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router";
 
 import type { LocationProps, StatsProps } from "../types";
 import { STAT_USER_API_URL, USER_API_URL } from "../config";
-import { ChatPage, Loading, Offers, Requests, Start } from "../components";
+import {
+  ChatPage,
+  CreateCare,
+  Loading,
+  Offers,
+  Requests,
+  Sessions,
+  Start,
+} from "../components";
 import { extractPostalAndCity } from "../lib";
 import OldOff from "../components/Care/OldOff";
-import CreateCare from "../components/Care/CreateCare";
 
 const Dashboard = () => {
   const { user, loading, refreshUser, signOut } = useAuth();
@@ -167,6 +175,13 @@ const Dashboard = () => {
       description: t("dashboard.manageRequests"),
       link: "/app/requests",
       count: stats ? stats.requests : 0,
+    },
+    {
+      title: t("dashboard.sessions"),
+      icon: CalendarClock,
+      description: t("dashboard.manageSessions"),
+      link: "/app/sessions",
+      count: stats ? stats.sessions : 0,
     },
     {
       title: t("dashboard.chat"),
@@ -427,7 +442,9 @@ const Dashboard = () => {
                       {user?.firstName + ", " + t(successMessage)}
                     </div>
                   ) : (
-                    <>Welcome back, {user?.firstName}!</>
+                    <>
+                      {t("dashboard.welcomeBack")} {user?.firstName}!
+                    </>
                   )}
                 </p>
               </div>
@@ -463,7 +480,7 @@ const Dashboard = () => {
                     className="absolute left-0 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-50 p-4"
                   >
                     <p className="font-semibold text-gray-800">
-                      Your Locations
+                      {t("dashboard.yourLocations")}
                     </p>
 
                     {/* LOCATION CARD */}
@@ -489,7 +506,7 @@ const Dashboard = () => {
                               disabled={currentIndex === 0}
                               className="px-3 py-1 bg-gray-200 rounded disabled:opacity-30"
                             >
-                              Prev
+                              {t("dashboard.previous")}
                             </button>
 
                             <p className="text-sm text-gray-600">
@@ -503,7 +520,7 @@ const Dashboard = () => {
                               }
                               className="px-3 py-1 bg-gray-200 rounded disabled:opacity-30"
                             >
-                              Next
+                              {t("dashboard.next")}
                             </button>
                           </div>
                         )}
@@ -534,9 +551,13 @@ const Dashboard = () => {
             {isActivePath("/app") && stats && <Start stats={stats} />}
             {isActivePath("/app/chat") && <ChatPage />}
             {isActivePath("/app/offers") && <Offers />}
+            {isActivePath("/app/requests") && <Requests />}
+            {isActivePath("/app/sessions") && <Sessions />}
             {isActivePath("/app/offers2") && <OldOff />}
             {isActivePath("/app/offers/create") && <CreateCare type="offer" />}
-            {isActivePath("/app/requests") && <Requests />}
+            {isActivePath("/app/requests/create") && (
+              <CreateCare type="request" />
+            )}
           </main>
         </div>
       </div>

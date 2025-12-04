@@ -84,28 +84,28 @@ const Start = ({ stats }: { stats: StatsProps }) => {
   const quickActions = [
     {
       title: t("dashboard.createOffer"),
-      description: "Share your skills and help others in your community",
+      description: t("dashboard.helpYourNeighbors"),
       icon: Handshake,
       color: "from-blue-500 to-blue-600",
       action: () => navigate("/app/offers/create"),
     },
     {
       title: t("dashboard.postRequest"),
-      description: "Ask for help from your neighbors",
+      description: t("dashboard.getHelpFromCommunity"),
       icon: FilePlus2,
       color: "from-green-500 to-green-600",
       action: () => navigate("/app/requests/create"),
     },
     {
       title: t("dashboard.browseMap"),
-      description: "Explore help offers and requests near you",
+      description: t("dashboard.exploreHelpOffers"),
       icon: MapPin,
       color: "from-purple-500 to-purple-600",
       action: () => navigate("/app/map"),
     },
     {
       title: t("dashboard.viewMessages"),
-      description: "Check your conversations and respond to messages",
+      description: t("dashboard.stayConnected"),
       icon: MessageCircle,
       color: "from-orange-500 to-orange-600",
       action: () => navigate("/app/messages"),
@@ -235,7 +235,9 @@ const Start = ({ stats }: { stats: StatsProps }) => {
         transition={{ duration: 0.6, delay: 0.2 }}
         className="mb-8"
       >
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-4">
+          {t("dashboard.quickActions")}
+        </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {quickActions.map((action, idx) => (
             <motion.div
