@@ -1,4 +1,5 @@
 import {
+  deleteMessage,
   getMessagesBySession,
   markAllMessagesAsRead,
   markMessageAsRead,
@@ -15,19 +16,17 @@ chatMsgRoutes.post("/:sessionId", authenticate, sendMessage);
 
 chatMsgRoutes.get("/:sessionId", authenticate, getMessagesBySession);
 
-chatMsgRoutes.patch(
-  "/:id/read",
-  authenticate,
-  authorize(ChatMessage),
-  markMessageAsRead
-);
-chatMsgRoutes.patch(
-  "/:sessionId/readAll",
-  authenticate,
-  authorize(ChatMessage),
-  markAllMessagesAsRead
-);
+chatMsgRoutes.patch("/:id/read", authenticate, markMessageAsRead);
+
+chatMsgRoutes.patch("/:sessionId/readAll", authenticate, markAllMessagesAsRead);
 
 chatMsgRoutes.put("/:id", authenticate, authorize(ChatMessage), updateMessage);
+
+chatMsgRoutes.delete(
+  "/:id",
+  authenticate,
+  authorize(ChatMessage),
+  deleteMessage
+);
 
 export default chatMsgRoutes;

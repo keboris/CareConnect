@@ -5,9 +5,11 @@ import { useEffect, useState } from "react";
 import { API_BASE_URL } from "../../config";
 import { useNavigate } from "react-router";
 import { useLanguage } from "../../contexts";
+import Loading from "./Loading";
 
 const CategoriesSection = () => {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
   const { language, t } = useLanguage();
@@ -30,12 +32,15 @@ const CategoriesSection = () => {
         setCategories(sortedCategories);
       } catch (error) {
         console.error("Error fetching categories:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchCategories();
   }, []);
 
+  if (loading) return <Loading />;
   return (
     <div className="py-24 bg-gradient-to-b from-gray-50 to-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -24,11 +24,16 @@ const authorize = (Model: any): RequestHandler => {
           })
         );
 
-      let ownerId: string | undefined;
+      let ownerId: string | string[] | undefined;
       if (Model.modelName != "HelpSession") {
-        if (Model.modelName === "ChatMessage")
-          ownerId = model.senderId?.toString();
-        else ownerId = model.userId?.toString() ?? model._id.toString();
+        if (Model.modelName === "ChatMessage") {
+          ownerId = [
+            model.senderId?.toString(),
+            model.receiverId?.toString(),
+          ].filter((s): s is string => typeof s === "string");
+        } else {
+          ownerId = model.userId?.toString() ?? model._id.toString();
+        }
       } else {
         if (model.offerId) {
           ownerId = model.userRequesterId?.toString();
@@ -39,15 +44,29 @@ const authorize = (Model: any): RequestHandler => {
 
       console.log("✅ authorize", "Checking ownership for user:", req.user?.id);
       // otherwise only allow if user is the author
-      if (ownerId !== req.user?.id) {
-        return next(
-          new Error(
-            `Forbidden, you cannot modify this ${Model.modelName.toLowerCase()}`,
-            {
-              cause: { status: 403 },
-            }
-          )
-        );
+      const userId = req.user?.id;
+      if (Array.isArray(ownerId)) {
+        if (!userId || !ownerId.includes(userId)) {
+          return next(
+            new Error(
+              `Forbidden, you cannot modify this ${Model.modelName.toLowerCase()}`,
+              {
+                cause: { status: 403 },
+              }
+            )
+          );
+        }
+      } else {
+        if (ownerId !== userId) {
+          return next(
+            new Error(
+              `Forbidden, you cannot modify this ${Model.modelName.toLowerCase()}`,
+              {
+                cause: { status: 403 },
+              }
+            )
+          );
+        }
       }
       next();
     }

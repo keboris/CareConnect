@@ -149,6 +149,9 @@ export const markMessageAsRead: RequestHandler<{ id: string }> = async (
         .json({ message: `Message with id:${id} not found` });
     }
 
+    console.log(
+      `Message receiverId: ${msg.receiverId}, Current userId: ${userId}`
+    );
     if (msg.receiverId.toString() !== userId) {
       return res
         .status(403)
@@ -314,6 +317,65 @@ export const updateMessage: RequestHandler<{ id: string }> = async (
   } catch (error) {
     res.status(500).json({
       message: "An error occurred while updating the message",
+    });
+  }
+};
+
+export const deleteMessage: RequestHandler<{ id: string }> = async (
+  req,
+  res
+) => {
+  try {
+    const {
+      params: { id },
+    } = req;
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const msg = await ChatMessage.findById(id);
+    if (!msg) {
+      return res
+        .status(404)
+        .json({ message: `Message with id:${id} not found` });
+    }
+    if (msg.senderId.toString() !== userId) {
+      return res.status(403).json({
+        message: "You can only delete messages you sent",
+      });
+    }
+
+    // Check time window (5 minutes)
+    const EDIT_WINDOW_MINUTES = 5;
+    const timeSinceSent = (Date.now() - msg.createdAt.getTime()) / 1000 / 60; // in minutes
+
+    if (timeSinceSent > EDIT_WINDOW_MINUTES) {
+      return res.status(400).json({
+        message: `You can only delete a message within ${EDIT_WINDOW_MINUTES} minutes after sending it`,
+      });
+    }
+
+    // Prevent deleting if receiver has already read it
+    if (msg.isRead) {
+      return res.status(400).json({
+        message: "You cannot delete a message that has already been read",
+      });
+    }
+
+    const imagesToDelete = await ChatMessage.findById(id).select(
+      "attachementsPublicIds"
+    );
+    if (imagesToDelete) {
+      for (const publicId of imagesToDelete.attachementsPublicIds) {
+        await cloudinary.uploader.destroy(publicId);
+      }
+    }
+    await ChatMessage.findByIdAndDelete(id);
+    await Notification.findByIdAndDelete(msg.notifId);
+    res.status(200).json({ message: "Message deleted successfully" });
+  } catch (error) {
+    res.status(500).json({
+      message: "An error occurred while deleting the message",
     });
   }
 };

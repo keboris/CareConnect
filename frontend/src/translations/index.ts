@@ -368,4 +368,9 @@ export const translationsMap: Translations = {
 
   "dashboard.mainAddress": { en: "Main Address", de: "Hauptadresse" },
   "dashboard.otherAddress": { en: "Other Address", de: "Andere Adresse" },
+
+  "dashboard.createNewOffer": {
+    en: "Create New Offer",
+    de: "Neues Angebot erstellen",
+  },
 };
