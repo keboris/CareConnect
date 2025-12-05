@@ -58,6 +58,12 @@ const AddressInput: React.FC<AddressInputProps> = ({
       latitude: parseFloat(place.lat),
       longitude: parseFloat(place.lon),
     });
+    console.log(
+      "Selected place:",
+      namePlace,
+      parseFloat(place.lat),
+      parseFloat(place.lon)
+    );
   };
 
   const handleBlur = () => {

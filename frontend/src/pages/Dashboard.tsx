@@ -26,6 +26,7 @@ import {
   ChatPage,
   CreateCare,
   Loading,
+  MapList,
   Offers,
   Requests,
   Sessions,
@@ -558,6 +559,7 @@ const Dashboard = () => {
             {isActivePath("/app/requests/create") && (
               <CreateCare type="request" />
             )}
+            {isActivePath("/app/map") && <MapList />}
           </main>
         </div>
       </div>

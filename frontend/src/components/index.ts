@@ -18,6 +18,8 @@ export { default as MapList } from "./Map/MapList";
 export { default as SessionDetail } from "./Chat/SessionDetail";
 export { default as CreateCare } from "./Care/CreateCare";
 export { default as Sessions } from "./Care/Sessions";
+export { default as Map } from "./Map/Map";
+export { default as MarkerLegend } from "./Map/MarkerLegend";
 
 export * from "./ui/card";
 export * as IconMap from "./ui/icons";
