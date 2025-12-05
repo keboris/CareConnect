@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ChangeEvent } from "react";
+import { useEffect, useState } from "react";
 import type { mapcenterProps, OfferProps, RequestProps } from "../../types";
 import OrtMap from "./OrtMap";
 import { useAuth, useLanguage } from "../../contexts";
