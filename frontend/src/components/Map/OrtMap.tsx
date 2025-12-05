@@ -40,6 +40,20 @@ const OrtMap = ({ orts, mapCenter, onMarkerClick, zoom }: OrtMapProps) => {
   //const [zoom, setZoom] = useState(13);
   const [currentZoom, setCurrentZoom] = useState<number>(zoom ?? 10);
 
+  const createBlinkingMarker = (iconUrl: string) => {
+    return L.divIcon({
+      html: `
+      <div class="blink-alert-wrapper">
+        <div class="blink-alert-circle"></div>
+        <img src="${iconUrl}" class="blink-alert-icon" />
+      </div>
+    `,
+      className: "", // pas de style Leaflet par défaut
+      iconSize: [30, 41],
+      iconAnchor: [15, 41], // centre sur le bas de l'icône
+      popupAnchor: [0, -41],
+    });
+  };
   useEffect(() => {
     if (mapCenter) {
       setCenter(mapCenter);
@@ -164,7 +178,13 @@ const OrtMap = ({ orts, mapCenter, onMarkerClick, zoom }: OrtMapProps) => {
         <Marker
           key={ort._id}
           position={[ort.latitude, ort.longitude]}
-          icon={getMarkerIcon(ort)}
+          icon={
+            getOrtType(ort) === "alert" && ort.status === "active"
+              ? createBlinkingMarker(
+                  "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png"
+                ) // ton icône normale
+              : getMarkerIcon(ort) // icône normale pour les autres
+          }
           eventHandlers={{
             click: () => handleMarkerClick(ort),
           }}

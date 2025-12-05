@@ -505,4 +505,23 @@ export const translationsMap: Translations = {
   },
 
   "dashboard.quickActions": { en: "Quick Actions", de: "Schnellaktionen" },
+
+  "sos.send": { en: "Send SOS", de: "SOS senden" },
+  "sos.sending": { en: "Sending SOS...", de: "Sende SOS..." },
+  "sos.descriptionPlaceholder": {
+    en: "Enter description...",
+    de: "Beschreibung eingeben...",
+  },
+
+  "sos.description": { en: "Description", de: "Beschreibung" },
+  "sos.typePlaceholder": {
+    en: "Select type of emergency...",
+    de: "Art des Notfalls auswählen...",
+  },
+  "sos.medical": { en: "Medical", de: "Medizinisch" },
+  "sos.fire": { en: "Fire", de: "Feuer" },
+  "sos.police": { en: "Police", de: "Polizei" },
+  "sos.danger": { en: "Danger", de: "Gefahr" },
+  "sos.assistance": { en: "Assistance", de: "Hilfe" },
+  "sos.other": { en: "Other", de: "Andere" },
 };

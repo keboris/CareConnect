@@ -27,6 +27,8 @@ import {
   CreateCare,
   Loading,
   MapList,
+  Me,
+  Notifications,
   Offers,
   Requests,
   Sessions,
@@ -232,6 +234,7 @@ const Dashboard = () => {
   };
 
   if (loading || loadingStats || loadingOtherLocations) return <Loading />;
+
   return (
     <>
       <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -559,7 +562,9 @@ const Dashboard = () => {
             {isActivePath("/app/requests/create") && (
               <CreateCare type="request" />
             )}
+            {isActivePath("/app/notifications") && <Notifications />}
             {isActivePath("/app/map") && <MapList />}
+            {isActivePath("/app/profile") && <Me />}
           </main>
         </div>
       </div>

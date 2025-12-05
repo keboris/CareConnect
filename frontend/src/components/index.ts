@@ -20,6 +20,8 @@ export { default as CreateCare } from "./Care/CreateCare";
 export { default as Sessions } from "./Care/Sessions";
 export { default as Map } from "./Map/Map";
 export { default as MarkerLegend } from "./Map/MarkerLegend";
+export { default as Notifications } from "./Profile/Notifications";
+export { default as Me } from "./Profile/Me";
 
 export * from "./ui/card";
 export * as IconMap from "./ui/icons";
