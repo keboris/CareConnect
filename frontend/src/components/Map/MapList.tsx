@@ -44,9 +44,9 @@ const MapList = () => {
   const [mapCenter, setMapCenter] = useState<mapcenterProps | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [initialActiveOrts, setInitialActiveOrts] = useState<
+  /*const [initialActiveOrts, setInitialActiveOrts] = useState<
     (OfferProps | RequestProps)[]
-  >([]);
+  >([]);*/
 
   const [allActiveOrts, setAllActiveOrts] = useState<
     (OfferProps | RequestProps)[]
@@ -124,7 +124,7 @@ const MapList = () => {
         setSearchQuery("");
 
         setAllActiveOrts(mergedActiveList);
-        setInitialActiveOrts(mergedActiveList);
+        //setInitialActiveOrts(mergedActiveList);
         setOrtsToSend(mergedActiveList);
 
         setAllUserOrts(mergeUserList);
