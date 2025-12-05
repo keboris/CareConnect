@@ -4,9 +4,9 @@ import { OFFER_API_URL, REQUEST_API_URL } from "../../config";
 import type { OfferProps, RequestProps } from "../../types";
 import { Card, CardContent, Loading } from "../../components";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Handshake, FilePlus2, Zap, X, Search } from "lucide-react";
+import { MapPin, Handshake, FilePlus2, Zap, Search } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import L, { map } from "leaflet";
+import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 // Fix for Leaflet marker icons
