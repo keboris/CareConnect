@@ -48,7 +48,7 @@ export type LocationProps = {
 
 export type OfferProps = {
   _id: string;
-  userId: string;
+  userId: User;
   title: string;
   description: string;
   categoryId: string;
@@ -65,7 +65,6 @@ export type OfferProps = {
     | "cancelled"
     | "inactive"
     | "archived";
-  user?: User;
   category?: Category;
   createdAt: string;
   updatedAt: string;
@@ -73,7 +72,7 @@ export type OfferProps = {
 
 export type RequestProps = {
   _id: string;
-  userId: string;
+  userId: User;
   typeRequest: "alert" | "request";
   title?: string;
   description: string;
@@ -94,7 +93,6 @@ export type RequestProps = {
     | "cancelled"
     | "inactive"
     | "archived";
-  user?: User;
   category?: Category;
   createdAt: string;
   updatedAt: string;
@@ -106,9 +104,10 @@ export type mapcenterProps = {
 };
 
 export type OrtMapProps = {
-  orts: OfferProps[] | RequestProps[];
+  orts: (OfferProps | RequestProps)[];
   mapCenter: mapcenterProps | null;
   onMarkerClick: (ort: OfferProps | RequestProps) => void;
+  zoom?: number;
 };
 
 export type AuthContextType = {
