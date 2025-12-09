@@ -4,9 +4,10 @@ import type { ZodObject } from "zod/v4";
 const validateBodyZod =
   (zodSchema: ZodObject): RequestHandler =>
   (req, res, next) => {
+    console.log(req.body);
     const parsed = zodSchema.safeParse(req.body);
-
-    //console.log(parsed?.error?.issues);
+    console.log("Parsed result:", parsed);
+    console.log(parsed?.error?.issues);
 
     if (!parsed.success) {
       const issues = parsed.error?.issues.map((issue) => ({

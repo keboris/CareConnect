@@ -1,6 +1,4 @@
-import { STATUS_CODES } from "http";
 import { z } from "zod";
-import { is } from "zod/locales";
 
 // User Schemas
 //----------------------------------------------------------------------------
@@ -87,8 +85,6 @@ export const userUpdateSchema = z
       .string({ error: "phone must be a string" })
       .min(10, { message: "phone must be at least 10 chars long" })
       .optional(),
-    profileImage: z.string().url().optional(),
-    profileImagePublicId: z.string().optional(),
     bio: z
       .string({ error: "bio must be a string" })
       .max(500, { message: "bio must be at most 500 characters long" })
@@ -104,8 +100,18 @@ export const userUpdateSchema = z
       .string({ error: "location must be a string" })
       .min(2, { message: "location must be at least 2 chars long" })
       .optional(),
-    longitude: z.number({ error: "longitude must be a number" }).optional(),
-    latitude: z.number({ error: "latitude must be a number" }).optional(),
+    longitude: z
+      .preprocess(
+        (val) => parseFloat(val as string),
+        z.number({ error: "Longitude must be a number" })
+      )
+      .optional(),
+    latitude: z
+      .preprocess(
+        (val) => parseFloat(val as string),
+        z.number({ error: "Latitude must be a number" })
+      )
+      .optional(),
     languages: z
       .array(
         z.string({ error: "language must be a string" }).min(24, {
@@ -200,15 +206,29 @@ export const offerInputSchema = z
       .min(24, { message: "category must be a valid ID" }),
     isPaid: z.boolean({ error: "isPaid must be a boolean" }).default(false),
     price: z
-      .number({ error: "price must be a number" })
-      .min(0, { message: "price cannot be negative" })
+      .preprocess(
+        (val) => parseFloat(val as string),
+        z
+          .number({ error: "Price must be a number or greater than 0" })
+          .min(0, { message: "Price cannot be negative" })
+      )
       .optional(),
     location: z
-      .string({ error: "location must be a string" })
-      .min(2, { message: "location must be at least 2 chars long" })
+      .string({ error: "Location must be a string" })
+      .min(2, { message: "Location must be at least 2 chars long" })
       .optional(),
-    longitude: z.number({ error: "longitude must be a number" }).optional(),
-    latitude: z.number({ error: "latitude must be a number" }).optional(),
+    longitude: z
+      .preprocess(
+        (val) => parseFloat(val as string),
+        z.number({ error: "Longitude must be a number" })
+      )
+      .optional(),
+    latitude: z
+      .preprocess(
+        (val) => parseFloat(val as string),
+        z.number({ error: "Latitude must be a number" })
+      )
+      .optional(),
     images: z
       .array(
         z
@@ -238,15 +258,29 @@ export const offerUpdateSchema = z
       .default(false)
       .optional(),
     price: z
-      .number({ error: "price must be a number" })
-      .min(0, { message: "price cannot be negative" })
+      .preprocess(
+        (val) => parseFloat(val as string),
+        z
+          .number({ error: "Price must be a number or greater than 0" })
+          .min(0, { message: "Price cannot be negative" })
+      )
       .optional(),
     location: z
-      .string({ error: "location must be a string" })
-      .min(2, { message: "location must be at least 2 chars long" })
+      .string({ error: "Location must be a string" })
+      .min(2, { message: "Location must be at least 2 chars long" })
       .optional(),
-    longitude: z.number({ error: "longitude must be a number" }).optional(),
-    latitude: z.number({ error: "latitude must be a number" }).optional(),
+    longitude: z
+      .preprocess(
+        (val) => parseFloat(val as string),
+        z.number({ error: "Longitude must be a number" })
+      )
+      .optional(),
+    latitude: z
+      .preprocess(
+        (val) => parseFloat(val as string),
+        z.number({ error: "Latitude must be a number" })
+      )
+      .optional(),
     images: z
       .array(
         z
@@ -271,14 +305,24 @@ export const requestInputSchema = z
     title: z.string({ error: "title must be a string" }).optional(),
     description: z.string({ error: "description must be a string" }).optional(),
     category: z
-      .string({ error: "category must be a string" })
-      .min(24, { message: "category must be a valid ID" }),
+      .string({ error: "Category must be a string" })
+      .min(24, { message: "Category must be a valid ID" }),
     location: z
-      .string({ error: "location must be a string" })
-      .min(2, { message: "location must be at least 2 chars long" })
+      .string({ error: "Location must be a string" })
+      .min(2, { message: "Location must be at least 2 chars long" })
       .optional(),
-    longitude: z.number({ error: "longitude must be a number" }).optional(),
-    latitude: z.number({ error: "latitude must be a number" }).optional(),
+    longitude: z
+      .preprocess(
+        (val) => parseFloat(val as string),
+        z.number({ error: "Longitude must be a number" })
+      )
+      .optional(),
+    latitude: z
+      .preprocess(
+        (val) => parseFloat(val as string),
+        z.number({ error: "Latitude must be a number" })
+      )
+      .optional(),
     rewardType: z
       .enum(["free", "paid"], {
         error: "rewardType must be either 'free' or 'paid'",
@@ -286,13 +330,21 @@ export const requestInputSchema = z
       .default("free")
       .optional(),
     price: z
-      .number({ error: "price must be a number" })
-      .min(0, { message: "price cannot be negative" })
+      .preprocess(
+        (val) => parseFloat(val as string),
+        z
+          .number({ error: "Price must be a number or greater than 0" })
+          .min(0, { message: "Price cannot be negative" })
+      )
       .optional(),
     radius: z
-      .number({ error: "radius must be a number" })
-      .min(100, { message: "radius must be at least 100 meters" })
-      .max(10000, { message: "radius must be at most 10000 meters" })
+      .preprocess(
+        (val) => parseFloat(val as string),
+        z
+          .number({ error: "radius must be a number" })
+          .min(100, { message: "radius must be at least 100 meters" })
+          .max(10000, { message: "radius must be at most 10000 meters" })
+      )
       .optional(),
     urgency: z
       .enum(["low", "normal", "high"], {
@@ -314,14 +366,16 @@ export const requestInputSchema = z
       if (!data.title) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "title is required for typeRequest 'request'",
+          message: "Title is required for typeRequest 'request'",
+          path: ["title"],
         });
       } else {
         if (data.title.length < 5) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message:
-              "title must be at least 5 characters long for typeRequest 'request'",
+              "Title must be at least 5 characters long for typeRequest 'request'",
+            path: ["title"],
           });
         }
       }
@@ -330,14 +384,16 @@ export const requestInputSchema = z
       if (!data.description) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "description is required for typeRequest 'request'",
+          message: "Description is required for typeRequest 'request'",
+          path: ["description"],
         });
       } else {
         if (data.description.length < 10) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message:
-              "description must be at least 10 characters long for typeRequest 'request'",
+              "Description must be at least 10 characters long for typeRequest 'request'",
+            path: ["description"],
           });
         }
       }
@@ -364,21 +420,39 @@ export const requestUpdateSchema = z
       .string({ error: "location must be a string" })
       .min(2, { message: "location must be at least 2 chars long" })
       .optional(),
-    longitude: z.number({ error: "longitude must be a number" }).optional(),
-    latitude: z.number({ error: "latitude must be a number" }).optional(),
+    longitude: z
+      .preprocess(
+        (val) => parseFloat(val as string),
+        z.number({ error: "Longitude must be a number" })
+      )
+      .optional(),
+    latitude: z
+      .preprocess(
+        (val) => parseFloat(val as string),
+        z.number({ error: "Latitude must be a number" })
+      )
+      .optional(),
     rewardType: z
       .enum(["free", "paid"], {
         error: "rewardType must be either 'free' or 'paid'",
       })
       .default("free"),
     price: z
-      .number({ error: "price must be a number" })
-      .min(0, { message: "price cannot be negative" })
+      .preprocess(
+        (val) => parseFloat(val as string),
+        z
+          .number({ error: "Price must be a number or greater than 0" })
+          .min(0, { message: "Price cannot be negative" })
+      )
       .optional(),
     radius: z
-      .number({ error: "radius must be a number" })
-      .min(100, { message: "radius must be at least 100 meters" })
-      .max(10000, { message: "radius must be at most 10000 meters" })
+      .preprocess(
+        (val) => parseFloat(val as string),
+        z
+          .number({ error: "radius must be a number" })
+          .min(100, { message: "radius must be at least 100 meters" })
+          .max(10000, { message: "radius must be at most 10000 meters" })
+      )
       .optional(),
     urgency: z
       .enum(["low", "normal", "high"], {
@@ -406,14 +480,16 @@ export const requestUpdateSchema = z
       if (!data.title) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "title is required for typeRequest 'request'",
+          message: "Title is required for typeRequest 'request'",
+          path: ["title"],
         });
       } else {
         if (data.title.length < 5) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message:
-              "title must be at least 5 characters long for typeRequest 'request'",
+              "Title must be at least 5 characters long for typeRequest 'request'",
+            path: ["title"],
           });
         }
       }
@@ -422,14 +498,16 @@ export const requestUpdateSchema = z
       if (!data.description) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "description is required for typeRequest 'request'",
+          message: "Description is required for typeRequest 'request'",
+          path: ["description"],
         });
       } else {
         if (data.description.length < 10) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message:
-              "description must be at least 10 characters long for typeRequest 'request'",
+              "Description must be at least 10 characters long for typeRequest 'request'",
+            path: ["description"],
           });
         }
       }

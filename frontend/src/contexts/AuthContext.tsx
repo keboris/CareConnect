@@ -178,6 +178,7 @@ export default function AuthContextProvider({
   const refreshUser = async (input: RequestInfo, init: RequestInit = {}) => {
     if (!init.headers) init.headers = {};
 
+    console.log("je recois : ", input, init);
     if (accessToken) {
       const headers = new Headers(init.headers);
       headers.set("Authorization", `Bearer ${accessToken}`);
@@ -221,7 +222,9 @@ export default function AuthContextProvider({
         signIn,
         signOut,
         isAuthenticated,
+        fetchUser,
         refreshUser,
+        issuesToFieldErrors,
       }}
     >
       {children}

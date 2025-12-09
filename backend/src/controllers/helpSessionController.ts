@@ -153,6 +153,7 @@ export const getHelpSession: RequestHandler = async (req, res) => {
     const helpSessions = await HelpSession.find({
       $or: [{ userRequesterId: userId }, { userHelperId: userId }],
     })
+      .sort({ createdAt: -1 })
       .populate("requestId", "category title description typeRequest")
       .populate("offerId", "category title description typeRequest");
 

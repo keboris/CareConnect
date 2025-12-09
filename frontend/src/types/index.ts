@@ -34,6 +34,7 @@ export type Category = {
 export type StatsProps = {
   offers: number;
   requests: number;
+  alerts: number;
   chats: number;
   unRead: number;
   sessions: number;
@@ -104,10 +105,26 @@ export type mapcenterProps = {
 };
 
 export type OrtMapProps = {
-  orts: (OfferProps | RequestProps)[];
-  mapCenter: mapcenterProps | null;
-  onMarkerClick: (ort: OfferProps | RequestProps) => void;
-  zoom?: number;
+  orts: (OfferProps | RequestProps | User)[];
+  mapCenter: number[] | null;
+  isClick?: boolean;
+  setIsClick?: (value: boolean) => void;
+  currentOrt?: OfferProps | RequestProps | User | null;
+  onMarkerClick: (ort: OfferProps | RequestProps | User) => void;
+  isClickedZoom?: boolean;
+  setIsClickedZoom?: (value: boolean) => void;
+  onAccept?: (ort: OfferProps | RequestProps | User) => void;
+  acceptLoading?: boolean;
+  mapRef?: React.RefObject<L.Map | null>;
+  overview?: boolean;
+};
+
+export type CountProps = {
+  offers: number;
+  requests: number;
+  alerts: number;
+  statuses: Record<string, number>;
+  allActive: number;
 };
 
 export type AuthContextType = {
@@ -117,7 +134,11 @@ export type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   isAuthenticated: boolean;
+  fetchUser: () => Promise<void>;
   refreshUser: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+  issuesToFieldErrors: (issues: Array<{ path: string[]; message: string }>) => {
+    [key: string]: string;
+  };
 };
 
 export type Language = "en" | "de";
@@ -232,4 +253,27 @@ export type HelpSessionProps = {
   notes: string;
   ratingPending: boolean;
   result: string;
+};
+
+export type ConfirmModalProps = {
+  title: string;
+  message: string;
+  onConfirm: (ort: OfferProps | RequestProps) => void;
+  onCancel: () => void;
+};
+
+export type CareModalProps = {
+  dialogRef: React.RefObject<HTMLDialogElement | null>;
+  selectedCare: OfferProps | RequestProps | null;
+  option: "show" | "create" | "edit";
+  isModalOpen: boolean;
+  closeModal: () => void;
+  page?: "request" | "alert";
+};
+
+export type CareProps = {
+  item?: OfferProps | RequestProps | null;
+  option?: "show" | "create" | "edit";
+  page?: "offer" | "request" | "alert";
+  closeModal?: () => void;
 };

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth, useLanguage } from "../../contexts";
 import { CATEGORIE_API_URL, SESSION_API_URL } from "../../config";
 import type { Category, HelpSessionProps } from "../../types";
@@ -34,9 +34,14 @@ const Sessions = () => {
   );
   const [categories, setCategories] = useState<Category[]>([]);
 
+  const [selectedCare, setSelectedCare] = useState<HelpSessionProps | null>(
+    null
+  );
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("active");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedSession, setSelectedSession] =
     useState<HelpSessionProps | null>(null);
@@ -133,6 +138,23 @@ const Sessions = () => {
     setFilteredSessions(filtered);
   }, [sessions, selectedCategory, selectedStatus, searchTerm]);
 
+  useEffect(() => {
+    if (selectedCare && dialogRef.current) {
+      dialogRef.current.showModal();
+    }
+  }, [selectedCare]);
+
+  const openModal = (e: HelpSessionProps | null): void => {
+    setSelectedCare(e);
+  };
+
+  const closeModal = () => {
+    if (dialogRef.current) {
+      dialogRef.current.close();
+    }
+    setSelectedCare(null);
+  };
+
   const markAsCompleted = async (sessionId: string) => {
     try {
       const response = await refreshUser(
@@ -174,7 +196,7 @@ const Sessions = () => {
   if (loading || loadingSessions) return <Loading />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6">
+    <div className="min-h-screen bg-white p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <motion.div
@@ -185,8 +207,8 @@ const Sessions = () => {
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <CalendarClock className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-orange-100 rounded-lg">
+                <CalendarClock className="w-6 h-6 text-orange-600" />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
@@ -208,53 +230,55 @@ const Sessions = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.1 }}
-              className="flex gap-2 flex-wrap flex-wrap col-span-3 lg:col-span-4"
+              className="flex gap-2 flex-wrap col-span-3 lg:col-span-4"
             >
-              {["all", "active", "completed", "cancelled"].map((status) => (
+              {["active", "completed", "cancelled", "all"].map((status) => (
                 <button
                   key={status}
-                  onClick={() => setSelectedStatus(status)}
+                  onClick={() => {
+                    closeModal();
+                    openModal(null);
+                    setSelectedStatus(status);
+                  }}
                   className={`px-3 py-2 rounded-lg cursor-pointer font-semibold transition-all text-sm ${
                     selectedStatus === status
                       ? "bg-blue-600 text-white shadow-lg"
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 >
-                  {status.charAt(0).toUpperCase() +
-                    status.slice(1).replace(/_/g, " ")}
+                  {t(`status.${status}`) ||
+                    status.charAt(0).toUpperCase() +
+                      status.slice(1).replace(/_/g, " ")}
                 </button>
               ))}
             </motion.div>
 
             {/* Search */}
-            {filteredSessions.length > 0 && (
-              <>
-                <div className="relative col-span-3 lg:col-span-1">
-                  <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search offers..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
 
-                {/* Category Filter */}
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All Categories</option>
-                  {categories.map((cat) => (
-                    <option key={cat._id} value={cat._id}>
-                      {language === "de" ? cat.nameDE : cat.name}
-                    </option>
-                  ))}
-                </select>
-              </>
-            )}
+            <div className="relative col-span-3 lg:col-span-1">
+              <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search offers..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Category Filter */}
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Categories</option>
+              {categories.map((cat) => (
+                <option key={cat._id} value={cat._id}>
+                  {language === "de" ? cat.nameDE : cat.name}
+                </option>
+              ))}
+            </select>
           </div>
         </motion.div>
 

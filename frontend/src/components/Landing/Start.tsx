@@ -1,4 +1,4 @@
-import { Card, CardContent, Loading } from "../../components";
+import { Card, CardContent, Loading, MapList } from "../../components";
 import {
   BarChart,
   Bar,
@@ -122,109 +122,123 @@ const Start = ({ stats }: { stats: StatsProps }) => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="mb-8 text-center"
+        className="grid grid-cols-1 lg:grid-cols-2 gap-8"
       >
-        <h3 className="text-xl font-bold text-gray-800 mb-4">
-          {t("dashboard.overview")}
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <motion.div
-            key="total-activity"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: 1 * 0.05 }}
-          >
-            <Card className="rounded-xl shadow-lg hover:shadow-xl transition-all bg-white border-0 overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="bg-blue-100 text-blue-600 p-3 rounded-lg">
-                    <TrendingUp className="h-6 w-6" />
-                  </div>
-                  <div
-                    className={`text-3xl font-bold bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent`}
-                  >
-                    {stats.offers + stats.requests}
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600 font-medium">
-                  {t("dashboard.totalActivity")}
-                </p>
-              </CardContent>
-            </Card>
-          </motion.div>
+        {/* --- Map --- */}
 
-          <motion.div
-            key="active-chats"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: 2 * 0.05 }}
-          >
-            <Card className="rounded-xl shadow-lg hover:shadow-xl transition-all bg-white border-0 overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="bg-green-100 text-green-600 p-3 rounded-lg">
-                    <Users className="h-6 w-6" />
-                  </div>
-                  <div
-                    className={`text-3xl font-bold bg-gradient-to-r from-green-500 to-green-600 bg-clip-text text-transparent`}
-                  >
-                    {stats.chats}
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600 font-medium">
-                  {t("dashboard.activeChats")}
-                </p>
-              </CardContent>
-            </Card>
-          </motion.div>
+        <div>
+          <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">
+            {t("dashboard.map")}
+          </h3>
+          <div className="grid grid-cols-1 p-2">
+            <MapList overview={true} />
+          </div>
+        </div>
 
-          <motion.div
-            key="active-requests"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: 3 * 0.05 }}
-          >
-            <Card className="rounded-xl shadow-lg hover:shadow-xl transition-all bg-white border-0 overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="bg-yellow-100 text-yellow-600 p-3 rounded-lg">
-                    <Clock className="h-6 w-6" />
+        {/* --- Stats Cards --- */}
+        <div>
+          <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">
+            {t("dashboard.overview")}
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <motion.div
+              key="total-activity"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4, delay: 1 * 0.05 }}
+            >
+              <Card className="rounded-xl shadow-lg hover:shadow-xl transition-all bg-white border-0 overflow-hidden">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="bg-blue-100 text-blue-600 p-3 rounded-lg">
+                      <TrendingUp className="h-6 w-6" />
+                    </div>
+                    <div
+                      className={`text-3xl font-bold bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent`}
+                    >
+                      {stats.offers + stats.requests}
+                    </div>
                   </div>
-                  <div
-                    className={`text-3xl font-bold bg-gradient-to-r from-yellow-500 to-yellow-600 bg-clip-text text-transparent`}
-                  >
-                    {stats.requests}
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600 font-medium">
-                  {t("dashboard.pendingRequests")}
-                </p>
-              </CardContent>
-            </Card>
-          </motion.div>
+                  <p className="text-sm text-gray-600 font-medium">
+                    {t("dashboard.totalActivity")}
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
 
-          <motion.div
-            key="active-offers"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: 4 * 0.05 }}
-          >
-            <Card className="rounded-xl shadow-lg hover:shadow-xl transition-all bg-white border-0 overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="bg-purple-100 text-purple-600 p-3 rounded-lg">
-                    <CheckCircle className="h-6 w-6" />
+            <motion.div
+              key="active-chats"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4, delay: 2 * 0.05 }}
+            >
+              <Card className="rounded-xl shadow-lg hover:shadow-xl transition-all bg-white border-0 overflow-hidden">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="bg-green-100 text-green-600 p-3 rounded-lg">
+                      <Users className="h-6 w-6" />
+                    </div>
+                    <div
+                      className={`text-3xl font-bold bg-gradient-to-r from-green-500 to-green-600 bg-clip-text text-transparent`}
+                    >
+                      {stats.chats}
+                    </div>
                   </div>
-                  <div className="text-3xl font-bold bg-gradient-to-r from-purple-500 to-purple-600 bg-clip-text text-transparent">
-                    {stats.offers}
+                  <p className="text-sm text-gray-600 font-medium">
+                    {t("dashboard.activeChats")}
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              key="active-requests"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4, delay: 3 * 0.05 }}
+            >
+              <Card className="rounded-xl shadow-lg hover:shadow-xl transition-all bg-white border-0 overflow-hidden">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="bg-yellow-100 text-yellow-600 p-3 rounded-lg">
+                      <Clock className="h-6 w-6" />
+                    </div>
+                    <div
+                      className={`text-3xl font-bold bg-gradient-to-r from-yellow-500 to-yellow-600 bg-clip-text text-transparent`}
+                    >
+                      {stats.requests}
+                    </div>
                   </div>
-                </div>
-                <p className="text-sm text-gray-600 font-medium">
-                  {t("dashboard.activeOffers")}
-                </p>
-              </CardContent>
-            </Card>
-          </motion.div>
+                  <p className="text-sm text-gray-600 font-medium">
+                    {t("dashboard.pendingRequests")}
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              key="active-offers"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4, delay: 4 * 0.05 }}
+            >
+              <Card className="rounded-xl shadow-lg hover:shadow-xl transition-all bg-white border-0 overflow-hidden">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="bg-purple-100 text-purple-600 p-3 rounded-lg">
+                      <CheckCircle className="h-6 w-6" />
+                    </div>
+                    <div className="text-3xl font-bold bg-gradient-to-r from-purple-500 to-purple-600 bg-clip-text text-transparent">
+                      {stats.offers}
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 font-medium">
+                    {t("dashboard.activeOffers")}
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
         </div>
       </motion.div>
 

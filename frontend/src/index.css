@@ -4,6 +4,66 @@
 @custom-variant dark (&:is(.dark *));
 @plugin 'daisyui';
 
+.blink-alert-wrapper,
+.blink-user-wrapper {
+  position: relative;
+  width: 30px; /* largeur totale du marker */
+  height: 41px; /* hauteur totale du marker */
+}
+
+.blink-alert-circle {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 70px;
+  background-color: red;
+  border-radius: 50%;
+  border: 2px solid white; /* optionnel pour contraste */
+  animation: blink 1s infinite ease-in-out;
+  z-index: 1;
+}
+
+.blink-user-circle {
+  position: absolute;
+  top: 0;
+  left: 43%;
+  transform: translateX(-50%);
+  width: 25px;
+  height: 25px;
+  background-color: blue;
+  border-radius: 50%;
+  border: 2px solid white; /* optionnel pour contraste */
+  /*animation: blink 1s infinite ease-in-out;*/
+  z-index: 1;
+}
+
+@keyframes blink {
+  0% {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.5);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+}
+
+.blink-alert-icon {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px; /* taille de ton icône normale */
+  height: 41px;
+  z-index: 2;
+}
+
 @layer utilities {
   .bg-grid-white {
     background-image: linear-gradient(white 1px, transparent 1px),

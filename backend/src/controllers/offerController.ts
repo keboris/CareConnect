@@ -10,7 +10,7 @@ type OfferUpdateDTO = z.infer<typeof offerUpdateSchema>;
 
 export const createOffer: RequestHandler<
   unknown,
-  { message: string; offer?: any },
+  { field?: string; message: string; offer?: any },
   OfferDTO
 > = async (req, res) => {
   try {
@@ -38,15 +38,39 @@ export const createOffer: RequestHandler<
       latitude,
     } = req.body;
 
+    const files = req.files as Express.Multer.File[] | undefined;
+    const images = files ? files.map((file) => file.path) : [];
+    const imagesPublicIds = files ? files.map((file) => file.filename) : [];
+
     if (isPaid && (price === undefined || price <= 0)) {
+      if (imagesPublicIds.length > 0) {
+        for (const publicId of imagesPublicIds) {
+          await cloudinary.uploader.destroy(publicId);
+        }
+      }
       return res.status(400).json({
+        field: "price",
         message: "Price must be greater than 0 for paid offers",
       });
     }
 
-    const files = req.files as Express.Multer.File[] | undefined;
-    const images = files ? files.map((file) => file.path) : [];
-    const imagesPublicIds = files ? files.map((file) => file.filename) : [];
+    if (location !== undefined) {
+      const regex = /^.+\s\d+\s*,?\s*\d{3,}\s+[A-Za-zÀ-ÖØ-öø-ÿ\s-]+$/;
+
+      if (!regex.test(location)) {
+        if (imagesPublicIds.length > 0) {
+          for (const publicId of imagesPublicIds) {
+            await cloudinary.uploader.destroy(publicId);
+          }
+        }
+
+        return res.status(400).json({
+          field: "location",
+          message:
+            "Address must contain a street with number, a postal code, and a city",
+        });
+      }
+    }
 
     const offer = await Offer.create({
       userId: userId,
@@ -78,6 +102,7 @@ export const getOffers: RequestHandler = async (req, res) => {
       status: { $in: ["active", "in_progress", "completed"] },
     })*/
     const offers = await Offer.find()
+      .sort({ createdAt: -1 })
       .populate("category", "name nameDE")
       .populate("userId", "firstName lastName rating location")
       .lean();
@@ -115,7 +140,6 @@ export const getOfferById: RequestHandler = async (req, res) => {
 };
 
 export const myOffers: RequestHandler = async (req, res) => {
-  console.log("Fetching offers for user:", req.user);
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -123,6 +147,7 @@ export const myOffers: RequestHandler = async (req, res) => {
     }
 
     const offers = await Offer.find({ userId })
+      .sort({ createdAt: -1 })
       .populate("category", "name nameDE")
       .populate("userId", "rating");
 
@@ -141,7 +166,7 @@ export const myOffers: RequestHandler = async (req, res) => {
 
 export const updateOffer: RequestHandler<
   { id: string },
-  { message: string; offer: OfferDTO | any },
+  { field?: string; message: string; offer: OfferDTO | any },
   OfferUpdateDTO
 > = async (req, res) => {
   try {
@@ -163,8 +188,20 @@ export const updateOffer: RequestHandler<
       },
       params: { id },
     } = req;
+
+    const files = req.files as Express.Multer.File[] | undefined;
+    const images = files ? files.map((file) => file.path) : [];
+    const imagesPublicIds = files ? files.map((file) => file.filename) : [];
+
     if (isPaid && (price === undefined || price <= 0)) {
+      if (imagesPublicIds.length > 0) {
+        for (const publicId of imagesPublicIds) {
+          await cloudinary.uploader.destroy(publicId);
+        }
+      }
+
       return res.status(400).json({
+        field: "price",
         message: "Price (if isPaid is true) is required",
         offer: undefined,
       });
@@ -176,36 +213,54 @@ export const updateOffer: RequestHandler<
         status
       )
     ) {
+      if (imagesPublicIds.length > 0) {
+        for (const publicId of imagesPublicIds) {
+          await cloudinary.uploader.destroy(publicId);
+        }
+      }
+
       return res
         .status(400)
         .json({ message: "Invalid status value for offer", offer: undefined });
     }
 
     const offer = await Offer.findById(id);
-    if (!offer)
+    if (!offer) {
+      if (imagesPublicIds.length > 0) {
+        for (const publicId of imagesPublicIds) {
+          await cloudinary.uploader.destroy(publicId);
+        }
+      }
+
       return res
         .status(404)
         .json({ message: "Offer not found", offer: undefined });
+    }
 
     if (category) {
       const searchCategory = await Category.findById(category);
       if (!searchCategory) {
-        return res
-          .status(404)
-          .json({ message: "Category not found", offer: undefined });
+        if (imagesPublicIds.length > 0) {
+          for (const publicId of imagesPublicIds) {
+            await cloudinary.uploader.destroy(publicId);
+          }
+        }
+
+        return res.status(404).json({
+          field: "category",
+          message: "Category not found",
+          offer: undefined,
+        });
       }
     }
 
     if (offer.status === "completed" || offer.status === "cancelled") {
       return res.status(400).json({
+        field: "status",
         message: "Cannot update a completed or cancelled offer",
         offer: undefined,
       });
     }
-
-    const files = req.files as Express.Multer.File[] | undefined;
-    const images = files ? files.map((file) => file.path) : [];
-    const imagesPublicIds = files ? files.map((file) => file.filename) : [];
 
     const priceToUpdate = isPaid ? price : 0;
 

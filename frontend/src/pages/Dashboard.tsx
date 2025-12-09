@@ -17,8 +17,9 @@ import {
   Menu,
   ChevronDown,
   CalendarClock,
+  Zap,
 } from "lucide-react";
-import { useLocation, useNavigate } from "react-router";
+import { Link, Navigate, useLocation, useNavigate } from "react-router";
 
 import type { LocationProps, StatsProps } from "../types";
 import { STAT_USER_API_URL, USER_API_URL } from "../config";
@@ -27,6 +28,8 @@ import {
   CreateCare,
   Loading,
   MapList,
+  Me,
+  Notifications,
   Offers,
   Requests,
   Sessions,
@@ -36,7 +39,7 @@ import { extractPostalAndCity } from "../lib";
 import OldOff from "../components/Care/OldOff";
 
 const Dashboard = () => {
-  const { user, loading, refreshUser, signOut } = useAuth();
+  const { user, loading, refreshUser, isAuthenticated, signOut } = useAuth();
 
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -57,6 +60,12 @@ const Dashboard = () => {
   const [stats, setStats] = useState<StatsProps | null>(null);
 
   const [otherLocations, setOtherLocations] = useState<LocationProps[]>([]);
+
+  const [imageError, setImageError] = useState(false);
+  const profileImage = user?.profileImage;
+  //const [permission, setPermission] = useState(Notification.permission);
+
+  //const { sendNotification } = UseNotifications();
 
   useEffect(() => {
     if (loading) return;
@@ -82,7 +91,7 @@ const Dashboard = () => {
 
     const fetchOtherLocations = async () => {
       try {
-        if (!user) return;
+        if (!user?._id) return;
 
         const response = await refreshUser(
           `${USER_API_URL}/${user._id}/locations`
@@ -178,6 +187,13 @@ const Dashboard = () => {
       count: stats ? stats.requests : 0,
     },
     {
+      title: t("dashboard.alerts"),
+      icon: Zap,
+      description: t("dashboard.manageAlerts"),
+      link: "/app/alerts",
+      count: stats ? stats.alerts : 0,
+    },
+    {
       title: t("dashboard.sessions"),
       icon: CalendarClock,
       description: t("dashboard.manageSessions"),
@@ -231,7 +247,9 @@ const Dashboard = () => {
     return location.pathname === path;
   };
 
-  if (loading || loadingStats || loadingOtherLocations) return <Loading />;
+  if (!isAuthenticated) return <Navigate to="/login" />;
+  if (loading && loadingStats && loadingOtherLocations) return <Loading />;
+
   return (
     <>
       <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -249,8 +267,21 @@ const Dashboard = () => {
               <div className="p-4 border-b border-gray-700">
                 <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-all cursor-pointer">
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                    {user?.firstName?.charAt(0)}
-                    {user?.lastName?.charAt(0)}
+                    <Link to="/app/profile">
+                      {profileImage && !imageError ? (
+                        <img
+                          src={user.profileImage}
+                          alt={`${user.firstName} ${user.lastName}`}
+                          className="w-12 h-12 rounded-full object-cover"
+                          onError={() => setImageError(true)}
+                        />
+                      ) : (
+                        <>
+                          {user?.firstName?.charAt(0)}
+                          {user?.lastName?.charAt(0)}
+                        </>
+                      )}
+                    </Link>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold truncate">
@@ -341,13 +372,23 @@ const Dashboard = () => {
                 animate={{ x: 0 }}
                 exit={{ x: -300 }}
                 transition={{ duration: 0.3 }}
-                className="fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white shadow-2xl z-50 lg:hidden overflow-y-auto"
+                className="fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white shadow-2xl z-[9999] lg:hidden overflow-y-auto"
               >
                 <div className="p-4 border-b border-gray-700">
                   <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                      {user?.firstName?.charAt(0)}
-                      {user?.lastName?.charAt(0)}
+                      {user?.profileImage ? (
+                        <img
+                          src={user.profileImage}
+                          alt={`${user.firstName} ${user.lastName}`}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                      ) : (
+                        <>
+                          {user?.firstName?.charAt(0)}
+                          {user?.lastName?.charAt(0)}
+                        </>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold truncate">
@@ -365,8 +406,11 @@ const Dashboard = () => {
                     {navigationItems.map((item, idx) => (
                       <button
                         key={idx}
-                        onClick={() => navigate(item.link)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                        onClick={() => {
+                          navigate(item.link);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center cursor-pointer gap-3 px-4 py-3 rounded-xl transition-all ${
                           isActivePath(item.link)
                             ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
                             : "hover:bg-white/10 text-gray-300 hover:text-white"
@@ -389,8 +433,11 @@ const Dashboard = () => {
                     {bottomNavigationItems.map((item, idx) => (
                       <button
                         key={idx}
-                        onClick={() => navigate(item.path)}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 text-gray-300 hover:text-white transition-all"
+                        onClick={() => {
+                          navigate(item.path);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center curor-pointer gap-3 px-4 py-3 rounded-xl hover:bg-white/10 text-gray-300 hover:text-white transition-all"
                       >
                         <item.icon className="w-5 h-5" />
                         <span className="flex-1 text-left font-medium">
@@ -400,7 +447,7 @@ const Dashboard = () => {
                     ))}
                     <button
                       onClick={signOut}
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/20 text-gray-300 hover:text-red-400 transition-all"
+                      className="w-full flex items-center cursor-pointer gap-3 px-4 py-3 rounded-xl hover:bg-red-500/20 text-gray-300 hover:text-red-400 transition-all"
                     >
                       <LogOut className="w-5 h-5" />
                       <span className="flex-1 text-left font-medium">
@@ -421,14 +468,14 @@ const Dashboard = () => {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-all"
+                className="lg:hidden p-2 hover:bg-gray-100 cursor-pointer rounded-lg transition-all"
               >
                 <Menu className="w-6 h-6 text-gray-700" />
               </button>
 
               <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="hidden lg:block p-2 hover:bg-gray-100 rounded-lg transition-all"
+                className="hidden lg:block p-2 hover:bg-gray-100 cursor-pointer rounded-lg transition-all"
               >
                 <Menu className="w-6 h-6 text-gray-700" />
               </button>
@@ -457,14 +504,14 @@ const Dashboard = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: 1 * 0.05 }}
                 onClick={() => setIsOpen(!isOpen)}
-                className={`w-full flex items-center cursor-pointer gap-3 px-4 py-3 rounded-xl transition-all group
+                className={`w-full flex items-center cursor-pointer gap-3 px-3 py-2 sm:px-4 sm:py-3 rounded-xl transition-all group
                        ${
                          isOpen
                            ? "bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white shadow-lg"
                            : "hover:bg-gradient-to-b hover:from-gray-900 hover:via-gray-800 hover:to-gray-900 hover:text-white hover:shadow-lg"
                        }`}
               >
-                <MapPin className="w-5 h-5 flex-shrink-0" />
+                <MapPin className="w-5 h-5 sm:w-4 sm:h-4 flex-shrink-0" />
                 <span className="flex-1 text-left font-medium">
                   {user?.location ? extractPostalAndCity(user.location) : "N/A"}
                 </span>
@@ -505,7 +552,7 @@ const Dashboard = () => {
                             <button
                               onClick={prev}
                               disabled={currentIndex === 0}
-                              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-30"
+                              className="px-3 py-1 bg-gray-200 cursor-pointer rounded disabled:opacity-30"
                             >
                               {t("dashboard.previous")}
                             </button>
@@ -519,7 +566,7 @@ const Dashboard = () => {
                               disabled={
                                 currentIndex === allLocations.length - 1
                               }
-                              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-30"
+                              className="px-3 py-1 bg-gray-200 cursor-pointer rounded disabled:opacity-30"
                             >
                               {t("dashboard.next")}
                             </button>
@@ -535,7 +582,7 @@ const Dashboard = () => {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => navigate("/app/notifications")}
-                className="relative p-2 hover:bg-gray-100 rounded-lg transition-all"
+                className="relative p-2 hover:bg-gray-100 cursor-pointer rounded-lg transition-all"
               >
                 <Bell className="w-6 h-6 text-gray-700" />
                 {stats && stats.notifications > 0 && (
@@ -552,14 +599,26 @@ const Dashboard = () => {
             {isActivePath("/app") && stats && <Start stats={stats} />}
             {isActivePath("/app/chat") && <ChatPage />}
             {isActivePath("/app/offers") && <Offers />}
-            {isActivePath("/app/requests") && <Requests />}
+            {isActivePath("/app/requests") && <Requests page="request" />}
+            {isActivePath("/app/alerts") && <Requests page="alert" />}
             {isActivePath("/app/sessions") && <Sessions />}
             {isActivePath("/app/offers2") && <OldOff />}
-            {isActivePath("/app/offers/create") && <CreateCare type="offer" />}
-            {isActivePath("/app/requests/create") && (
-              <CreateCare type="request" />
+            {isActivePath("/app/offers/create") && (
+              <CreateCare
+                option="create"
+                closeModal={() => navigate("/app/offers")}
+              />
             )}
+            {isActivePath("/app/requests/create") && (
+              <CreateCare
+                page="request"
+                option="create"
+                closeModal={() => navigate("/app/requests")}
+              />
+            )}
+            {isActivePath("/app/notifications") && <Notifications />}
             {isActivePath("/app/map") && <MapList />}
+            {isActivePath("/app/profile") && <Me />}
           </main>
         </div>
       </div>

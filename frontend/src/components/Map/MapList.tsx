@@ -1,5 +1,11 @@
-import { useEffect, useState } from "react";
-import type { mapcenterProps, OfferProps, RequestProps } from "../../types";
+import { useEffect, useRef, useState } from "react";
+import type {
+  CountProps,
+  mapcenterProps,
+  OfferProps,
+  RequestProps,
+  User,
+} from "../../types";
 import OrtMap from "./OrtMap";
 import { useAuth, useLanguage } from "../../contexts";
 import { OFFER_API_URL, REQUEST_API_URL } from "../../config";
@@ -7,60 +13,113 @@ import Loading from "../Landing/Loading";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "../ui/card";
 import {
-  Bell,
+  Archive,
+  CheckCircle,
   ChevronLeft,
   ChevronRight,
-  ClipboardList,
   FilePlus2,
   Handshake,
+  Loader2,
   MapPin,
+  PauseCircle,
   Search,
   SearchX,
-  Users,
+  XCircle,
   Zap,
 } from "lucide-react";
-import MarkerLegend from "./MarkerLegend";
+import ConfirmModal from "../Landing/ConfirmModal";
 
-const MapList = () => {
+const MapList = ({ overview }: { overview?: boolean }) => {
   const { t } = useLanguage();
   const { user, refreshUser, loading } = useAuth();
 
-  const [currentOrt, setCurrentOrt] = useState<
-    OfferProps | RequestProps | null
+  const [, setUserLocation] = useState<User | mapcenterProps | null>(user);
+
+  const [, setCurrentOrt] = useState<OfferProps | RequestProps | User | null>(
+    null
+  );
+  const [ortToSelect, setOrtToSelect] = useState<
+    OfferProps | RequestProps | User | null
   >(null);
 
   const [loadingData, setLoadingData] = useState(true);
   const [filterType, setFilterType] = useState<
     | "allActive"
-    | "offers"
-    | "requests"
-    | "alerts"
-    | "allUsers"
-    | "myOffers"
-    | "myRequests"
-    | "myAlerts"
+    | "offers_active"
+    | "offers_in_progress"
+    | "offers_completed"
+    | "offers_cancelled"
+    | "offers_inactive"
+    | "offers_archived"
+    | "requests_active"
+    | "requests_in_progress"
+    | "requests_completed"
+    | "requests_cancelled"
+    | "requests_inactive"
+    | "requests_archived"
+    | "alerts_active"
+    | "alerts_in_progress"
+    | "alerts_completed"
+    | "alerts_cancelled"
+    | "alerts_inactive"
+    | "alerts_archived"
   >("allActive");
 
-  const [mapCenter, setMapCenter] = useState<mapcenterProps | null>(null);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([0, 0]);
+  const mapRef = useRef<L.Map | null>(null);
+
+  const [isClick, setIsClick] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState("");
 
-  /*const [initialActiveOrts, setInitialActiveOrts] = useState<
-    (OfferProps | RequestProps)[]
-  >([]);*/
+  const [allOrts, setAllOrts] = useState<(OfferProps | RequestProps | User)[]>(
+    []
+  );
+  const [allEnreg, setAllEnreg] = useState<(OfferProps | RequestProps)[]>([]);
 
-  const [allActiveOrts, setAllActiveOrts] = useState<
-    (OfferProps | RequestProps)[]
+  const [counts, setCounts] = useState<CountProps>({
+    offers: 0,
+    requests: 0,
+    alerts: 0,
+    statuses: {},
+    allActive: 0,
+  });
+
+  const [ortsToSend, setOrtsToSend] = useState<
+    (OfferProps | RequestProps | User)[]
   >([]);
-  const [allUserOrts, setAllUserOrts] = useState<(OfferProps | RequestProps)[]>(
-    []
-  );
+  const [ortsToClick, setOrtsToClick] = useState<
+    (OfferProps | RequestProps | User)[]
+  >([]);
 
-  const [ortsToSend, setOrtsToSend] = useState<(OfferProps | RequestProps)[]>(
-    []
-  );
+  const [openSubMenu, setOpenSubMenu] = useState<string | null>(null);
 
   const [isClickedZoom, setIsClickedZoom] = useState(false);
   const [showDetails, setShowDetails] = useState(true);
+
+  const [selectedOrtToConfirm, setSelectedOrtToConfirm] = useState<
+    OfferProps | RequestProps | User | null
+  >(null);
+
+  const [infoMsg, setInfoMsg] = useState<string | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState<string>("");
+  const [acceptLoading, setAcceptLoading] = useState<boolean>(false);
+
+  const [activeStatus, setActiveStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({
+          lat: user?.latitude ?? pos.coords.latitude,
+          lng: user?.longitude ?? pos.coords.longitude,
+        });
+      },
+      (err) => console.warn(err),
+      { enableHighAccuracy: true }
+    );
+  }, []);
 
   useEffect(() => {
     if (loading) return;
@@ -84,61 +143,54 @@ const MapList = () => {
         const requestsArray: RequestProps[] =
           (dataR && (dataR as any).requests) ??
           (Array.isArray(dataR) ? (dataR as RequestProps[]) : []);
+        // =============== MERGED LISTS ===============
+        const offerData = offersArray || [];
+        const requestData = requestsArray || [];
 
-        // =============== USER OWN LISTS ===============
-        const userDataO = offersArray.filter(
-          (offer) => offer.userId._id === user?._id
-        );
-        const userDataR = requestsArray.filter(
-          (request) => request.userId._id === user?._id
-        );
-
-        //setUserOffers(userDataO);
-        //setUserRequests(userDataR);
-
-        // =============== ACTIVE PUBLIC LISTS ===============
         const activeDataO = offersArray.filter(
           (item: OfferProps) =>
             item.status === "active" && item.userId._id !== user?._id
         );
+
         const activeDataR = requestsArray.filter(
           (item: RequestProps) =>
             item.status === "active" && item.userId._id !== user?._id
         );
 
-        //setOffersActive(activeDataO);
-        //setRequestsActive(activeDataR);
+        const mergedActiveList = [...activeDataO, ...activeDataR];
 
-        // =============== MERGED LISTS ===============
-        const mergedList = [
-          ...userDataO,
-          ...userDataR,
+        const mergedList = [...offerData, ...requestData];
+
+        const mergedAllList = [
+          ...(user ? [user] : []),
+          ...offerData,
+          ...requestData,
+        ];
+
+        const mergedAllActiveList = [
+          ...(user ? [user] : []),
           ...activeDataO,
           ...activeDataR,
         ];
 
-        const mergedActiveList = [...activeDataO, ...activeDataR];
-        const mergeUserList = [...userDataO, ...userDataR];
-
-        console.log("Merged List:", mergedList);
         setSearchQuery("");
 
-        setAllActiveOrts(mergedActiveList);
-        //setInitialActiveOrts(mergedActiveList);
-        setOrtsToSend(mergedActiveList);
+        setAllOrts(mergedAllList);
+        setAllEnreg(mergedList);
 
-        setAllUserOrts(mergeUserList);
+        setOrtsToSend(mergedAllActiveList);
 
-        if (mergedList.length > 0) {
-          setCurrentOrt(mergedActiveList[0]);
+        setOrtsToClick(mergedActiveList);
 
-          setMapCenter({
-            lat: (mergedActiveList[0] as any).latitude ?? 0,
-            lng: (mergedActiveList[0] as any).longitude ?? 0,
-          });
+        if (mergedAllActiveList.length > 0) {
+          setCurrentOrt(user);
+          setOrtToSelect(mergedActiveList[0] as OfferProps | RequestProps);
+
+          setMapCenter([user?.latitude ?? 0, user?.longitude ?? 0]);
         } else {
           setCurrentOrt(null);
-          setMapCenter(null);
+          setOrtToSelect(null);
+          setMapCenter([0, 0]);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -151,69 +203,236 @@ const MapList = () => {
   }, [loading]);
 
   useEffect(() => {
+    calculateCounts();
+    if (loading) return;
+
+    const interval = setInterval(() => {
+      calculateCounts();
+    }, 60_000); // All 60 seconds
+
+    return () => clearInterval(interval);
+  }, [loading, allEnreg]);
+
+  useEffect(() => {
     setIsClickedZoom(false);
     const filteredItems = getFilteredItems();
+
     setOrtsToSend(filteredItems);
+
+    const filteredItemsWithoutUser = filteredItems.filter(
+      (item) => item._id !== user?._id
+    );
+    setOrtsToClick(filteredItemsWithoutUser);
+
+    if (filteredItemsWithoutUser.length > 0) {
+      setOrtToSelect(filteredItemsWithoutUser[0]);
+    } else setOrtToSelect(null);
   }, [filterType, searchQuery]);
+
+  console.log(ortsToSend);
+
+  useEffect(() => {
+    if (allOrts.length === 0) return;
+
+    // Ensure we provide numbers to setMapCenter (no undefined)
+    setMapCenter([user?.latitude ?? 0, user?.longitude ?? 0]);
+    setIsClickedZoom(false);
+  }, [allOrts]);
+
+  const getItemType = (item: any): "offer" | "request" | "alert" => {
+    if ("isPaid" in item) return "offer";
+    if ("typeRequest" in item && item.typeRequest === "request")
+      return "request";
+    if ("typeRequest" in item && item.typeRequest === "alert") return "alert";
+    return "alert";
+  };
+
+  const parseFilter = (filter: string) => {
+    if (filter === "allActive") {
+      return { type: "all", status: "active" };
+    }
+
+    const [type, status] = filter.split(/_(.+)/);
+    return { type, status };
+  };
+
+  const calculateCounts = () => {
+    const newCounts: CountProps = {
+      offers: 0,
+      requests: 0,
+      alerts: 0,
+      statuses: {},
+      allActive: 0,
+    };
+
+    allEnreg.forEach((o) => {
+      const status = (o as any).status || "unknown";
+
+      // Count all statuses for the submenu
+      newCounts.statuses[status] = (newCounts.statuses[status] || 0) + 1;
+
+      // Count active for allActive
+      if (status === "active") {
+        newCounts.allActive++;
+      }
+
+      // Count by type (total, not filtered)
+      if ("isPaid" in o) newCounts.offers++;
+      else if ("typeRequest" in o && o.typeRequest === "request")
+        newCounts.requests++;
+      else if ("typeRequest" in o && o.typeRequest === "alert")
+        newCounts.alerts++;
+    });
+
+    setCounts(newCounts);
+  };
+
+  const getSubmenuCount = (parentType: string, status: string) => {
+    return allEnreg.filter((o) => {
+      const itemType =
+        "isPaid" in o
+          ? "offer"
+          : "typeRequest" in o && o.typeRequest === "request"
+          ? "request"
+          : "typeRequest" in o && o.typeRequest === "alert"
+          ? "alert"
+          : null;
+
+      if (!itemType) return false;
+
+      // Check that the parentType matches the type of the submenu
+      if (parentType === "offers_active" && itemType !== "offer") return false;
+      if (parentType === "requests_active" && itemType !== "request")
+        return false;
+      if (parentType === "alerts_active" && itemType !== "alert") return false;
+
+      // Check that the status matches
+      return (o as any).status === status;
+    }).length;
+  };
+
+  const filterItems = ({
+    items,
+    filterType,
+  }: {
+    items: (OfferProps | RequestProps)[];
+    filterType: string;
+  }) => {
+    const { type, status } = parseFilter(filterType);
+
+    return items.filter((item) => {
+      const itemType = getItemType(item); // "offer" | "request" | "alert"
+
+      // Filter by type
+      if (type === "offers" && itemType !== "offer") return false;
+      if (type === "requests" && itemType !== "request") return false;
+      if (type === "alerts" && itemType !== "alert") return false;
+
+      // Filter by status
+      if (status && item.status !== status) return false;
+
+      return true;
+    });
+  };
 
   // Filter items
   const getFilteredItems = () => {
-    let items: (OfferProps | RequestProps)[] = [];
+    let items: (OfferProps | RequestProps | User)[] = [];
 
-    if (filterType === "allActive") items = [...items, ...allActiveOrts];
-    else if (filterType === "offers") {
-      items = [...items, ...allActiveOrts.filter((item) => "isPaid" in item)];
-    } else if (filterType === "requests") {
-      items = [
-        ...items,
-        ...allActiveOrts.filter(
-          (item) => "typeRequest" in item && item.typeRequest === "request"
-        ),
-      ];
-    } else if (filterType === "alerts") {
-      items = [
-        ...items,
-        ...allActiveOrts.filter(
-          (item) => "typeRequest" in item && item.typeRequest === "alert"
-        ),
-      ];
-    } else if (filterType === "allUsers") items = [...items, ...allUserOrts];
-    else if (filterType === "myOffers") {
-      items = [...items, ...allUserOrts.filter((item) => "isPaid" in item)];
-    } else if (filterType === "myRequests") {
-      items = [
-        ...items,
-        ...allUserOrts.filter(
-          (item) => "typeRequest" in item && item.typeRequest === "request"
-        ),
-      ];
-    } else if (filterType === "myAlerts") {
-      items = [
-        ...items,
-        ...allUserOrts.filter(
-          (item) => "typeRequest" in item && item.typeRequest === "alert"
-        ),
-      ];
+    const userItem = allOrts.find((item) => item._id === user?._id);
+    const otherItems = allOrts.filter((item) => item._id !== user?._id);
+
+    items = filterItems({
+      items: otherItems as (OfferProps | RequestProps)[],
+      filterType,
+    });
+
+    if (userItem) {
+      items = [userItem, ...items];
     }
 
     return items.filter((item) => {
+      const q = searchQuery.toLowerCase();
+
+      if (item && item._id === user?._id) {
+        // Use the authenticated user object (which has firstName/lastName) instead of the union-typed item
+        const fullName = `${user?.firstName ?? ""} ${
+          user?.lastName ?? ""
+        }`.toLowerCase();
+        return fullName.includes(q);
+      }
+
       const title = "title" in item && item.title ? item.title : "SOS Alert";
       const description =
         "description" in item && item.description ? item.description : "";
-      const q = searchQuery.toLowerCase();
+
       return (
         title.toLowerCase().includes(q) || description.toLowerCase().includes(q)
       );
     });
   };
 
-  const filteredItems = getFilteredItems();
+  const filtItems = getFilteredItems();
+  console.log("Filtered Items:", filtItems);
+  const filteredItems = filtItems.filter((item) => item._id !== user?._id);
 
-  // Determine if item is offer or request
-  const getOrtType = (item: OfferProps | RequestProps) => {
+  const handleAccepted = (ort: OfferProps | RequestProps | User) => {
+    setSelectedOrtToConfirm(ort);
+    setShowConfirm(true);
+
+    const type = getOrtType(ort);
+    setConfirmMessage(t(`${type}.confirmMessage`));
+  };
+
+  const handleAccept = async () => {
+    if (!selectedOrtToConfirm) return;
+
+    setAcceptLoading(true);
+    const ort = selectedOrtToConfirm;
+    try {
+      const url =
+        "isPaid" in ort
+          ? `${OFFER_API_URL}/${ort._id}`
+          : "typeRequest" in ort
+          ? `${REQUEST_API_URL}/${ort._id}`
+          : null;
+
+      if (!url) throw new Error("Invalid item type");
+
+      await refreshUser(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
+
+      setAllOrts((prev) => prev.filter((item) => item._id !== ort._id));
+
+      setOrtsToSend((prev) => prev.filter((item) => item._id !== ort._id));
+      setOrtsToClick((prev) => prev.filter((item) => item._id !== ort._id));
+
+      const type = getOrtType(ort);
+      setInfoMsg(t(`${type}.accepted`));
+
+      window.scrollTo(0, 0);
+    } catch (error) {
+      console.error("Error accepting session:", error);
+    } finally {
+      setAcceptLoading(false);
+      setShowConfirm(false);
+      setSelectedOrtToConfirm(null);
+    }
+  };
+
+  // Determine if item is offer, request or a user entry
+  const getOrtType = (item: OfferProps | RequestProps | User) => {
     if ("isPaid" in item) return "offer";
     if ("typeRequest" in item && item.typeRequest === "alert") return "alert";
-    return "request";
+    if ("typeRequest" in item && item.typeRequest === "request")
+      return "request";
+    // If none of the request/offer discriminators are present, treat as request-like by default
+    return "user";
   };
 
   /*const handleSearch = (
@@ -254,16 +473,30 @@ const MapList = () => {
     setAllActiveOrts(initialActiveOrts);
   };
 */
+  const showOrt = (
+    ort: OfferProps | RequestProps | User | null,
+    animationZoom: boolean
+  ) => {
+    if (!ort) return;
 
-  const showOrt = (ort: OfferProps | RequestProps) => {
-    setCurrentOrt(ort);
     const lat = (ort as any).latitude ?? (ort as any).lat ?? 0;
     const lng = (ort as any).longitude ?? (ort as any).lng ?? 0;
-    setMapCenter({
-      lat,
-      lng,
-    });
-    setIsClickedZoom(true);
+    const centerTuple: [number, number] = [lat, lng];
+
+    // if the map is already initialized, flyTo directly
+    if (mapRef.current && animationZoom) {
+      try {
+        mapRef.current.flyTo(centerTuple, 18, { animate: true, duration: 1.0 });
+      } catch (err) {
+        console.warn("mapRef.flyTo failed", err);
+        // fallback
+        setMapCenter([lat, lng]);
+      }
+    } else {
+      // fallback if the map is not ready yet
+      setMapCenter([lat, lng]);
+    }
+    setCurrentOrt(ort);
   };
 
   const getStatusColor = (item: any) => {
@@ -273,10 +506,12 @@ const MapList = () => {
     const isRequest = "typeRequest" in item && item.typeRequest === "request";
     const isAlert = "typeRequest" in item && item.typeRequest === "alert";
 
-    if (status === "completed") return "bg-violet-500";
-    if (status === "cancelled") return "bg-black";
-    if (status === "archived") return "bg-gray-400";
-    if (status === "in_progress") return "bg-orange-500";
+    if (status === "active") return "bg-green-500";
+    if (status === "completed") return "bg-blue-500";
+    if (status === "cancelled") return "bg-red-500";
+    if (status === "archived") return "bg-purple-400";
+    if (status === "in_progress") return "bg-yellow-500";
+    if (status === "inactive") return "bg-gray-400";
 
     // Active / default
     if (isOffer) return "bg-blue-500";
@@ -286,23 +521,199 @@ const MapList = () => {
     return "bg-gray-400"; // fallback
   };
 
+  const handleMainClick = (type: string) => {
+    // Open or close submenu
+    if (openSubMenu === type) setOpenSubMenu(null);
+    else setOpenSubMenu(type);
+
+    if (type === "offers_active") {
+      const firstOffer = allOrts.find((item: any) => "isPaid" in item);
+      if (firstOffer) setCurrentOrt(firstOffer);
+    } else if (type === "requests_active") {
+      const firstRequest = allOrts.find(
+        (item: any) => item.typeRequest === "request"
+      );
+      if (firstRequest) setCurrentOrt(firstRequest);
+    } else if (type === "alerts_active") {
+      const firstAlert = allOrts.find(
+        (item: any) => item.typeRequest === "alert"
+      );
+      if (firstAlert) setCurrentOrt(firstAlert);
+    }
+
+    setFilterType(type as any);
+    setIsClick(false);
+    setIsClickedZoom(false);
+  };
+
+  const handleSubClick = (subType: string) => {
+    setFilterType(subType as any);
+
+    const ort = allOrts.find((item: any) => {
+      if (subType.startsWith("offers"))
+        return "isPaid" in item && item.status === subType.split("_")[1];
+      if (subType.startsWith("requests"))
+        return (
+          item.typeRequest === "request" &&
+          item.status === subType.split("_")[1]
+        );
+      if (subType.startsWith("alerts"))
+        return (
+          item.typeRequest === "alert" && item.status === subType.split("_")[1]
+        );
+      return false;
+    });
+
+    if (ort) setCurrentOrt(ort);
+
+    setIsClick(false);
+    setIsClickedZoom(false);
+  };
+
+  const subStatuses = [
+    "active",
+    "in_progress",
+    "completed",
+    "cancelled",
+    "inactive",
+    "archived",
+  ];
+
+  const getStatusProps = (status: string, isActive: boolean) => {
+    switch (status) {
+      case "active":
+        return {
+          icon: (
+            <Zap
+              className={`w-4 h-4 ${
+                isActive ? "text-white" : "text-green-600"
+              }`}
+            />
+          ),
+          color: isActive ? "bg-green-800 text-white" : "bg-green-100",
+        };
+      case "in_progress":
+        return {
+          icon: (
+            <Loader2
+              className={`w-4 h-4 ${
+                isActive ? " text-white" : "text-yellow-600"
+              }`}
+            />
+          ),
+          color: isActive ? "bg-yellow-800 text-white" : "bg-yellow-100",
+        };
+      case "cancelled":
+        return {
+          icon: (
+            <XCircle
+              className={`w-4 h-4 ${isActive ? "text-white" : "text-red-600"}`}
+            />
+          ),
+          color: isActive ? "bg-red-800 text-white" : "bg-red-100",
+        };
+      case "completed":
+        return {
+          icon: (
+            <CheckCircle
+              className={`w-4 h-4 ${isActive ? "text-white" : "text-blue-600"}`}
+            />
+          ),
+          color: isActive ? "bg-blue-800 text-white" : "bg-blue-100",
+        };
+      case "inactive":
+        return {
+          icon: (
+            <PauseCircle
+              className={`w-4 h-4 ${isActive ? "text-white" : "text-gray-600"}`}
+            />
+          ),
+          color: isActive ? "bg-gray-800 text-white" : "bg-gray-100",
+        };
+      case "archived":
+        return {
+          icon: (
+            <Archive
+              className={`w-4 h-4 ${
+                isActive ? "text-white" : "text-purple-600"
+              }`}
+            />
+          ),
+          color: isActive ? "bg-purple-800 text-white" : "bg-purple-100",
+        };
+      default:
+        return {
+          icon: (
+            <FilePlus2
+              className={`w-4 h-4 ${isActive ? "text-white" : "text-gray-700"}`}
+            />
+          ),
+          color: isActive ? "bg-gray-800 text-white" : "bg-gray-100",
+        };
+    }
+  };
+  console.log("Ort To Select ", ortToSelect);
   if (loading || loadingData) return <Loading />;
 
   return (
     <>
+      {infoMsg && (
+        <div
+          role="alert"
+          className="alert alert-success cursor-pointer hover:opacity-80 mb-4 transition"
+          onClick={() => setInfoMsg(null)}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 shrink-0 stroke-current"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <span>{infoMsg}</span>
+          <div>
+            <button
+              onClick={() => setInfoMsg(null)}
+              className="btn btn-sm cursor-pointer btn-ghost btn-circle"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 shrink-0 stroke-current"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4 h-full flex flex-col">
         {/* Header */}
+
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
+          className={`${overview ? "hidden" : "block"} mb-2`}
         >
           <h1 className="text-3xl font-bold text-gray-800">
             {t("dashboard.browseMap")}
           </h1>
           <p className="text-gray-600">
-            {t("dashboard.exploreHelpOffersAndRequests")} (
-            {filteredItems.length})
+            {t("dashboard.browseMapDesc")} ({filteredItems.length} )
           </p>
         </motion.div>
 
@@ -311,11 +722,13 @@ const MapList = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
-          className="flex flex-col gap-4 w-full"
+          className={`${
+            overview ? "hidden" : "block"
+          } mb-2 flex flex-col gap-4 w-full`}
         >
           {/* ---------------------- First Block: Search + Type Filter ---------------------- */}
-          <div className="flex justify-between items-center w-full">
-            <div className="flex-1 min-w-64 relative max-w-sm">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full">
+            <div className="flex-1 min-w-0 md:min-w-64 relative max-w-full md:max-w-sm">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
@@ -327,213 +740,116 @@ const MapList = () => {
             </div>
 
             {/* Type Filter */}
-            <div className="flex gap-2 flex-wrap justify-end">
-              {["allActive", "offers", "requests", "alerts"].map((type) => (
-                <button
-                  key={type}
-                  onClick={() => {
-                    setFilterType(type as any);
+            <div className="flex gap-2 flex-wrap overflow-x-auto justify-end">
+              {[
+                "allActive",
+                "offers_active",
+                "requests_active",
+                "alerts_active",
+              ].map((type) => {
+                const isMainActive = filterType.startsWith(type.split("_")[0]); // garde actif si sous-menu actif
+                let mainColor = "bg-gray-100 text-gray-700 hover:bg-gray-200";
+                if (isMainActive) {
+                  if (type === "allActive")
+                    mainColor = "bg-purple-600 text-white shadow-lg";
+                  else if (type === "offers_active")
+                    mainColor = "bg-blue-600 text-white shadow-lg";
+                  else if (type === "requests_active")
+                    mainColor = "bg-green-600 text-white shadow-lg";
+                  else mainColor = "bg-red-600 text-white shadow-lg";
+                }
 
-                    if (
-                      type === "offers" &&
-                      allActiveOrts.filter((item) => "isPaid" in item).length >
-                        0
-                    ) {
-                      setCurrentOrt(
-                        allActiveOrts.filter((item) => "isPaid" in item)[0]
-                      );
-                    } else if (
-                      type === "requests" &&
-                      allActiveOrts.filter(
-                        (item) =>
-                          "typeRequest" in item &&
-                          item.typeRequest === "request"
-                      ).length > 0
-                    ) {
-                      setCurrentOrt(
-                        allActiveOrts.filter(
-                          (item) =>
-                            "typeRequest" in item &&
-                            item.typeRequest === "request"
-                        )[0]
-                      );
-                    } else if (
-                      type === "alerts" &&
-                      allUserOrts.filter(
-                        (item) =>
-                          "typeRequest" in item && item.typeRequest === "alert"
-                      ).length > 0
-                    ) {
-                      setCurrentOrt(
-                        allUserOrts.filter(
-                          (item) =>
-                            "typeRequest" in item &&
-                            item.typeRequest === "alert"
-                        )[0]
-                      );
-                    } else if (
-                      type === "allActive" &&
-                      allActiveOrts.length > 0
-                    ) {
-                      setCurrentOrt(allActiveOrts[0]);
-                    }
-                  }}
-                  className={`px-4 py-2 rounded-lg cursor-pointer font-medium transition-all flex items-center gap-2 text-sm ${
-                    filterType === type
-                      ? type === "allActive"
-                        ? "bg-purple-600 text-white shadow-lg"
-                        : type === "offers"
-                        ? "bg-blue-600 text-white shadow-lg"
-                        : type === "requests"
-                        ? "bg-green-600 text-white shadow-lg"
-                        : "bg-red-600 text-white shadow-lg"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  {type === "offers" && (
-                    <>
-                      <Handshake className="w-4 h-4" /> Offers
-                    </>
-                  )}
-                  {type === "requests" && (
-                    <>
-                      <FilePlus2 className="w-4 h-4" /> Requests
-                    </>
-                  )}
-                  {type === "alerts" && (
-                    <>
-                      <Zap className="w-4 h-4" /> Alerts
-                    </>
-                  )}
-                  {type === "allActive" && (
-                    <>
-                      <MapPin className="w-4 h-4" /> Active
-                    </>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* ---------------------- Second Block: User Filter + Toggle Details ---------------------- */}
-          <div className="flex justify-between items-center w-full">
-            <div></div>
-            {/* User Filter */}
-            <div className="flex gap-2 flex-wrap justify-end items-center">
-              {["allUsers", "myOffers", "myRequests", "myAlerts"].map(
-                (type) => (
+                return (
                   <button
                     key={type}
                     onClick={() => {
-                      setFilterType(type as any);
-
-                      // On choisit le premier élément correspondant au filtre
-                      if (type === "allUsers" && allUserOrts.length > 0) {
-                        setCurrentOrt(allUserOrts[0]);
-                      } else if (
-                        type === "myOffers" &&
-                        allUserOrts.filter((item) => "isPaid" in item).length >
-                          0
-                      ) {
-                        setCurrentOrt(
-                          allUserOrts.filter((item) => "isPaid" in item)[0]
-                        );
-                      } else if (
-                        type === "myRequests" &&
-                        allUserOrts.filter(
-                          (item) =>
-                            "typeRequest" in item &&
-                            item.typeRequest === "request"
-                        ).length > 0
-                      ) {
-                        setCurrentOrt(
-                          allUserOrts.filter(
-                            (item) =>
-                              "typeRequest" in item &&
-                              item.typeRequest === "request"
-                          )[0]
-                        );
-                      } else if (
-                        type === "myAlerts" &&
-                        allUserOrts.filter(
-                          (item) =>
-                            "typeRequest" in item &&
-                            item.typeRequest === "alert"
-                        ).length > 0
-                      ) {
-                        setCurrentOrt(
-                          allUserOrts.filter(
-                            (item) =>
-                              "typeRequest" in item &&
-                              item.typeRequest === "alert"
-                          )[0]
-                        );
-                      }
+                      setActiveStatus(null);
+                      handleMainClick(type as any);
                     }}
-                    className={`px-4 py-2 rounded-lg cursor-pointer font-medium transition-all flex items-center gap-2 text-sm ${
-                      filterType === type
-                        ? type === "allUsers"
-                          ? "bg-purple-600 text-white shadow-lg"
-                          : type === "myOffers"
-                          ? "bg-blue-600 text-white shadow-lg"
-                          : type === "myRequests"
-                          ? "bg-green-600 text-white shadow-lg"
-                          : "bg-red-600 text-white shadow-lg"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
+                    className={`px-2 py-1 md:px-4 md:py-2 rounded-lg cursor-pointer font-medium transition-all flex items-center gap-2 text-sm ${mainColor}`}
                   >
-                    {type === "allUsers" && (
+                    {type === "allActive" && (
                       <>
-                        <Users className="w-4 h-4" /> All My Items
+                        <MapPin className="w-4 h-4" /> {t("dashboard.active")} (
+                        {counts.allActive})
                       </>
                     )}
-                    {type === "myOffers" && (
+                    {type === "offers_active" && (
                       <>
-                        <Handshake className="w-4 h-4" /> My Offers
+                        <Handshake className="w-4 h-4" />{" "}
+                        {t("dashboard.offers")} ({counts.offers})
                       </>
                     )}
-                    {type === "myRequests" && (
+                    {type === "requests_active" && (
                       <>
-                        <ClipboardList className="w-4 h-4" /> My Requests
+                        <FilePlus2 className="w-4 h-4" />{" "}
+                        {t("dashboard.requests")} ({counts.requests})
                       </>
                     )}
-                    {type === "myAlerts" && (
+                    {type === "alerts_active" && (
                       <>
-                        <Bell className="w-4 h-4" /> My Alerts
+                        <Zap className="w-4 h-4" /> {t("dashboard.alerts")} (
+                        {counts.alerts})
                       </>
                     )}
                   </button>
-                )
-              )}
-
-              {/* Toggle Details */}
-              <button
-                onClick={() => setShowDetails(!showDetails)}
-                className={`px-4 cursor-pointer py-2 rounded-lg flex items-center gap-2 font-medium transition-all ${
-                  showDetails
-                    ? "bg-gray-500 text-white"
-                    : "bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white shadow-lg"
-                }`}
-              >
-                {showDetails ? (
-                  <ChevronRight className="w-4 h-4" />
-                ) : (
-                  <ChevronLeft className="w-4 h-4" />
-                )}
-                {showDetails ? "Hide Details" : "Show Details"}
-              </button>
+                );
+              })}
             </div>
           </div>
-        </motion.div>
-        {["all", "allUsers", "myOffers", "myRequests", "myAlerts"].includes(
-          filterType
-        ) && (
-          <div className="flex items-center gap-4 mb-4 p-2 bg-gray-50 rounded-lg shadow-sm">
-            <MarkerLegend />
+          {/* ---------------------- Submenu Options ---------------------- */}
+          <div className="flex justify-between items-center w-full">
+            <div></div>
+            {/* Options Filter */}
+            {openSubMenu && openSubMenu !== "allActive" && (
+              <div className="flex gap-2 flex-wrap justify-end items-center">
+                {subStatuses.map((status) => {
+                  const isActive = activeStatus === status;
+                  const { icon, color } = getStatusProps(status, isActive);
+
+                  return (
+                    <button
+                      key={status}
+                      onClick={() => {
+                        setActiveStatus(status);
+                        handleSubClick(
+                          `${openSubMenu.split("_")[0]}_${status}`
+                        );
+                      }}
+                      className={`flex items-center gap-2 px-2 py-1 md:px-4 md:py-2 rounded-lg cursor-pointer font-medium transition-all text-sm ${color} hover:opacity-80`}
+                    >
+                      {icon}
+                      {status.replace("_", " ")} (
+                      {getSubmenuCount(openSubMenu, status)})
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={() => setShowDetails(!showDetails)}
+                  className={`px-2 py-1 md:px-4 md:py-2 cursor-pointer rounded-lg flex items-center gap-2 font-medium transition-all ${
+                    showDetails
+                      ? "bg-gray-500 text-white"
+                      : "bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white shadow-lg"
+                  }`}
+                >
+                  {showDetails ? (
+                    <ChevronRight className="w-4 h-4" />
+                  ) : (
+                    <ChevronLeft className="w-4 h-4" />
+                  )}
+                  {showDetails ? "Hide Details" : "Show Details"}
+                </button>
+              </div>
+            )}
           </div>
-        )}
-        {/* Map and Details Grid */}
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 min-h-0">
+        </motion.div>
+
+        <div
+          className={`flex-1 grid grid-cols-1 ${
+            overview ? "" : "min-h-0 gap-4 w-full lg:grid-cols-4"
+          } `}
+        >
           {/* Map - Takes 3/4 of space */}
 
           <motion.div
@@ -542,51 +858,71 @@ const MapList = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, ease: "easeInOut" }}
             className={`rounded-xl overflow-hidden shadow-lg h-full`}
-            style={{ gridColumn: showDetails ? "span 3" : "span 4" }}
+            style={{ gridColumn: overview ? "span 4" : "span 3" }}
           >
-            <Card className="h-full">
+            <Card
+              className={`${
+                overview ? "py-0 pb-2 px-3 h-[380px]" : "h-[380px] md:h-full"
+              }`}
+            >
               {/* Map centered on the event position */}
               {mapCenter &&
-                (console.log("Zoom State:", isClickedZoom),
+                (console.log("mapCenter:", mapCenter),
                 (
                   <OrtMap
                     orts={ortsToSend}
                     mapCenter={mapCenter}
-                    onMarkerClick={(o: OfferProps | RequestProps) =>
-                      setCurrentOrt(o)
+                    isClick={isClick}
+                    setIsClick={setIsClick}
+                    currentOrt={ortToSelect}
+                    onMarkerClick={(o: OfferProps | RequestProps | User) =>
+                      setOrtToSelect(o)
                     }
-                    zoom={isClickedZoom ? 18 : 10}
+                    isClickedZoom={isClickedZoom}
+                    setIsClickedZoom={setIsClickedZoom}
+                    onAccept={handleAccepted}
+                    acceptLoading={acceptLoading}
+                    mapRef={mapRef}
+                    overview={overview}
                   />
                 ))}
             </Card>
+            {showConfirm && (
+              <ConfirmModal
+                title={t("dashboard.confirmTitle")}
+                message={confirmMessage}
+                onConfirm={handleAccept}
+                onCancel={() => setShowConfirm(false)}
+              />
+            )}
           </motion.div>
 
           {/* Details Panel - Takes 1/4 of space */}
-          {showDetails && (
+          {showDetails && !overview && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: 0.3 }}
-              className="lg:col-span-1 flex flex-col gap-4 min-h-0"
+              className={`flex flex-col gap-4 min-h-0 w-full lg:col-span-1`}
             >
               {/* Selected Item Details */}
-              {filteredItems.length > 0 && currentOrt ? (
+              {filteredItems.length > 0 && ortToSelect ? (
                 <Card className="flex-1 overflow-hidden flex flex-col">
                   <CardContent className="p-4 flex-1 overflow-y-auto">
                     {/* Header */}
                     <div className="flex items-start gap-3 mb-4">
                       <div
                         className={`p-2 rounded-lg flex-shrink-0 ${
-                          getOrtType(currentOrt) === "offer"
+                          getOrtType(ortToSelect) === "offer"
                             ? "bg-blue-100"
-                            : getOrtType(currentOrt) === "request"
+                            : getOrtType(ortToSelect) === "request"
                             ? "bg-green-100"
                             : "bg-red-100"
                         }`}
                       >
-                        {getOrtType(currentOrt) === "offer" ? (
+                        {getOrtType(ortToSelect) === "offer" ? (
                           <Handshake className="w-5 h-5 text-blue-600" />
-                        ) : getOrtType(currentOrt) === "request" ? (
+                        ) : getOrtType(ortToSelect) === "request" ? (
                           <FilePlus2 className="w-5 h-5 text-green-600" />
                         ) : (
                           <Zap className="w-5 h-5 text-red-600" />
@@ -594,15 +930,14 @@ const MapList = () => {
                       </div>
                       <div className="flex-1">
                         <h3 className="font-bold text-gray-800 text-sm">
-                          {getOrtType(currentOrt) === "offer" ||
-                          getOrtType(currentOrt) === "request"
-                            ? currentOrt.title
+                          {"title" in ortToSelect && ortToSelect.title
+                            ? ortToSelect.title
                             : "SOS Alert"}
                         </h3>
                         <p className="text-xs text-gray-600 mt-1">
-                          {getOrtType(currentOrt) === "offer"
+                          {getOrtType(ortToSelect) === "offer"
                             ? "Offer"
-                            : getOrtType(currentOrt) === "request"
+                            : getOrtType(ortToSelect) === "request"
                             ? "Request"
                             : "Alert"}
                         </p>
@@ -611,7 +946,10 @@ const MapList = () => {
 
                     {/* Description */}
                     <p className="text-gray-600 text-xs mb-4 line-clamp-3">
-                      📖 {currentOrt.description}
+                      📖{" "}
+                      {"description" in ortToSelect &&
+                        ortToSelect.description &&
+                        ortToSelect.description}
                     </p>
 
                     {/* Details */}
@@ -619,45 +957,48 @@ const MapList = () => {
                       {/* Location */}
                       <div>
                         <p className="text-xs font-medium text-gray-600 mb-1">
-                          Location
+                          {t("dashboard.location")}
                         </p>
                         <p className="text-xs text-gray-800 line-clamp-2">
-                          📍 {currentOrt.location}
+                          📍 {ortToSelect.location}
                         </p>
                       </div>
 
                       {/* Category */}
                       <div>
                         <p className="text-xs font-medium text-gray-600 mb-1">
-                          Category
+                          {t("dashboard.category")}
                         </p>
                         <p className="text-xs text-gray-800">
-                          {currentOrt.category?.name || "N/A"}
+                          {"category" in ortToSelect &&
+                          ortToSelect.category?.name
+                            ? ortToSelect.category.name
+                            : "N/A"}
                         </p>
                       </div>
 
                       {/* Price */}
-                      {(currentOrt &&
-                        "isPaid" in currentOrt &&
-                        getOrtType(currentOrt) === "offer" &&
-                        (currentOrt as OfferProps).isPaid) ||
-                        (currentOrt &&
-                          "rewardType" in currentOrt &&
-                          getOrtType(currentOrt) === "request" &&
-                          (currentOrt as RequestProps).rewardType ===
+                      {(ortToSelect &&
+                        "isPaid" in ortToSelect &&
+                        getOrtType(ortToSelect) === "offer" &&
+                        (ortToSelect as OfferProps).isPaid) ||
+                        (ortToSelect &&
+                          "rewardType" in ortToSelect &&
+                          getOrtType(ortToSelect) === "request" &&
+                          (ortToSelect as RequestProps).rewardType ===
                             "paid" && (
                             <div>
                               <p className="text-xs font-medium text-gray-600 mb-1">
-                                Price
+                                {t("dashboard.price")}
                               </p>
                               <p className="text-xs font-bold text-green-600">
-                                ${currentOrt.price}
+                                ${ortToSelect.price}
                               </p>
                             </div>
                           ))}
 
                       {/* SOS Badge */}
-                      {getOrtType(currentOrt) === "alert" && (
+                      {getOrtType(ortToSelect) === "alert" && (
                         <div className="flex items-center gap-2 px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
                           <Zap className="w-3 h-3" />
                           SOS Alert
@@ -666,23 +1007,28 @@ const MapList = () => {
                     </div>
 
                     {/* Images */}
-                    {currentOrt.images && currentOrt.images.length > 0 && (
-                      <div className="mt-3 border-t pt-3">
-                        <p className="text-xs font-medium text-gray-600 mb-2">
-                          Images
-                        </p>
-                        <div className="grid grid-cols-2 gap-2">
-                          {currentOrt.images.slice(0, 4).map((img, i) => (
-                            <img
-                              key={i}
-                              src={img}
-                              alt={`Item ${i + 1}`}
-                              className="w-full h-16 object-cover rounded"
-                            />
-                          ))}
+                    {ortToSelect &&
+                      "images" in ortToSelect &&
+                      ortToSelect.images &&
+                      ortToSelect.images.length > 0 && (
+                        <div className="mt-3 border-t pt-3">
+                          <p className="text-xs font-medium text-gray-600 mb-2">
+                            Images
+                          </p>
+                          <div className="grid grid-cols-2 gap-2">
+                            {(ortToSelect as OfferProps | RequestProps).images
+                              .slice(0, 4)
+                              .map((img, i) => (
+                                <img
+                                  key={i}
+                                  src={img}
+                                  alt={`Item ${i + 1}`}
+                                  className="w-full h-16 object-cover rounded"
+                                />
+                              ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                   </CardContent>
                 </Card>
               ) : (
@@ -700,31 +1046,60 @@ const MapList = () => {
                   <p className="text-xs font-medium text-gray-600 mb-2">
                     {filterType === "allActive"
                       ? "Active Items"
-                      : filterType === "offers"
+                      : filterType === "offers_active"
                       ? "Offers"
-                      : filterType === "requests"
+                      : filterType === "requests_active"
                       ? "Requests"
-                      : filterType === "alerts"
+                      : filterType === "alerts_active"
                       ? "Alerts"
-                      : filterType === "allUsers"
-                      ? "All My Items"
-                      : filterType === "myOffers"
-                      ? "My Offers"
-                      : filterType === "myRequests"
-                      ? "My Requests"
-                      : "My Alerts"}{" "}
-                    ({filteredItems.length})
+                      : filterType === "offers_in_progress"
+                      ? "In Progress Offers"
+                      : filterType === "offers_completed"
+                      ? "Completed Offers"
+                      : filterType === "offers_cancelled"
+                      ? "Cancelled Offers"
+                      : filterType === "offers_inactive"
+                      ? "Inactive Offers"
+                      : filterType === "offers_archived"
+                      ? "Archived Offers"
+                      : filterType === "requests_in_progress"
+                      ? "In Progress Requests"
+                      : filterType === "requests_completed"
+                      ? "Completed Requests"
+                      : filterType === "requests_cancelled"
+                      ? "Cancelled Requests"
+                      : filterType === "requests_inactive"
+                      ? "Inactive Requests"
+                      : filterType === "requests_archived"
+                      ? "Archived Requests"
+                      : filterType === "alerts_in_progress"
+                      ? "In Progress Alerts"
+                      : filterType === "alerts_completed"
+                      ? "Completed Alerts"
+                      : filterType === "alerts_cancelled"
+                      ? "Cancelled Alerts"
+                      : filterType === "alerts_inactive"
+                      ? "Inactive Alerts"
+                      : filterType === "alerts_archived"
+                      ? "Archived Alerts"
+                      : "Care Connect"}{" "}
+                    ({ortsToClick.length})
                   </p>
                   <div className="space-y-2">
                     <AnimatePresence>
-                      {filteredItems.length > 0 ? (
-                        filteredItems.slice(0, 10).map((item) => {
+                      {ortsToClick && ortsToClick.length > 0 ? (
+                        (console.log("Rendering Filtered Items:", ortsToClick),
+                        ortsToClick.slice(0, 10).map((item) => {
                           const title =
                             getOrtType(item) !== "alert"
-                              ? item.title
+                              ? "title" in item && item.title
+                                ? item.title
+                                : "Untitled"
                               : "SOS Alert";
 
-                          const isActive = currentOrt?._id === item._id;
+                          const isActive =
+                            (ortToSelect?._id || ortsToClick[0]?._id) ===
+                            item._id;
 
                           const statusColor = getStatusColor(item);
                           return (
@@ -734,8 +1109,16 @@ const MapList = () => {
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: -10 }}
                               onClick={() => {
-                                showOrt(item);
-                                console.log("Clicked item:", item);
+                                if (
+                                  ortToSelect &&
+                                  ortToSelect._id !== user?._id
+                                ) {
+                                  setOrtToSelect(item);
+                                  setCurrentOrt(item);
+                                  showOrt(item, true);
+                                  setIsClickedZoom(true);
+                                  setIsClick(true);
+                                }
                               }}
                               className={`relative w-full text-left cursor-pointer p-2 rounded-lg transition-all text-xs ${
                                 isActive
@@ -750,14 +1133,13 @@ const MapList = () => {
                                 {title}
                               </p>
                               <p className="text-gray-600 truncate">
-                                {item.location}
-                              </p>
-                              <p className="text-gray-600 truncate">
-                                {item.status}
+                                {"location" in item && item.location
+                                  ? item.location
+                                  : ""}
                               </p>
                             </motion.button>
                           );
-                        })
+                        }))
                       ) : (
                         <p className="text-center text-gray-500 text-xs py-4">
                           No items found
@@ -771,167 +1153,6 @@ const MapList = () => {
           )}
         </div>
       </div>
-
-      {/*<div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
-      <div className="max-w-6xl mx-auto flex gap-6"></div>
-
-      <div className="modal-box w-11/12 max-w-5xl">
-        <div className="card bg-base-100 w-full shadow-sm">
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1 md:basis-[30%]">
-              <h2 className="flex items-center justify-start gap-2 text-xl font-bold mb-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="w-6 h-6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"
-                  />
-                </svg>
-                Map
-              </h2>
-
-              <div className="flex items-center gap-2 mb-4">
-                {/ Search Bar }
-                <form onSubmit={handleSearch} className="form-control">
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      placeholder="Search events..."
-                      className="input input-bordered input-sm w-48"
-                      value={searchQuery}
-                      onChange={handleSearch}
-                    />
-                    {searchQuery ? (
-                      <button
-                        type="button"
-                        onClick={clearSearch}
-                        className="btn btn-ghost btn-sm"
-                        aria-label="Clear search"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={1.5}
-                          stroke="currentColor"
-                          className="w-5 h-5"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    ) : null}
-
-                    <button type="submit" className="btn btn-square btn-sm">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </form>
-              </div>
-
-              <div className="hidden md:flex flex-col gap-2 carousel carousel-vertical h-108">
-                {allOrts &&
-                  allOrts.map((ort) => (
-                    <div
-                      key={(ort as any).id ?? JSON.stringify(ort)}
-                      onClick={() => showOrt(ort)}
-                      className={`card carousel-item w-full shadow-sm cursor-pointer overflow-hidden hover:shadow-2xl hover:scale-105 transition-transform ${
-                        (ort as any).id === (currentOrt as any)?.id
-                          ? "bg-primary text-primary-content"
-                          : "bg-base-100"
-                      }`}
-                    >
-                      <div className="px-4 py-4">
-                        <h2 className="card-title">{(ort as any).title}</h2>
-                        <p>📍 {(ort as any).location}</p>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-
-              <div className="relative md:hidden">
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 px-2">
-                  <span className="text-2xl opacity-50">❮</span>
-                </div>
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 z-10 px-2">
-                  <span className="text-2xl opacity-50">❯</span>
-                </div>
-                <div className="carousel rounded-box w-full">
-                  {allOrts &&
-                    allOrts.map((ort) => (
-                      <div
-                        key={(ort as any).id ?? JSON.stringify(ort)}
-                        onClick={() => showOrt(ort)}
-                        className={`carousel-item w-1/2 card shadow-sm cursor-pointer overflow-hidden transition-transform ${
-                          (ort as any).id === (currentOrt as any)?.id
-                            ? "bg-primary text-primary-content"
-                            : "bg-base-100"
-                        }`}
-                      >
-                        <div className="px-4 py-4 text-sm">
-                          <h2 className="card-title text-md">
-                            {(ort as any).title}
-                          </h2>
-                          <p>📍 {(ort as any).location}</p>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-1 md:basis-[70%]">
-              <h2 className="text-2xl font-bold mb-4">
-                {(currentOrt as any)?.title ?? "Select an event"}
-              </h2>
-              {currentOrt ? (
-                <>
-                  <p className="text-base-content/70 mb-2">
-                    📅{" "}
-                    {(currentOrt as any).date
-                      ? new Date((currentOrt as any).date).toLocaleDateString()
-                      : "—"}
-                  </p>
-                  <p className="text-base-content/70 mb-2">
-                    📍 {(currentOrt as any).location}
-                  </p>
-                  <p className="text-base-content/70 mb-4">
-                    📖 {(currentOrt as any).description ?? "—"}
-                  </p>
-                </>
-              ) : (
-                <p className="text-base-content/70 mb-4">No event selected</p>
-              )}
-
-              
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>*/}
     </>
   );
 };
