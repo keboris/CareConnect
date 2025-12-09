@@ -17,15 +17,15 @@ import { v2 as cloudinary } from "cloudinary";
 
 import type { z } from "zod/v4";
 import mongoose from "mongoose";
+import { normalizePhone } from "#utils";
 
-type UserInputDTO = z.infer<typeof userInputSchema>;
 type UserUpdateDTO = z.infer<typeof userUpdateSchema>;
 type UserDTO = UserUpdateDTO;
 type ChangePasswordDTO = z.infer<typeof changePasswordSchema>;
 
 export const getUsers: RequestHandler = async (req, res) => {
   try {
-    const users = await User.find();
+    const users = await User.find().sort({ createdAt: -1 }).lean();
     if (!users.length) {
       throw new Error("User not found", { cause: 404 });
     }
@@ -69,11 +69,13 @@ export const getUserStatsById: RequestHandler = async (req, res) => {
     const user = await User.findById(userId).lean();
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    const [offersCount, requestsCount, notificationsCount] = await Promise.all([
-      Offer.countDocuments({ userId }),
-      Request.countDocuments({ userId }),
-      Notification.countDocuments({ userId }),
-    ]);
+    const [offersCount, requestsCount, alertsCount, notificationsCount] =
+      await Promise.all([
+        Offer.countDocuments({ userId }),
+        Request.countDocuments({ userId }).where("typeRequest", "request"),
+        Request.countDocuments({ userId }).where("typeRequest", "alert"),
+        Notification.countDocuments({ userId }),
+      ]);
 
     const chatsCount = await ChatMessage.distinct("sessionId", {
       $or: [{ senderId: userId }, { receiverId: userId }],
@@ -86,7 +88,9 @@ export const getUserStatsById: RequestHandler = async (req, res) => {
 
     const helpSessions = await HelpSession.find({
       $or: [{ userRequesterId: userId }, { userHelperId: userId }],
-    }).lean();
+    })
+      .sort({ createdAt: -1 })
+      .lean();
 
     const helpSessionsCount = helpSessions.length;
 
@@ -95,6 +99,7 @@ export const getUserStatsById: RequestHandler = async (req, res) => {
       stats: {
         offers: offersCount,
         requests: requestsCount,
+        alerts: alertsCount,
         chats: chatsCount,
         unRead: unreadCount,
         sessions: helpSessionsCount,
@@ -203,7 +208,7 @@ export const getLocationsByUser: RequestHandler = async (req, res) => {
 
 export const updateUser: RequestHandler<
   { id: string },
-  { message: string; user: UserDTO },
+  { field?: string; message: string; user?: UserDTO },
   UserUpdateDTO
 > = async (req, res) => {
   const { id } = req.params;
@@ -222,15 +227,44 @@ export const updateUser: RequestHandler<
 
   const file = req.file as Express.Multer.File | undefined;
 
-  const profileImage = file?.path || "";
-  const profileImagePublicId = file?.filename || "";
+  if (phone) {
+    const submittedPhone = normalizePhone(phone);
+    const phoneExist = await User.exists({
+      phone: submittedPhone,
+      _id: { $ne: id },
+    });
 
-  const searchProfile = await User.findById(id).select("profileImagePublicId");
-  if (searchProfile && file) {
-    const existingPublicId = searchProfile.profileImagePublicId;
-    if (existingPublicId) {
-      await cloudinary.uploader.destroy(existingPublicId);
+    if (phoneExist) {
+      if (file?.filename && file?.filename.length > 0) {
+        await cloudinary.uploader.destroy(file.filename);
+      }
+      return res
+        .status(400)
+        .json({ field: "phone", message: "Phone number already in use" });
     }
+  }
+
+  const searchProfile = await User.findById(id).select(
+    "profileImage profileImagePublicId"
+  );
+
+  if (!searchProfile) {
+    throw new Error("User not found", { cause: { status: 404 } });
+  }
+
+  let profileImage = searchProfile.profileImage;
+  let profileImagePublicId = searchProfile.profileImagePublicId;
+
+  profileImage = file?.path || "";
+  profileImagePublicId = file?.filename || "";
+
+  if (file?.filename && file?.filename.length > 0) {
+    if (profileImagePublicId) {
+      await cloudinary.uploader.destroy(profileImagePublicId);
+    }
+
+    profileImage = file.path;
+    profileImagePublicId = file.filename;
   }
 
   const updatedUser = await User.findByIdAndUpdate(
@@ -240,8 +274,8 @@ export const updateUser: RequestHandler<
       lastName,
       email,
       phone,
-      profileImage: profileImage,
-      profileImagePublicId: profileImagePublicId,
+      profileImage,
+      profileImagePublicId,
       bio,
       skills,
       languages,

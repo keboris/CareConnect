@@ -11,7 +11,7 @@ type RequestUpdateDTO = z.infer<typeof requestUpdateSchema>;
 
 export const createRequest: RequestHandler<
   unknown,
-  { message: string; request?: any },
+  { field?: string; message: string; request?: any },
   RequestDTO
 > = async (req, res) => {
   try {
@@ -47,15 +47,60 @@ export const createRequest: RequestHandler<
       latitude,
     } = req.body;
 
+    const files = req.files as Express.Multer.File[] | undefined;
+    const images = files ? files.map((file) => file.path) : [];
+    const imagesPublicIds = files ? files.map((file) => file.filename) : [];
+
     if (rewardType === "paid" && (price === undefined || price <= 0)) {
+      if (imagesPublicIds.length > 0) {
+        for (const publicId of imagesPublicIds) {
+          await cloudinary.uploader.destroy(publicId);
+        }
+      }
+
       return res.status(400).json({
+        field: "price",
         message: "Price must be greater than 0 for paid requests",
       });
     }
 
-    const files = req.files as Express.Multer.File[] | undefined;
-    const images = files ? files.map((file) => file.path) : [];
-    const imagesPublicIds = files ? files.map((file) => file.filename) : [];
+    if (typeRequest === "alert") {
+      const existingActiveAlert = await Request.findOne({
+        userId: userId,
+        typeRequest: "alert",
+        status: { $in: ["active", "in_progress"] },
+      });
+      if (existingActiveAlert) {
+        if (imagesPublicIds.length > 0) {
+          for (const publicId of imagesPublicIds) {
+            await cloudinary.uploader.destroy(publicId);
+          }
+        }
+
+        return res.status(400).json({
+          message:
+            "You already have an active alert. Please resolve it before creating a new one.",
+        });
+      }
+    }
+
+    if (location !== undefined) {
+      const regex = /^.+\s\d+\s*,?\s*\d{3,}\s+[A-Za-zÀ-ÖØ-öø-ÿ\s-]+$/;
+
+      if (!regex.test(location)) {
+        if (imagesPublicIds.length > 0) {
+          for (const publicId of imagesPublicIds) {
+            await cloudinary.uploader.destroy(publicId);
+          }
+        }
+
+        return res.status(400).json({
+          field: "location",
+          message:
+            "Address must contain a street with number, a postal code, and a city",
+        });
+      }
+    }
 
     console.log("Created Request:", userId);
     const request = await Request.create({
@@ -103,9 +148,11 @@ export const getRequests: RequestHandler = async (req, res) => {
       status: { $in: ["active", "in_progress", "completed"] },
     })*/
     const requests = await Request.find()
+      .sort({ createdAt: -1 })
       .populate("category", "name nameDE")
       .populate("userId", "firstName lastName")
       .lean();
+
     if (!requests.length) {
       return res.status(404).json({ message: "No Request found" });
     }
@@ -123,7 +170,9 @@ export const getRequestById: RequestHandler = async (req, res) => {
     const {
       params: { id },
     } = req;
-    const request = await Request.findById(id).populate("category", "name");
+    const request = await Request.findById(id)
+      .sort({ createdAt: -1 })
+      .populate("category", "name");
 
     if (!request) {
       return res.status(404).json({ error: `Request with id:${id} not found` });
@@ -158,7 +207,10 @@ export const myRequests: RequestHandler = async (req, res) => {
       total = await Request.countDocuments({ userId, typeRequest: "alert" });
     } else {
       nameReq = "Requests";
-      requests = await Request.find({ userId }).populate("category", "name");
+      requests = await Request.find({ userId })
+        .sort({ createdAt: -1 })
+        .populate("category", "name");
+
       total = await Request.countDocuments({ userId });
     }
     if (!requests.length) {
@@ -177,7 +229,7 @@ export const myRequests: RequestHandler = async (req, res) => {
 
 export const updateRequest: RequestHandler<
   { id: string },
-  { message: string; request: RequestDTO | any },
+  { field?: string; message: string; request: RequestDTO | any },
   RequestUpdateDTO
 > = async (req, res) => {
   try {
@@ -202,8 +254,20 @@ export const updateRequest: RequestHandler<
       },
       params: { id },
     } = req;
+
+    const files = req.files as Express.Multer.File[] | undefined;
+    const images = files ? files.map((file) => file.path) : [];
+    const imagesPublicIds = files ? files.map((file) => file.filename) : [];
+
     if (rewardType === "paid" && (price === undefined || price <= 0)) {
+      if (imagesPublicIds.length > 0) {
+        for (const publicId of imagesPublicIds) {
+          await cloudinary.uploader.destroy(publicId);
+        }
+      }
+
       return res.status(400).json({
+        field: "price",
         message: "Price (if rewardType is 'paid') is required",
         request: undefined,
       });
@@ -215,6 +279,12 @@ export const updateRequest: RequestHandler<
         status
       )
     ) {
+      if (imagesPublicIds.length > 0) {
+        for (const publicId of imagesPublicIds) {
+          await cloudinary.uploader.destroy(publicId);
+        }
+      }
+
       return res.status(400).json({
         message: "Invalid status value for request",
         request: undefined,
@@ -222,30 +292,44 @@ export const updateRequest: RequestHandler<
     }
 
     const request = await Request.findById(id);
-    if (!request)
+    if (!request) {
+      if (imagesPublicIds.length > 0) {
+        for (const publicId of imagesPublicIds) {
+          await cloudinary.uploader.destroy(publicId);
+        }
+      }
+
       return res
         .status(404)
         .json({ message: "Request not found", request: undefined });
+    }
 
     if (category) {
       const searchCategory = await Category.findById(category);
       if (!searchCategory) {
+        if (imagesPublicIds.length > 0) {
+          for (const publicId of imagesPublicIds) {
+            await cloudinary.uploader.destroy(publicId);
+          }
+        }
+
         return res
           .status(404)
-          .json({ message: "Category not found", request: undefined });
+          .json({
+            field: "category",
+            message: "Category not found",
+            request: undefined,
+          });
       }
     }
 
     if (request.status === "completed" || request.status === "cancelled") {
       return res.status(400).json({
+        field: "status",
         message: "Cannot update a completed or cancelled request",
         request: undefined,
       });
     }
-
-    const files = req.files as Express.Multer.File[] | undefined;
-    const images = files ? files.map((file) => file.path) : [];
-    const imagesPublicIds = files ? files.map((file) => file.filename) : [];
 
     const priceToUpdate = rewardType === "paid" ? price : 0;
 
