@@ -22,7 +22,9 @@ export { default as Map } from "./Map/Map";
 export { default as MarkerLegend } from "./Map/MarkerLegend";
 export { default as Notifications } from "./Profile/Notifications";
 export { default as Me } from "./Profile/Me";
-
+export { default as ConfirmModal } from "./Landing/ConfirmModal";
+export { default as CareModal } from "./Care/CareModal";
+//export { default as UseNotifications } from "./Notifications/UseNotifications";
 export * from "./ui/card";
 export * as IconMap from "./ui/icons";
 export * as colorMapping from "./ui/colors";

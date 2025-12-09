@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import { Mail, Lock, LogIn } from "lucide-react";
 
 import { useAuth, useLanguage } from "../contexts";
-import { Navigate, useNavigate } from "react-router";
+import { Navigate, useLocation, useNavigate } from "react-router";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/app";
 
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +27,7 @@ const Login = () => {
 
     try {
       await signIn(email, password);
-      navigate("/app");
+      //navigate(from, { replace: true });
     } catch (err: any) {
       if (err instanceof Error) {
         setError(err.message); // string
@@ -41,7 +44,7 @@ const Login = () => {
   }, [t]);
 
   if (isAuthenticated) {
-    return <Navigate to="/app" replace />;
+    return <Navigate to={from} replace />;
   }
 
   return (

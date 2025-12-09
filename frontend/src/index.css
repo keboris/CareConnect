@@ -4,7 +4,8 @@
 @custom-variant dark (&:is(.dark *));
 @plugin 'daisyui';
 
-.blink-alert-wrapper {
+.blink-alert-wrapper,
+.blink-user-wrapper {
   position: relative;
   width: 30px; /* largeur totale du marker */
   height: 41px; /* hauteur totale du marker */
@@ -21,6 +22,20 @@
   border-radius: 50%;
   border: 2px solid white; /* optionnel pour contraste */
   animation: blink 1s infinite ease-in-out;
+  z-index: 1;
+}
+
+.blink-user-circle {
+  position: absolute;
+  top: 0;
+  left: 43%;
+  transform: translateX(-50%);
+  width: 25px;
+  height: 25px;
+  background-color: blue;
+  border-radius: 50%;
+  border: 2px solid white; /* optionnel pour contraste */
+  /*animation: blink 1s infinite ease-in-out;*/
   z-index: 1;
 }
 

@@ -248,6 +248,7 @@ export const translationsMap: Translations = {
   "common.send": { en: "Send", de: "Senden" },
   "common.viewDetails": { en: "View Details", de: "Details anzeigen" },
   "common.create": { en: "Create", de: "Erstellen" },
+  "common.creating": { en: "Creating...", de: "Wird erstellt..." },
   "common.error": { en: "Error", de: "Fehler" },
   "common.success": { en: "Success", de: "Erfolg" },
 
@@ -265,6 +266,11 @@ export const translationsMap: Translations = {
   "dashboard.alerts": {
     en: "Alerts",
     de: "Warnungen",
+  },
+
+  "dashboard.active": {
+    en: "Active",
+    de: "Aktiv",
   },
 
   "dashboard.offersRequestsByCategory": {
@@ -303,13 +309,28 @@ export const translationsMap: Translations = {
   },
 
   "dashboard.createOffer": {
-    en: "Create New Offer",
-    de: "Neues Angebot erstellen",
+    en: "Create Offer",
+    de: "Angebot erstellen",
   },
 
   "dashboard.postRequest": {
     en: "Post a Request",
     de: "Anfrage posten",
+  },
+
+  "dashboard.isPaid": {
+    en: "This is a paid offer",
+    de: "Dies ist ein bezahltes Angebot",
+  },
+
+  "dashboard.rewardTypeRequest": {
+    en: "This request offers a reward",
+    de: "Diese Anfrage bietet eine Belohnung",
+  },
+
+  "dashboard.rewardTypeAlert": {
+    en: "This alert request offers a reward",
+    de: "Diese Warnungsanfrage bietet eine Belohnung",
   },
 
   "dashboard.browseMap": {
@@ -420,6 +441,31 @@ export const translationsMap: Translations = {
     de: "Keine Anfragen entsprechen Ihren Kriterien.",
   },
 
+  "dashboard.createAlert": {
+    en: "Create Alert",
+    de: "Warnung erstellen",
+  },
+
+  "dashboard.myAlerts": {
+    en: "My Alerts",
+    de: "Meine Warnungen",
+  },
+
+  "dashboard.allAlerts": {
+    en: "All Alerts",
+    de: "Alle Warnungen",
+  },
+
+  "dashboard.noAlerts": {
+    en: "No alerts found yet.",
+    de: "Noch keine Warnungen gefunden.",
+  },
+
+  "dashboard.noAlertsCriteria": {
+    en: "No alerts match your criteria.",
+    de: "Keine Warnungen entsprechen Ihren Kriterien.",
+  },
+
   "dashboard.category": { en: "Category", de: "Kategorie" },
   "dashboard.price": { en: "Price", de: "Preis" },
   "dashboard.free": { en: "Free", de: "Kostenlos" },
@@ -433,6 +479,10 @@ export const translationsMap: Translations = {
   "dashboard.images": { en: "Images", de: "Bilder" },
   "dashboard.description": { en: "Description", de: "Beschreibung" },
   "dashboard.typeRequest": { en: "Type of Request", de: "Art der Anfrage" },
+  "dashboard.clickToUpload": {
+    en: "Click to upload or drag and drop",
+    de: "Klicken Sie zum Hochladen oder ziehen Sie Dateien per Drag & Drop",
+  },
 
   "dashboard.welcomeBack": {
     en: "Welcome back,",
@@ -472,11 +522,15 @@ export const translationsMap: Translations = {
     de: "Durchsuchen und verwalten Sie verfügbare Anfragen in Ihrer Gemeinschaft",
   },
 
+  "dashboard.msgAlerts": {
+    en: "Browse and manage available alerts in your community",
+    de: "Durchsuchen und verwalten Sie verfügbare Warnungen in Ihrer Gemeinschaft",
+  },
+
   "dashboard.stayConnected": {
     en: "Check your conversations and respond to messages",
     de: "Überprüfen Sie Ihre Unterhaltungen und antworten Sie auf Nachrichten",
   },
-
   "dashboard.sessions": { en: "Sessions", de: "Sitzungen" },
 
   "dashboard.msgSessions": {
@@ -524,4 +578,91 @@ export const translationsMap: Translations = {
   "sos.danger": { en: "Danger", de: "Gefahr" },
   "sos.assistance": { en: "Assistance", de: "Hilfe" },
   "sos.other": { en: "Other", de: "Andere" },
+  "sos.type": { en: "Type of Emergency", de: "Art des Notfalls" },
+
+  "map.acceptHelp": { en: "Accept", de: "Annehmen" },
+
+  "offer.accepted": {
+    en: "You are now handling this offer.",
+    de: "Sie bearbeiten jetzt dieses Angebot.",
+  },
+
+  "request.accepted": {
+    en: "You are now handling this request.",
+    de: "Sie bearbeiten jetzt diese Anfrage.",
+  },
+
+  "alert.accepted": {
+    en: "You are now responding to this alert.",
+    de: "Sie reagieren jetzt auf diese Warnung.",
+  },
+
+  "dashboard.browseMapDesc": {
+    en: "Explore help offers and requests near you",
+    de: "Entdecken Sie Hilfeangebote und Anfragen in Ihrer Nähe",
+  },
+
+  "dashboard.createOfferConfirm": {
+    en: "Offer created successfully!",
+    de: "Angebot erfolgreich erstellt!",
+  },
+  "dashboard.createRequestConfirm": {
+    en: "Request created successfully!",
+    de: "Anfrage erfolgreich erstellt!",
+  },
+  "dashboard.createAlertConfirm": {
+    en: "Alert created successfully!",
+    de: "Warnung erfolgreich erstellt!",
+  },
+
+  "dashboard.confirmTitle": { en: "Confirm Action", de: "Aktion bestätigen" },
+  "dashboard.yourLocation": { en: "Your Location", de: "Ihr Standort" },
+
+  "offer.confirmMessage": {
+    en: "Are you sure you want to accept this offer?",
+    de: "Sind Sie sicher, dass Sie dieses Angebot annehmen möchten?",
+  },
+  "request.confirmMessage": {
+    en: "Are you sure you want to accept this request?",
+    de: "Sind Sie sicher, dass Sie diese Anfrage annehmen möchten?",
+  },
+  "alert.confirmMessage": {
+    en: "Are you sure you want to respond to this alert?",
+    de: "Sind Sie sicher, dass Sie auf diese Warnung reagieren möchten?",
+  },
+
+  "dashboard.map": { en: "Available Offers and Requests", de: "Karte" },
+  "map.viewInDetails": { en: "View Details", de: "Details anzeigen" },
+
+  "profile.updateSuccess": {
+    en: "Profile updated successfully.",
+    de: "Profil erfolgreich aktualisiert.",
+  },
+
+  "dashboard.offerDetails": { en: "Offer Details", de: "Angebotsdetails" },
+  "dashboard.requestDetails": { en: "Request Details", de: "Anfragedetails" },
+
+  "dashboard.dateCreated": { en: "Date Created", de: "Erstellt am" },
+  "dashboard.publishedBy": { en: "Published By", de: "Veröffentlicht von" },
+
+  "dashboard.acceptOffer": { en: "Accept Offer", de: "Angebot annehmen" },
+  "dashboard.reportOffer": { en: "Report Offer", de: "Angebot melden" },
+  "dashboard.acceptRequest": { en: "Accept Request", de: "Anfrage annehmen" },
+  "dashboard.reportRequest": { en: "Report Request", de: "Anfrage melden" },
+  "dashboard.acceptAlert": { en: "Handle", de: "Übernehmen" },
+  "dashboard.reportAlert": { en: "Report Alert", de: "Warnung melden" },
+  "dashboard.editOffer": { en: "Edit Offer", de: "Angebot bearbeiten" },
+  "dashboard.editRequest": { en: "Edit Request", de: "Anfrage bearbeiten" },
+  "dashboard.editAlert": { en: "Edit Alert", de: "Warnung bearbeiten" },
+  "dashboard.deleteOffer": { en: "Delete Offer", de: "Angebot löschen" },
+  "dashboard.deleteRequest": { en: "Delete Request", de: "Anfrage löschen" },
+  "dashboard.deleteAlert": { en: "Delete Alert", de: "Warnung löschen" },
+
+  "status.active": { en: "Active", de: "Aktiv" },
+  "status.completed": { en: "Completed", de: "Abgeschlossen" },
+  "status.cancelled": { en: "Cancelled", de: "Abgebrochen" },
+  "status.inactive": { en: "Inactive", de: "Inaktiv" },
+  "status.in_progress": { en: "In Progress", de: "In Bearbeitung" },
+  "status.archived": { en: "Archived", de: "Archiviert" },
+  "status.all": { en: "All", de: "Alle" },
 };

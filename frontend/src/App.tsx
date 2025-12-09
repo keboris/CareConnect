@@ -16,6 +16,7 @@ function App() {
     "offers",
     "offers2",
     "requests",
+    "alerts",
     "sessions",
     "profile",
     "chat",
