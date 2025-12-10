@@ -674,6 +674,37 @@ export const translationsMap: Translations = {
     de: "Sind Sie sicher, dass Sie diese Warnung löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
   },
 
+  "alert.acceptOfferMessage": {
+    en: "Are you sure you want to accept this offer?",
+    de: "Sind Sie sicher, dass Sie dieses Angebot annehmen möchten?",
+  },
+  "alert.acceptRequestMessage": {
+    en: "Are you sure you want to accept this request?",
+    de: "Sind Sie sicher, dass Sie diese Anfrage annehmen möchten?",
+  },
+  "alert.acceptAlertMessage": {
+    en: "Are you sure you want to handle this particular alert?",
+    de: "Sind Sie sicher, dass Sie diese bestimmte Warnung übernehmen möchten?",
+  },
+
+  "dashboard.confirmAcceptOffer": {
+    en: "Offer accepted successfully.",
+    de: "Angebot erfolgreich angenommen.",
+  },
+  "dashboard.confirmAcceptRequest": {
+    en: "Request accepted successfully.",
+    de: "Anfrage erfolgreich angenommen.",
+  },
+  "dashboard.confirmAcceptAlert": {
+    en: "Alert accepted successfully.",
+    de: "Warnung erfolgreich übernommen.",
+  },
+
+  "dashboard.alertSend": {
+    en: "SOS alert sent successfully.",
+    de: "SOS-Warnung erfolgreich gesendet.",
+  },
+
   "confirm.completedSession": {
     en: "Are you sure you want to mark this session as completed?",
     de: "Sind Sie sicher, dass Sie diese Sitzung als abgeschlossen markieren möchten?",

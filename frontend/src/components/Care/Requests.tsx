@@ -74,8 +74,11 @@ const Requests = ({ page }: { page: "request" | "alert" }) => {
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showConfirmAccept, setShowConfirmAccept] = useState(false);
+
   const [confirmMessage, setConfirmMessage] = useState<string>("");
   const [itemToAction, setItemToAction] = useState<RequestProps | null>(null);
+  const [refresh, setRefresh] = useState(false);
   /**
    * Fetch all requests from the API
    * Called on component mount and when user data is loaded
@@ -118,7 +121,7 @@ const Requests = ({ page }: { page: "request" | "alert" }) => {
     };
 
     fetchRequests();
-  }, [loading]);
+  }, [loading, refresh]);
 
   // Fetch categories
   useEffect(() => {
@@ -268,6 +271,11 @@ const Requests = ({ page }: { page: "request" | "alert" }) => {
 
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
+    } else if (option === "accept") {
+      setItemToAction(newCare);
+      getConfirmMsg("accept");
+      setIsModalOpen(false);
+      setShowConfirmAccept(true);
     } else {
       setRequests((prev) => [newCare, ...prev]);
 
@@ -320,6 +328,45 @@ const Requests = ({ page }: { page: "request" | "alert" }) => {
         setConfirmMessage(t("alert.deleteRequestMessage"));
       else if (page === "alert")
         setConfirmMessage(t("alert.deleteAlertMessage"));
+    } else if (action === "accept") {
+      if (page === "request")
+        setConfirmMessage(t("alert.acceptRequestMessage"));
+      else if (page === "alert")
+        setConfirmMessage(t("alert.acceptAlertMessage"));
+    }
+  };
+
+  const acceptRequest = async (requestId: string) => {
+    setIsModalOpen(false);
+    try {
+      const response = await refreshUser(`${REQUEST_API_URL}/${requestId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to accept request");
+      }
+
+      setFilteredRequests((prev) =>
+        prev.filter((request) => request._id !== requestId)
+      );
+
+      if (page === "request")
+        setSuccessMessage(t("dashboard.confirmAcceptRequest"));
+      else if (page === "alert")
+        setSuccessMessage(t("dashboard.confirmAcceptAlert"));
+
+      setRefresh(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error) {
+      console.error("Error accepting request:", error);
+      alert("Failed to accept request. Please try again.");
+    } finally {
+      setShowConfirmAccept(false);
+      setConfirmMessage("");
+      setItemToAction(null);
     }
   };
 
@@ -1171,6 +1218,20 @@ const Requests = ({ page }: { page: "request" | "alert" }) => {
           )}
         </div>*/}
       </div>
+
+      {showConfirmAccept && (
+        <ConfirmModal
+          title={t("dashboard.confirmTitle")}
+          message={confirmMessage}
+          onConfirm={() => {
+            acceptRequest(itemToAction?._id || "");
+          }}
+          onCancel={() => {
+            setShowConfirmAccept(false);
+            openModal(itemToAction, "show");
+          }}
+        />
+      )}
 
       <CareModal
         dialogRef={dialogRef}

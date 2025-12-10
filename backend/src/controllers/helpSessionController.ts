@@ -58,7 +58,7 @@ export const createHelpSession: RequestHandler = async (req, res) => {
     const isAlert =
       requestBase === "requests" && resource.typeRequest === "alert";
 
-    if (!isAlert) {
+    /*if (!isAlert) {
       // Check if a session already exists between the same users
       const existingSession = await HelpSession.findOne({
         $or: [
@@ -80,7 +80,7 @@ export const createHelpSession: RequestHandler = async (req, res) => {
           message: "You already have an active session with this user.",
         });
       }
-    }
+    }*/
 
     // Expire notifications for alerts
     if (isAlert) {

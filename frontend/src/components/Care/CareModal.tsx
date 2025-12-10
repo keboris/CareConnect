@@ -34,7 +34,6 @@ const CareModal: React.FC<CareModalProps> = ({
   const { user } = useAuth();
 
   console.log("CareModal rendered with option:", option);
-  console.log("set option function:", setOption);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const [isMobileLayout, setIsMobileLayout] = useState(window.innerWidth < 640);
@@ -382,7 +381,10 @@ const CareModal: React.FC<CareModalProps> = ({
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
-                            onClick={() => {}}
+                            onClick={() => {
+                              handleAction &&
+                                handleAction(selectedCare, "accept");
+                            }}
                             className="px-2 py-1 md:px-4 md:py-2 rounded-lg cursor-pointer font-semibold transition-all flex items-center gap-2 text-sm md:text-md lg:text-lg
                 bg-green-700 text-white shadow-lg hover:shadow-xl"
                             title="Accept"
