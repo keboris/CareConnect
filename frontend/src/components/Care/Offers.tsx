@@ -213,7 +213,7 @@ const Offers = () => {
           offer._id === newCare._id ? (newCare as OfferProps) : offer
         )
       );
-      setSuccessMessage(t("dashboard.updateOfferConfirm"));
+      setSuccessMessage(t("dashboard.editOfferConfirm"));
       setChooseOffers("my");
 
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -227,7 +227,7 @@ const Offers = () => {
       if ("isPaid" in newCare) {
         setOffers((prev) => [newCare as OfferProps, ...prev]);
       }
-      setSuccessMessage(t("dashboard.updateOfferConfirm"));
+      setSuccessMessage(t("dashboard.createOfferConfirm"));
       setChooseOffers("my");
 
       window.scrollTo({ top: 0, behavior: "smooth" });
