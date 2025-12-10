@@ -26,7 +26,7 @@ function App() {
     "support",
     "offers/create",
     "offers/:id/edit",
-    "requests/:id",
+
     "requests/:id/edit",
     "alerts/:id",
   ];
