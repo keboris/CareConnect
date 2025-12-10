@@ -1,5 +1,16 @@
+import { useEffect } from "react";
+import { CategoriesSection } from "../components";
+
 const Categories = () => {
-  return <div>Categories Page</div>;
+  useEffect(() => {
+    document.title = `CareConnect - Categories`;
+  }, []);
+
+  return (
+    <>
+      <CategoriesSection />
+    </>
+  );
 };
 
 export default Categories;

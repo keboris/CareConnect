@@ -769,4 +769,46 @@ export const translationsMap: Translations = {
   "status.in_progress": { en: "In Progress", de: "In Bearbeitung" },
   "status.archived": { en: "Archived", de: "Archiviert" },
   "status.all": { en: "All", de: "Alle" },
+
+  // Service Section
+  "service.title": {
+    en: "Why Choose CareConnect?",
+    de: "Warum CareConnect wählen?",
+  },
+  "service.description": {
+    en: "Innovative solutions that combine cutting-edge technology with compassionate human care",
+    de: "Innovative Lösungen, die Spitzentechnologie mit mitfühlender menschlicher Pflege kombinieren",
+  },
+  "service.comprehensiveCare": {
+    en: "Comprehensive Care",
+    de: "Umfassende Pflege",
+  },
+  "service.comprehensiveCareDesc": {
+    en: "Providing integrated healthcare that covers all patient needs.",
+    de: "Bereitstellung integrierter Gesundheitsversorgung für alle Patientenbedürfnisse.",
+  },
+  "service.professionalTeam": {
+    en: "Professional Team",
+    de: "Professionelles Team",
+  },
+  "service.professionalTeamDesc": {
+    en: "Specialized medical team trained to the highest standards.",
+    de: "Spezialisiertes medizinisches Team, ausgebildet nach höchsten Standards.",
+  },
+  "service.flexibleScheduling": {
+    en: "Flexible Scheduling",
+    de: "Flexible Terminplanung",
+  },
+  "service.flexibleSchedulingDesc": {
+    en: "Easy appointment booking that fits your daily schedule.",
+    de: "Einfache Terminbuchung, die in Ihren täglichen Zeitplan passt.",
+  },
+  "service.privacySecurity": {
+    en: "Privacy & Security",
+    de: "Privatsphäre & Sicherheit",
+  },
+  "service.privacySecurityDesc": {
+    en: "Protecting your medical data with highest security standards.",
+    de: "Schutz Ihrer medizinischen Daten mit höchsten Sicherheitsstandards.",
+  },
 };

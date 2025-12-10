@@ -77,6 +77,7 @@ const MapList = ({ overview }: { overview?: boolean }) => {
     statuses: {},
     allActive: 0,
   });
+  const [refresh, setRefresh] = useState(false);
 
   const [ortsToSend, setOrtsToSend] = useState<
     (OfferProps | RequestProps | User)[]
@@ -192,7 +193,7 @@ const MapList = ({ overview }: { overview?: boolean }) => {
     };
 
     fetchData();
-  }, [loading]);
+  }, [loading, refresh]);
 
   useEffect(() => {
     calculateCounts();
@@ -386,6 +387,7 @@ const MapList = ({ overview }: { overview?: boolean }) => {
   const handleAccept = async () => {
     if (!selectedOrtToConfirm) return;
 
+    setRefresh(false);
     setAcceptLoading(true);
     const ort = selectedOrtToConfirm;
     try {
@@ -414,6 +416,7 @@ const MapList = ({ overview }: { overview?: boolean }) => {
       const type = getOrtType(ort);
       setInfoMsg(t(`${type}.accepted`));
 
+      setRefresh(true);
       window.scrollTo(0, 0);
     } catch (error) {
       console.error("Error accepting session:", error);
@@ -498,26 +501,26 @@ const MapList = ({ overview }: { overview?: boolean }) => {
     setCurrentOrt(ort);
   };
 
-  const getStatusColor = (item: any) => {
-    const status = item.status; // 'active', 'in_progress', 'completed', 'cancelled', 'archived'
-
+  const colorLeft = (item: any) => {
     const isOffer = "isPaid" in item;
     const isRequest = "typeRequest" in item && item.typeRequest === "request";
     const isAlert = "typeRequest" in item && item.typeRequest === "alert";
 
-    if (status === "active") return "bg-green-500";
-    if (status === "completed") return "bg-blue-500";
-    if (status === "cancelled") return "bg-red-500";
-    if (status === "archived") return "bg-purple-400";
-    if (status === "in_progress") return "bg-yellow-500";
-    if (status === "inactive") return "bg-gray-400";
-
-    // Active / default
-    if (isOffer) return "bg-blue-500";
-    if (isRequest) return "bg-green-500";
-    if (isAlert) return "bg-red-500";
-
-    return "bg-gray-400"; // fallback
+    if (isOffer)
+      return {
+        bg: "bg-blue-500",
+        bg_: "bg-blue-100",
+        border: "border-blue-600",
+      };
+    if (isRequest)
+      return {
+        bg: "bg-green-500",
+        bg_: "bg-green-100",
+        border: "border-green-600",
+      };
+    if (isAlert)
+      return { bg: "bg-red-500", bg_: "bg-red-100", border: "border-red-600" };
+    return { bg: "bg-gray-500", bg_: "bg-gray-100", border: "border-gray-600" };
   };
 
   const handleMainClick = (type: string) => {
@@ -996,6 +999,16 @@ const MapList = ({ overview }: { overview?: boolean }) => {
                             </div>
                           ))}
 
+                      <div className="flex items-center justify-center gap-2 px-2 py-1 text-white rounded text-xs font-medium">
+                        <button
+                          onClick={() => handleAccepted(ortToSelect)}
+                          className={`flex items-center gap-2
+              rounded-lg cursor-pointer font-medium
+              transition-all whitespace-nowrap px-2 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm  md:px-4 md:py-2 md:text-sm bg-blue-800 hover:opacity-80`}
+                        >
+                          {t("map.acceptHelp")}
+                        </button>
+                      </div>
                       {/* SOS Badge */}
                       {getOrtType(ortToSelect) === "alert" && (
                         <div className="flex items-center gap-2 px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
@@ -1100,7 +1113,7 @@ const MapList = ({ overview }: { overview?: boolean }) => {
                             (ortToSelect?._id || ortsToClick[0]?._id) ===
                             item._id;
 
-                          const statusColor = getStatusColor(item);
+                          const statusColor = colorLeft(item);
                           return (
                             <motion.button
                               key={item._id}
@@ -1121,12 +1134,12 @@ const MapList = ({ overview }: { overview?: boolean }) => {
                               }}
                               className={`relative w-full text-left cursor-pointer p-2 rounded-lg transition-all text-xs ${
                                 isActive
-                                  ? "bg-blue-100 border-2 border-blue-600"
+                                  ? `${statusColor.bg_} border-2 ${statusColor.border}`
                                   : "bg-gray-50 border border-gray-200 hover:bg-gray-100"
                               }`}
                             >
                               <div
-                                className={`absolute left-0 top-0 h-full w-1 rounded-l-lg ${statusColor}`}
+                                className={`absolute left-0 top-0 h-full w-1 rounded-l-lg ${statusColor.bg}`}
                               />
                               <p className="font-semibold text-gray-800 truncate">
                                 {title}

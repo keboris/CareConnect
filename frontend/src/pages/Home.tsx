@@ -4,6 +4,7 @@ import {
   FeaturesSection,
   HeroSection,
   MapModal,
+  ServiceSection,
   StatsSection,
 } from "../components";
 
@@ -20,6 +21,7 @@ const Home = () => {
         onGetStarted={() => console.log("Get started")}
         onOpenMap={() => setShowMap(true)}
       />
+      <ServiceSection />
       <FeaturesSection />
       <CategoriesSection />
       <StatsSection />
