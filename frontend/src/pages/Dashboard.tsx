@@ -19,7 +19,13 @@ import {
   CalendarClock,
   Zap,
 } from "lucide-react";
-import { Link, Navigate, useLocation, useNavigate } from "react-router";
+import {
+  Link,
+  Navigate,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router";
 
 import type { LocationProps, StatsProps } from "../types";
 import { STAT_USER_API_URL, USER_API_URL } from "../config";
@@ -45,6 +51,9 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const { id } = useParams<{ id: string }>();
+
+  console.log("Looking for offer with ID from URL:", id);
   const successMessage = location.state?.successMessage || null;
 
   // Sidebar state
@@ -68,12 +77,30 @@ const Dashboard = () => {
   //const { sendNotification } = UseNotifications();
 
   useEffect(() => {
+    // ✅ navigation dans useEffect
+    if (id) {
+      navigate("/app/offers", { state: { selectedOfferId: id } });
+    }
+  }, [id, navigate]);
+
+  useEffect(() => {
     if (loading) return;
 
     const fetchStats = async () => {
       try {
         const response = await refreshUser(`${STAT_USER_API_URL}`);
         const data = await response.json();
+
+        const lastOffersCount = localStorage.getItem("lastVisit_offers") ?? 0;
+        console.log("LAST OFFERS COUNT:", lastOffersCount);
+        if (lastOffersCount && data.stats.offers > Number(lastOffersCount)) {
+          if (stats) {
+            console.log("NEW OFFERS :", data.stats.offers);
+            localStorage.setItem("lastVisit_offers", data.stats.offers);
+            data.stats.offers = data.stats.offers - Number(lastOffersCount);
+            console.log("NEW OFFERS AFTER CALC:", data.stats.offers);
+          }
+        } else localStorage.setItem("lastVisit_offers", data.stats.offers);
 
         setStats(data.stats);
       } catch (error) {
@@ -244,6 +271,7 @@ const Dashboard = () => {
 
   // Check if navigation path is active
   const isActivePath = (path: string) => {
+    //console.log("Current path:", location.pathname, "Checking against:", path);
     return location.pathname === path;
   };
 

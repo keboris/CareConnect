@@ -13,18 +13,11 @@ import Loading from "../Landing/Loading";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "../ui/card";
 import {
-  Archive,
-  CheckCircle,
-  ChevronLeft,
-  ChevronRight,
   FilePlus2,
   Handshake,
-  Loader2,
   MapPin,
-  PauseCircle,
   Search,
   SearchX,
-  XCircle,
   Zap,
 } from "lucide-react";
 import ConfirmModal from "../Landing/ConfirmModal";
@@ -95,7 +88,7 @@ const MapList = ({ overview }: { overview?: boolean }) => {
   const [openSubMenu, setOpenSubMenu] = useState<string | null>(null);
 
   const [isClickedZoom, setIsClickedZoom] = useState(false);
-  const [showDetails, setShowDetails] = useState(true);
+  const [showDetails] = useState(true);
 
   const [selectedOrtToConfirm, setSelectedOrtToConfirm] = useState<
     OfferProps | RequestProps | User | null
@@ -105,8 +98,6 @@ const MapList = ({ overview }: { overview?: boolean }) => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmMessage, setConfirmMessage] = useState<string>("");
   const [acceptLoading, setAcceptLoading] = useState<boolean>(false);
-
-  const [activeStatus, setActiveStatus] = useState<string | null>(null);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -144,8 +135,8 @@ const MapList = ({ overview }: { overview?: boolean }) => {
           (dataR && (dataR as any).requests) ??
           (Array.isArray(dataR) ? (dataR as RequestProps[]) : []);
         // =============== MERGED LISTS ===============
-        const offerData = offersArray || [];
-        const requestData = requestsArray || [];
+        //const offerData = offersArray || [];
+        //const requestData = requestsArray || [];
 
         const activeDataO = offersArray.filter(
           (item: OfferProps) =>
@@ -159,13 +150,13 @@ const MapList = ({ overview }: { overview?: boolean }) => {
 
         const mergedActiveList = [...activeDataO, ...activeDataR];
 
-        const mergedList = [...offerData, ...requestData];
+        //const mergedList = [...offerData, ...requestData];
 
-        const mergedAllList = [
+        /*const mergedAllList = [
           ...(user ? [user] : []),
           ...offerData,
           ...requestData,
-        ];
+        ];*/
 
         const mergedAllActiveList = [
           ...(user ? [user] : []),
@@ -175,8 +166,8 @@ const MapList = ({ overview }: { overview?: boolean }) => {
 
         setSearchQuery("");
 
-        setAllOrts(mergedAllList);
-        setAllEnreg(mergedList);
+        setAllOrts(mergedAllActiveList);
+        setAllEnreg(mergedActiveList);
 
         setOrtsToSend(mergedAllActiveList);
 
@@ -187,6 +178,7 @@ const MapList = ({ overview }: { overview?: boolean }) => {
           setOrtToSelect(mergedActiveList[0] as OfferProps | RequestProps);
 
           setMapCenter([user?.latitude ?? 0, user?.longitude ?? 0]);
+          scrollToCardMiddle();
         } else {
           setCurrentOrt(null);
           setOrtToSelect(null);
@@ -256,6 +248,13 @@ const MapList = ({ overview }: { overview?: boolean }) => {
     return { type, status };
   };
 
+  const scrollToCardMiddle = () => {
+    mapRef.current?.getContainer().scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  };
+
   const calculateCounts = () => {
     const newCounts: CountProps = {
       offers: 0,
@@ -287,7 +286,7 @@ const MapList = ({ overview }: { overview?: boolean }) => {
     setCounts(newCounts);
   };
 
-  const getSubmenuCount = (parentType: string, status: string) => {
+  /*const getSubmenuCount = (parentType: string, status: string) => {
     return allEnreg.filter((o) => {
       const itemType =
         "isPaid" in o
@@ -309,7 +308,7 @@ const MapList = ({ overview }: { overview?: boolean }) => {
       // Check that the status matches
       return (o as any).status === status;
     }).length;
-  };
+  };*/
 
   const filterItems = ({
     items,
@@ -546,7 +545,7 @@ const MapList = ({ overview }: { overview?: boolean }) => {
     setIsClickedZoom(false);
   };
 
-  const handleSubClick = (subType: string) => {
+  /*const handleSubClick = (subType: string) => {
     setFilterType(subType as any);
 
     const ort = allOrts.find((item: any) => {
@@ -568,18 +567,18 @@ const MapList = ({ overview }: { overview?: boolean }) => {
 
     setIsClick(false);
     setIsClickedZoom(false);
-  };
+  };*/
 
-  const subStatuses = [
+  /*const subStatuses = [
     "active",
     "in_progress",
     "completed",
     "cancelled",
     "inactive",
     "archived",
-  ];
+  ];*/
 
-  const getStatusProps = (status: string, isActive: boolean) => {
+  /*const getStatusProps = (status: string, isActive: boolean) => {
     switch (status) {
       case "active":
         return {
@@ -651,7 +650,7 @@ const MapList = ({ overview }: { overview?: boolean }) => {
           color: isActive ? "bg-gray-800 text-white" : "bg-gray-100",
         };
     }
-  };
+  };*/
   console.log("Ort To Select ", ortToSelect);
   if (loading || loadingData) return <Loading />;
 
@@ -763,7 +762,7 @@ const MapList = ({ overview }: { overview?: boolean }) => {
                   <button
                     key={type}
                     onClick={() => {
-                      setActiveStatus(null);
+                      //setActiveStatus(null);
                       handleMainClick(type as any);
                     }}
                     className={`px-2 py-1 md:px-4 md:py-2 rounded-lg cursor-pointer font-medium transition-all flex items-center gap-2 text-sm ${mainColor}`}
@@ -801,7 +800,7 @@ const MapList = ({ overview }: { overview?: boolean }) => {
           <div className="flex justify-between items-center w-full">
             <div></div>
             {/* Options Filter */}
-            {openSubMenu && openSubMenu !== "allActive" && (
+            {/*openSubMenu && openSubMenu !== "allActive" && (
               <div className="flex gap-2 flex-wrap justify-end items-center">
                 {subStatuses.map((status) => {
                   const isActive = activeStatus === status;
@@ -841,7 +840,7 @@ const MapList = ({ overview }: { overview?: boolean }) => {
                   {showDetails ? "Hide Details" : "Show Details"}
                 </button>
               </div>
-            )}
+            )*/}
           </div>
         </motion.div>
 

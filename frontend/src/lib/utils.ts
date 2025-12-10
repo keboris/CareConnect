@@ -5,6 +5,18 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function formatDateTime(locale: string, dateString: string) {
+  const date = new Date(dateString);
+
+  return date.toLocaleString(locale, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export function timeAgo(dateString: string): string {
   const now = new Date();
   const past = new Date(dateString);

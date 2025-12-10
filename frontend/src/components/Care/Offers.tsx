@@ -2,7 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth, useLanguage } from "../../contexts";
 import { CATEGORIE_API_URL, OFFER_API_URL } from "../../config";
 import type { Category, OfferProps } from "../../types";
-import { Card, CardContent, CareModal, Loading } from "../../components";
+import {
+  Card,
+  CardContent,
+  CareModal,
+  ConfirmModal,
+  Loading,
+} from "../../components";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Trash2,
@@ -25,6 +31,7 @@ import {
   Zap,
 } from "lucide-react";
 import { timeAgo } from "../../lib";
+import { useLocation } from "react-router";
 
 /**
  * Offers Component
@@ -35,6 +42,14 @@ const Offers = () => {
   const { user, refreshUser, loading } = useAuth();
   const { t, language } = useLanguage();
 
+  const location = useLocation();
+  const selectedId = location.state?.selectedOfferId || null;
+  const id = selectedId;
+
+  console.log("je recois ", id);
+  const [successMessage, setSuccessMessage] = useState<string | null>(
+    location.state?.successMessage
+  );
   const [selectedCare, setSelectedCare] = useState<OfferProps | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -57,6 +72,9 @@ const Offers = () => {
   const [, setSelectedOffer] = useState<OfferProps | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState("");
+  const [itemToAction, setItemToAction] = useState<OfferProps | null>(null);
   /**
    * Fetch all offers from the API
    * Called on component mount and when user data is loaded
@@ -110,6 +128,23 @@ const Offers = () => {
   // Filter offers
   useEffect(() => {
     let filtered = offers;
+    if (chooseOffers === "all") {
+      filtered = filtered.filter((offer: OfferProps) => {
+        const offerUserId =
+          typeof offer.userId === "string"
+            ? offer.userId
+            : (offer.userId as any)?._id;
+        return offer.status === "active" && offerUserId !== user?._id;
+      });
+    } else {
+      filtered = filtered.filter((offer: OfferProps) => {
+        const offerUserId =
+          typeof offer.userId === "string"
+            ? offer.userId
+            : (offer.userId as any)?._id;
+        return offerUserId === user?._id;
+      });
+    }
 
     if (selectedCategory !== "all") {
       filtered = filtered.filter((offer) => {
@@ -162,6 +197,23 @@ const Offers = () => {
     }
   }, [isModalOpen, dialogRef]);
 
+  useEffect(() => {
+    if (!id || offers.length === 0) return;
+    console.log("Looking for offer with ID from URL:", id);
+    const found = offers.find((offer) => offer._id === id);
+    if (!found) return;
+
+    console.log("Found offer for ID from URL:", found);
+    setSelectedCare(found);
+    setOption("show");
+    setIsModalOpen(true);
+
+    // ✅ FORCE l'ouverture du dialog
+    setTimeout(() => {
+      dialogRef.current?.showModal();
+    }, 0);
+  }, [id, offers]);
+
   const openModal = (
     e: OfferProps | null = null,
     modalOption: "show" | "edit" | "create" = "show"
@@ -176,6 +228,40 @@ const Offers = () => {
     setSelectedCare(null);
   };
 
+  const handleAction = (newCare: OfferProps | any, option?: string | null) => {
+    if (option === "edit") {
+      setOffers((prev) =>
+        prev.map((offer) =>
+          offer._id === newCare._id ? (newCare as OfferProps) : offer
+        )
+      );
+      setSuccessMessage(t("dashboard.updateOfferConfirm"));
+      setChooseOffers("my");
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    } else {
+      if ("isPaid" in newCare) {
+        setOffers((prev) => [newCare as OfferProps, ...prev]);
+      }
+      setSuccessMessage(t("dashboard.updateOfferConfirm"));
+      setChooseOffers("my");
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+  };
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+      }, 10000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
   /**
    * Filter offers based on selected status
    * Returns filtered array of offers
@@ -189,9 +275,15 @@ const Offers = () => {
    * Delete an offer by ID
    * Removes the offer from the database and updates UI
    */
+
+  const getConfirmMsg = (action: string) => {
+    if (action === "delete") {
+      setConfirmMessage(t("alert.deleteOfferMessage"));
+    }
+  };
+
   const handleDeleteOffer = async (offerId: string) => {
     // Confirm deletion with user
-    if (!window.confirm("Are you sure you want to delete this offer?")) return;
 
     try {
       setDeleting(offerId);
@@ -209,14 +301,23 @@ const Offers = () => {
       setOffers((prev) => prev.filter((offer) => offer._id !== offerId));
       setSelectedOffer(null);
 
-      console.log("Offer deleted successfully");
+      setSuccessMessage(t("dashboard.confirmDeleteOffer"));
+
+      setChooseOffers("my");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
       console.error("Error deleting offer:", error);
       alert("Failed to delete offer. Please try again.");
     } finally {
       setDeleting(null);
+      setShowConfirm(false);
+      setConfirmMessage("");
+      setItemToAction(null);
     }
   };
+
+  const getAuthorId = (userField: any) =>
+    typeof userField === "string" ? userField : userField?._id;
 
   const getStatusProps = (status: string, isActive: boolean) => {
     switch (status) {
@@ -292,26 +393,75 @@ const Offers = () => {
     }
   };
 
-  /*const getStatusColor = (status: string) => {
+  const getFarbe = (status: string) => {
     switch (status) {
       case "active":
-        return "bg-green-100 text-green-800";
+        return { icon: "🟢", color: "green", text: "Active" };
       case "in_progress":
-        return "bg-blue-100 text-blue-800";
+        return { icon: "🟡", color: "yellow", text: "In Progress" };
       case "completed":
-        return "bg-purple-100 text-purple-800";
+        return { icon: "🔵", color: "blue", text: "Completed" };
       case "cancelled":
-        return "bg-red-100 text-red-800";
+        return { icon: "🔴", color: "red", text: "Cancelled" };
+      case "inactive":
+        return { icon: "⚪", color: "gray", text: "Inactive" };
+      case "archived":
+        return { icon: "🟣", color: "purple", text: "Archived" };
       default:
-        return "bg-gray-100 text-gray-800";
+        return { icon: "⚪", color: "gray", text: "Unknown" };
     }
-  };*/
+  };
 
   // Show loading spinner while fetching data
   if (loading || loadingOffers) return <Loading />;
 
+  console.log("Rendered Offers Component with offers:", offers);
+
   return (
     <>
+      {successMessage && (
+        <div
+          role="alert"
+          className="alert alert-info cursor-pointer hover:opacity-80 mb-4 transition"
+          onClick={() => setSuccessMessage(null)}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 shrink-0 stroke-current"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <span>{successMessage}</span>
+          <div>
+            <button
+              onClick={() => setSuccessMessage(null)}
+              className="btn btn-sm cursor-pointer btn-ghost btn-circle"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 shrink-0 stroke-current"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="min-h-screen bg-white p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header Section */}
@@ -514,174 +664,202 @@ const Offers = () => {
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.5 }}
                     >
-                      <Card
-                        className="h-full cursor-pointer hover:shadow-lg transition-all"
-                        onClick={() => openModal(offer)}
-                      >
-                        {offer.images && offer.images.length > 0 ? (
-                          <div className="">
-                            <figure>
-                              <img
-                                src={offer.images[0]}
-                                alt="Shoes"
-                                className="w-full h-48 overflow-hidden flex items-center justify-center bg-gray-100 object-cover rounded"
-                              />
-                            </figure>
-                          </div>
-                        ) : (
+                      <div className="relative">
+                        {getAuthorId(offer?.userId) === user?._id && (
                           <>
-                            {/*<div className="mb-6"></div>*/}
+                            {/* BADGE STATUS */}
+                            <span
+                              className={`absolute top-2 right-2 z-20 px-2 py-1 bg-${
+                                getFarbe(offer?.status).color
+                              }-600 text-white text-xs font-bold rounded shadow-md`}
+                            >
+                              {getFarbe(offer?.status).icon}{" "}
+                              {getFarbe(offer?.status).text}
+                            </span>
+                          </>
+                        )}
+                        <Card
+                          className="h-full cursor-pointer hover:shadow-lg transition-all pt-0 pb-6"
+                          onClick={() => openModal(offer)}
+                        >
+                          {offer.images && offer.images.length > 0 ? (
                             <div className="">
                               <figure>
                                 <img
-                                  src="../logo.png"
-                                  alt="Shoes"
+                                  src={offer.images[0]}
+                                  alt={offer.title}
                                   className="w-full h-48 overflow-hidden flex items-center justify-center bg-gray-100 object-cover rounded"
                                 />
                               </figure>
                             </div>
-                          </>
-                        )}
-                        <CardContent className="px-4 md:px-6">
-                          <div className="flex flex-col md:flex-row items-start justify-between gap-4">
-                            <div className="flex-1 w-full">
-                              <div className="flex flex-col md:flex-row items-start md:items-center gap-3 mb-2">
-                                <h3 className="text-xl font-bold text-gray-900">
-                                  {offer.title}
-                                </h3>
+                          ) : (
+                            <>
+                              {/*<div className="mb-6"></div>*/}
+                              <div className="">
+                                <figure>
+                                  <img
+                                    src="../logo.png"
+                                    alt={offer.title}
+                                    className="w-full h-48 overflow-hidden flex items-center justify-center bg-gray-100 object-cover rounded"
+                                  />
+                                </figure>
                               </div>
-                              <p className="text-gray-600 mb-3">
-                                {offer.description}
-                              </p>
-
-                              {/* Details Grid */}
-                              <div className="grid grid-cols-2 md:grid-cols-2 gap-3 mb-4">
-                                {/* Category */}
-                                <div className="flex items-center gap-2">
-                                  <div className="p-2 bg-blue-100 rounded">
-                                    <Folder className="w-4 h-4 text-blue-600" />
-                                  </div>
-                                  <div>
-                                    <p className="text-xs text-gray-500">
-                                      {t("dashboard.category")}
-                                    </p>
-                                    <p className="text-sm font-semibold text-gray-900">
-                                      {offer.category
-                                        ? language === "de"
-                                          ? offer.category.nameDE ||
-                                            offer.category.name
-                                          : offer.category.name ||
-                                            offer.category.nameDE
-                                        : "-"}
-                                    </p>
-                                  </div>
+                            </>
+                          )}
+                          <CardContent className="px-4 md:px-6">
+                            <div className="flex flex-col md:flex-row items-start justify-between gap-4">
+                              <div className="flex-1 w-full">
+                                <div className="flex flex-col md:flex-row items-start md:items-center gap-3 mb-2">
+                                  <h3 className="text-xl font-bold text-gray-900">
+                                    {offer.title}
+                                  </h3>
                                 </div>
+                                <p className="text-gray-600 mb-3">
+                                  {offer.description}
+                                </p>
 
-                                {/* Price */}
-                                <div className="flex items-center gap-2">
-                                  <div className="p-2 bg-green-100 rounded">
-                                    <DollarSign className="w-4 h-4 text-green-600" />
-                                  </div>
-                                  <div>
-                                    <p className="text-xs text-gray-500">
-                                      {t("dashboard.price")}
-                                    </p>
-                                    <p className="text-sm font-semibold text-gray-900">
-                                      {offer.isPaid
-                                        ? `$${offer.price}`
-                                        : t("dashboard.free")}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-2 md:grid-cols-2 gap-3 mb-4">
-                                {/* Location */}
-                                <div className="flex items-center gap-2">
-                                  <div className="p-2 bg-red-100 rounded">
-                                    <MapPin className="w-4 h-4 text-red-600" />
-                                  </div>
-                                  <div>
-                                    <p className="text-xs text-gray-500">
-                                      {t("dashboard.location")}
-                                    </p>
-                                    <p className="text-sm font-semibold text-gray-900 truncate">
-                                      {offer.location}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Time */}
-                              <div className="flex items-center gap-2 text-xs text-gray-500">
-                                <Clock size={16} className="text-gray-400" />
-                                <span>{timeAgo(offer.createdAt)}</span>
-                              </div>
-
-                              {(() => {
-                                const u = offer.userId as any;
-                                let name = "Unknown";
-                                if (u && typeof u === "object") {
-                                  if (u._id === user?._id) name = "You";
-                                  else {
-                                    const first = u.firstName ?? name;
-                                    const last = u.lastName
-                                      ? ` ${u.lastName}`
-                                      : "";
-                                    name = `${first}${last}`;
-                                  }
-                                }
-                                if (name === "Unknown" || name === "You")
-                                  return null;
-                                return (
-                                  <>
-                                    {/* Creator */}
-                                    <div className="flex items-center gap-2 text-gray-600 mt-2">
-                                      <User
-                                        size={16}
-                                        className="text-gray-400"
-                                      />
-                                      <span>{name}</span>
+                                {/* Details Grid */}
+                                <div className="grid grid-cols-2 md:grid-cols-2 gap-3 mb-4">
+                                  {/* Category */}
+                                  <div className="flex items-center gap-2">
+                                    <div className="p-2 bg-blue-100 rounded">
+                                      <Folder className="w-4 h-4 text-blue-600" />
                                     </div>
-                                  </>
-                                );
-                              })()}
-                            </div>
-                          </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500">
+                                        {t("dashboard.category")}
+                                      </p>
+                                      <p className="text-sm font-semibold text-gray-900">
+                                        {offer.category
+                                          ? language === "de"
+                                            ? offer.category.nameDE ||
+                                              offer.category.name
+                                            : offer.category.name ||
+                                              offer.category.nameDE
+                                          : "-"}
+                                      </p>
+                                    </div>
+                                  </div>
 
-                          {/* Action Buttons - Only show for user's own offers */}
-                          {typeof user?._id === "string" &&
-                            user._id ===
-                              (typeof offer.userId === "string"
-                                ? offer.userId
-                                : (offer.userId as any) &&
-                                  (offer.userId as any)._id) && (
-                              <div className="flex gap-2 mt-2 pt-2">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                  }}
-                                  className="flex-1 flex cursor-pointer items-center justify-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all text-sm font-semibold"
-                                >
-                                  <Edit2 size={16} />
-                                  {t("common.edit")}
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteOffer(offer._id);
-                                  }}
-                                  disabled={deleting === offer._id}
-                                  className="flex-1 flex cursor-pointer items-center justify-center gap-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all text-sm font-semibold disabled:opacity-50"
-                                >
-                                  <Trash2 size={16} />
-                                  {deleting === offer._id
-                                    ? t("common.deleting")
-                                    : t("common.delete")}
-                                </button>
+                                  {/* Price */}
+                                  <div className="flex items-center gap-2">
+                                    <div className="p-2 bg-green-100 rounded">
+                                      <DollarSign className="w-4 h-4 text-green-600" />
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500">
+                                        {t("dashboard.price")}
+                                      </p>
+                                      <p className="text-sm font-semibold text-gray-900">
+                                        {offer.isPaid
+                                          ? `$${offer.price}`
+                                          : t("dashboard.free")}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-2 gap-3 mb-4">
+                                  {/* Location */}
+                                  <div className="flex items-center gap-2">
+                                    <div className="p-2 bg-red-100 rounded">
+                                      <MapPin className="w-4 h-4 text-red-600" />
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500">
+                                        {t("dashboard.location")}
+                                      </p>
+                                      <p className="text-sm font-semibold text-gray-900 truncate">
+                                        {offer.location}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Time */}
+                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                  <Clock size={16} className="text-gray-400" />
+                                  <span>{timeAgo(offer.createdAt)}</span>
+                                </div>
+
+                                {(() => {
+                                  const u = offer.userId as any;
+                                  let name = "Unknown";
+                                  if (u && typeof u === "object") {
+                                    if (u._id === user?._id) name = "You";
+                                    else {
+                                      const first = u.firstName ?? name;
+                                      const last = u.lastName
+                                        ? ` ${u.lastName}`
+                                        : "";
+                                      name = `${first}${last}`;
+                                    }
+                                  }
+                                  if (name === "Unknown" || name === "You")
+                                    return null;
+                                  return (
+                                    <>
+                                      {/* Creator */}
+                                      <div className="flex items-center gap-2 text-gray-600 mt-2">
+                                        <User
+                                          size={16}
+                                          className="text-gray-400"
+                                        />
+                                        <span>{name}</span>
+                                      </div>
+                                    </>
+                                  );
+                                })()}
                               </div>
-                            )}
-                        </CardContent>
-                      </Card>
+                            </div>
+
+                            {/* Action Buttons - Only show for user's own offers */}
+                            {typeof user?._id === "string" &&
+                              user._id ===
+                                (typeof offer.userId === "string"
+                                  ? offer.userId
+                                  : (offer.userId as any) &&
+                                    (offer.userId as any)._id) && (
+                                <div className="flex gap-2 mt-2 pt-2">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openModal(offer, "edit");
+                                    }}
+                                    className="flex-1 flex cursor-pointer items-center justify-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all text-sm font-semibold"
+                                  >
+                                    <Edit2 size={16} />
+                                    {t("common.edit")}
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setItemToAction(offer);
+                                      getConfirmMsg("delete");
+                                      setShowConfirm(true);
+                                    }}
+                                    disabled={deleting === offer._id}
+                                    className="flex-1 flex cursor-pointer items-center justify-center gap-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all text-sm font-semibold disabled:opacity-50"
+                                  >
+                                    <Trash2 size={16} />
+                                    {deleting === offer._id
+                                      ? t("common.deleting")
+                                      : t("common.delete")}
+                                  </button>
+                                </div>
+                              )}
+                          </CardContent>
+                        </Card>
+                        {showConfirm && (
+                          <ConfirmModal
+                            title={t("dashboard.confirmTitle")}
+                            message={confirmMessage}
+                            onConfirm={() => {
+                              handleDeleteOffer(itemToAction?._id || "");
+                            }}
+                            onCancel={() => setShowConfirm(false)}
+                          />
+                        )}
+                      </div>
                     </motion.div>
                   ))
                 )}
@@ -695,6 +873,8 @@ const Offers = () => {
         dialogRef={dialogRef}
         selectedCare={selectedCare}
         option={option}
+        setOption={setOption}
+        handleAction={handleAction}
         isModalOpen={isModalOpen}
         closeModal={closeModal}
       />

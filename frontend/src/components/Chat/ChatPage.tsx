@@ -177,6 +177,7 @@ const ChatPage = () => {
 
   // Send a new message
   const sendMessage = async () => {
+    console.log("hey je suis clic");
     if (!user || !newMessage.trim() || !selectedSession || sending) return;
 
     setSending(true);
@@ -756,6 +757,7 @@ const ChatPage = () => {
             </div>
 
             {/* Message Input */}
+
             <div className="bg-white border-t border-gray-200 p-4">
               <div className="flex items-end gap-3">
                 <button className="p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0">
@@ -772,6 +774,11 @@ const ChatPage = () => {
                     onKeyPress={handleKeyPress}
                     style={{ maxHeight: MAX_HEIGHT }}
                     className="flex-1 bg-transparent border-none outline-none text-sm resize-none max-h-32"
+                    disabled={
+                      selectedSession &&
+                      (selectedSession.status === "completed" ||
+                        selectedSession.status === "cancelled")
+                    }
                   />
 
                   <button className="p-1 hover:bg-gray-200 rounded-full transition-colors">

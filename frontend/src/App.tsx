@@ -29,6 +29,7 @@ function App() {
     "offers/:id/edit",
     "requests/:id",
     "requests/:id/edit",
+    "alerts/:id",
   ];
 
   return (
