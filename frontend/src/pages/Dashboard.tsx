@@ -51,7 +51,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
 
   console.log("Looking for offer with ID from URL:", id);
   const successMessage = location.state?.successMessage || null;
@@ -75,6 +75,13 @@ const Dashboard = () => {
   //const [permission, setPermission] = useState(Notification.permission);
 
   //const { sendNotification } = UseNotifications();
+
+  useEffect(() => {
+    if (id) {
+      console.log("✅ ID reçu:", id);
+      setReadyId(id);
+    }
+  }, [id]);
 
   useEffect(() => {
     // ✅ navigation dans useEffect

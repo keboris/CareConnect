@@ -334,11 +334,15 @@ const OrtMap = (props: OrtMapProps) => {
                   {overview && (
                     <button
                       className="bg-purple-700 text-white cursor-pointer font-semibold p-2 text-sm rounded-md"
-                      onClick={() =>
-                        getOrtType(ort) === "offer"
-                          ? navigate(`/map/offer/${ort._id}`)
-                          : navigate(`/map/request/${ort._id}`)
-                      }
+                      onClick={() => {
+                        if (getOrtType(ort) === "offer") {
+                          navigate(`/app/offers`);
+                        } else if (getOrtType(ort) === "request") {
+                          navigate(`/app/requests`);
+                        } else {
+                          navigate(`/app/alerts`);
+                        }
+                      }}
                     >
                       {t("map.viewInDetails")}
                     </button>

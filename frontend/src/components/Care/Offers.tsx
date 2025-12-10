@@ -31,7 +31,6 @@ import {
   Zap,
 } from "lucide-react";
 import { timeAgo } from "../../lib";
-import { useLocation } from "react-router";
 
 /**
  * Offers Component
@@ -42,14 +41,7 @@ const Offers = () => {
   const { user, refreshUser, loading } = useAuth();
   const { t, language } = useLanguage();
 
-  const location = useLocation();
-  const selectedId = location.state?.selectedOfferId || null;
-  const id = selectedId;
-
-  console.log("je recois ", id);
-  const [successMessage, setSuccessMessage] = useState<string | null>(
-    location.state?.successMessage
-  );
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [selectedCare, setSelectedCare] = useState<OfferProps | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -73,8 +65,11 @@ const Offers = () => {
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showConfirmAccept, setShowConfirmAccept] = useState(false);
+
   const [confirmMessage, setConfirmMessage] = useState("");
   const [itemToAction, setItemToAction] = useState<OfferProps | null>(null);
+  const [refresh, setRefresh] = useState(false);
   /**
    * Fetch all offers from the API
    * Called on component mount and when user data is loaded
@@ -103,7 +98,7 @@ const Offers = () => {
     };
 
     fetchOffers();
-  }, [loading]);
+  }, [loading, refresh]);
 
   // Fetch categories
   useEffect(() => {
@@ -197,23 +192,6 @@ const Offers = () => {
     }
   }, [isModalOpen, dialogRef]);
 
-  useEffect(() => {
-    if (!id || offers.length === 0) return;
-    console.log("Looking for offer with ID from URL:", id);
-    const found = offers.find((offer) => offer._id === id);
-    if (!found) return;
-
-    console.log("Found offer for ID from URL:", found);
-    setSelectedCare(found);
-    setOption("show");
-    setIsModalOpen(true);
-
-    // ✅ FORCE l'ouverture du dialog
-    setTimeout(() => {
-      dialogRef.current?.showModal();
-    }, 0);
-  }, [id, offers]);
-
   const openModal = (
     e: OfferProps | null = null,
     modalOption: "show" | "edit" | "create" = "show"
@@ -240,6 +218,11 @@ const Offers = () => {
 
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
+    } else if (option === "accept") {
+      setItemToAction(newCare);
+      getConfirmMsg("accept");
+      setIsModalOpen(false);
+      setShowConfirmAccept(true);
     } else {
       if ("isPaid" in newCare) {
         setOffers((prev) => [newCare as OfferProps, ...prev]);
@@ -279,6 +262,38 @@ const Offers = () => {
   const getConfirmMsg = (action: string) => {
     if (action === "delete") {
       setConfirmMessage(t("alert.deleteOfferMessage"));
+    } else if (action === "accept") {
+      setConfirmMessage(t("alert.acceptOfferMessage"));
+    }
+  };
+
+  const acceptOffer = async (offerId: string) => {
+    setIsModalOpen(false);
+    try {
+      const response = await refreshUser(`${OFFER_API_URL}/${offerId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to accept offer");
+      }
+
+      setFilteredOffers((prev) =>
+        prev.filter((offer) => offer._id !== offerId)
+      );
+      setSuccessMessage(t("dashboard.confirmAcceptOffer"));
+
+      setRefresh(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error) {
+      console.error("Error accepting offer:", error);
+      alert("Failed to accept offer. Please try again.");
+    } finally {
+      setShowConfirmAccept(false);
+      setConfirmMessage("");
+      setItemToAction(null);
     }
   };
 
@@ -868,6 +883,20 @@ const Offers = () => {
           </motion.div>
         </div>
       </div>
+
+      {showConfirmAccept && (
+        <ConfirmModal
+          title={t("dashboard.confirmTitle")}
+          message={confirmMessage}
+          onConfirm={() => {
+            acceptOffer(itemToAction?._id || "");
+          }}
+          onCancel={() => {
+            setShowConfirmAccept(false);
+            openModal(itemToAction, "show");
+          }}
+        />
+      )}
 
       <CareModal
         dialogRef={dialogRef}

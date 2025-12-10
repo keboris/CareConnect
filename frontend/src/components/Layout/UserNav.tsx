@@ -31,6 +31,7 @@ const UserNav = () => {
   const [sosLoading, setSosLoading] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [alertSend, setAlertSend] = useState(false);
 
   const [isMobileLayout, setIsMobileLayout] = useState(window.innerWidth < 640);
   const [formData, setFormData] = useState({
@@ -91,6 +92,16 @@ const UserNav = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (alertSend) {
+      const timer = setTimeout(() => {
+        setAlertSend(false);
+      }, 10000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [alertSend]);
+
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -128,7 +139,9 @@ const UserNav = () => {
           body: JSON.stringify(payload),
         });
 
+        setFormData({ description: "", typeAlert: "" });
         setSosActive(false);
+        setAlertSend(true);
       } catch (error) {
         console.error("Error sending SOS alert:", error);
       } finally {
@@ -139,6 +152,15 @@ const UserNav = () => {
 
   return (
     <>
+      {alertSend && (
+        <>
+          <div className="toast toast-top toast-end">
+            <div className="alert alert-info">
+              <span>{t("dashboard.alertSend")}</span>
+            </div>
+          </div>
+        </>
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           <button

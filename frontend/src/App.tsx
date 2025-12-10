@@ -25,7 +25,6 @@ function App() {
     "settings",
     "support",
     "offers/create",
-    "offers/:id",
     "offers/:id/edit",
     "requests/:id",
     "requests/:id/edit",
@@ -49,6 +48,7 @@ function App() {
             {dashboardRoutes.map((path) => (
               <Route key={path} path={path} element={<Dashboard />} />
             ))}
+            <Route path="/app/offers/:id" element={<Dashboard />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Route>
