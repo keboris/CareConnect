@@ -59,6 +59,7 @@ export type OfferProps = {
   longitude: number;
   latitude: number;
   images: string[];
+  imagesPublicIds?: string[];
   status:
     | "active"
     | "in_progress"
@@ -266,8 +267,10 @@ export type CareModalProps = {
   dialogRef: React.RefObject<HTMLDialogElement | null>;
   selectedCare: OfferProps | RequestProps | null;
   option: "show" | "create" | "edit";
+  setOption?: React.Dispatch<React.SetStateAction<"show" | "edit" | "create">>;
   isModalOpen: boolean;
   closeModal: () => void;
+  handleAction?: (newCare: OfferProps | RequestProps, option?: string) => void;
   page?: "request" | "alert";
 };
 
@@ -275,5 +278,6 @@ export type CareProps = {
   item?: OfferProps | RequestProps | null;
   option?: "show" | "create" | "edit";
   page?: "offer" | "request" | "alert";
+  handleAction?: (newCare: OfferProps | RequestProps, option?: string) => void;
   closeModal?: () => void;
 };

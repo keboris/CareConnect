@@ -88,7 +88,7 @@ const OrtMap = (props: OrtMapProps) => {
     });
   };
 
-  const zoomValue = overview ? [10, 11] : [10, 18];
+  const zoomValue = overview ? [10, 11] : orts.length > 3 ? [12, 18] : [10, 18];
 
   const createUserMarker = (iconUrl: string) => {
     return L.divIcon({
@@ -149,6 +149,19 @@ const OrtMap = (props: OrtMapProps) => {
       return "request";
     return "user";
   };
+
+  /*const groupByLocation = (
+    items: OfferProps[] | RequestProps[] | UserType[]
+  ) => {
+    return Object.values(
+      items.reduce((acc, item) => {
+        const key = `${item.latitude},${item.longitude}`;
+        acc[key] ||= [];
+        acc[key].push(item as OfferProps | RequestProps | UserType);
+        return acc;
+      }, {} as Record<string, (OfferProps | RequestProps | UserType)[]>)
+    );
+  };*/
 
   // Get marker icon based on ort type and status
   const getMarkerIcon = (item: OfferProps | RequestProps | UserType) => {

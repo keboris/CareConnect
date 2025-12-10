@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router";
 
 import { OFFER_API_URL, REQUEST_API_URL, CAT_USER_API_URL } from "../../config";
 import { type CareProps, type Category } from "../../types";
@@ -10,8 +9,9 @@ import {
   X,
   AlertCircle,
   CheckCircle,
-  PlusCircle,
   MapPin,
+  Edit2,
+  Plus,
 } from "lucide-react";
 import { useAuth, useLanguage } from "../../contexts";
 
@@ -19,44 +19,71 @@ const CreateCare = ({
   item,
   option,
   page,
+  handleAction,
   closeModal,
 }: CareProps & { closeModal: () => void }) => {
   const { user, refreshUser, loading, issuesToFieldErrors } = useAuth();
   const { t } = useLanguage();
-  const navigate = useNavigate();
 
   const contentRef = useRef<HTMLDivElement>(null);
-
-  console.log("CreateCare props:", { item, option, page });
 
   // Determine post type from props or params
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage] = useState("");
+
+  const [removedImagePublicIds, setRemovedImagePublicIds] = useState<string[]>(
+    []
+  );
+  const [removedImageIndexes, setRemovedImageIndexes] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    category: "",
-    location: user?.location || "",
-    longitude: user?.longitude || 0,
-    latitude: user?.latitude || 0,
-    isPaid: false,
-    price: 0,
-    images: [] as File[],
-    urgency: "normal" as "low" | "normal" | "high",
-    rewardType: "free" as "free" | "paid",
-    typeRequest: "" as "" | "request" | "alert",
-    typeAlert: "" as
-      | ""
-      | "medical"
-      | "fire"
-      | "police"
-      | "danger"
-      | "assistance"
-      | "other",
+    title: option === "edit" && item ? item.title : "",
+    description: option === "edit" && item ? item.description : "",
+    category:
+      option === "edit" && item
+        ? typeof item.category === "string"
+          ? item.category
+          : item.category?._id || ""
+        : "",
+    location: option === "edit" && item ? item.location : user?.location || "",
+    longitude:
+      option === "edit" && item ? item.longitude : user?.longitude || 0,
+    latitude: option === "edit" && item ? item.latitude : user?.latitude || 0,
+    isPaid:
+      option === "edit" && item && "isPaid" in item
+        ? (item as any).isPaid
+        : false,
+    price: option === "edit" && item ? item.price : 0,
+    image:
+      option === "edit" && item && item.images && item.images.length > 0
+        ? item.images
+        : ([] as File[]),
+    urgency:
+      option === "edit" && item && "urgency" in item
+        ? (item as any).urgency
+        : ("normal" as "low" | "normal" | "high"),
+    rewardType:
+      option === "edit" && item && "rewardType" in item
+        ? (item as any).rewardType
+        : ("free" as "free" | "paid"),
+    typeRequest:
+      option === "edit" && item && "typeRequest" in item
+        ? (item as any).typeRequest
+        : ("" as "" | "request" | "alert"),
+    typeAlert:
+      option === "edit" && item && "typeAlert" in item
+        ? (item as any).typeAlert
+        : ("" as
+            | ""
+            | "medical"
+            | "fire"
+            | "police"
+            | "danger"
+            | "assistance"
+            | "other"),
     radius: 500,
   });
 
@@ -66,12 +93,22 @@ const CreateCare = ({
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const create =
-    page === "offer" || !page
-      ? t("dashboard.createOffer")
-      : page === "request"
-      ? t("dashboard.postRequest")
-      : t("dashboard.createAlert");
+  let titleAction = "";
+  if (option === "edit" && !item) {
+    titleAction =
+      page === "offer" || !page
+        ? t("dashboard.createOffer")
+        : page === "request"
+        ? t("dashboard.postRequest")
+        : t("dashboard.createAlert");
+  } else {
+    titleAction =
+      page === "offer" || !page
+        ? t("dashboard.editOffer")
+        : page === "request"
+        ? t("dashboard.editRequest")
+        : t("dashboard.editAlert");
+  }
 
   const colorSet =
     page === "offer" || !page ? "blue" : page === "request" ? "green" : "red";
@@ -93,6 +130,12 @@ const CreateCare = ({
     if (!loading) {
       fetchCategories();
     }
+
+    if (option === "edit" && item && item.images && item.images.length > 0) {
+      setImageFiles((item.images as unknown as File[]) || []);
+      const urls = (item.images as unknown as string[]).map((img) => img);
+      setPreviewUrls(urls);
+    }
   }, [loading]);
 
   // Handle form change
@@ -102,7 +145,7 @@ const CreateCare = ({
     >
   ) => {
     const { name, value, type: inputType } = e.target as HTMLInputElement;
-    console.log("Handle change:", { name, value, inputType });
+
     if (inputType === "checkbox") {
       setFormData((prev) => ({
         ...prev,
@@ -110,8 +153,8 @@ const CreateCare = ({
           name === "isPaid"
             ? (e.target as HTMLInputElement).checked
             : (e.target as HTMLInputElement).checked
-            ? "paid"
-            : "free",
+            ? "true"
+            : "false",
       }));
     } else if (inputType === "number") {
       if (name === "radius") {
@@ -153,18 +196,27 @@ const CreateCare = ({
     setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const removeImageCloud = (index: number) => {
+    const img = (item as any)?.imagesPublicIds?.[index];
+    if (!img) return;
+    setRemovedImagePublicIds((prev) => [...prev, img]);
+    setRemovedImageIndexes((prev) => [...prev, String(index)]);
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
+  };
+
   // Handle location change
   const handleLocationChange = (location: any) => {
     setFormData((prev) => ({
       ...prev,
-      location: location.address,
+      location: location.location,
       latitude: location.latitude,
       longitude: location.longitude,
     }));
   };
 
   // Validate form
-  const validateForm = () => {
+  /*const validateForm = () => {
     const errors: Record<string, string> = {};
 
     if (!formData.title.trim()) {
@@ -185,33 +237,35 @@ const CreateCare = ({
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
-  };
+  };*/
 
   // Handle submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    contentRef.current?.scrollTo(0, 0);
 
-    if (!validateForm()) return;
+    console.log("Submitting form with data:", formData);
+    //if (!validateForm()) return;
 
     try {
       setSubmitting(true);
 
       // Prepare form data
       const submitData = new FormData();
-      imageFiles.forEach((file) => submitData.append("images", file));
-      submitData.append("title", formData.title);
+      imageFiles.forEach((file) => submitData.append("image", file));
+      submitData.append("title", formData.title ?? "");
       submitData.append("description", formData.description);
-      submitData.append("category", formData.category);
+      if (page !== "alert")
+        submitData.append("category", String(formData.category ?? ""));
+      else submitData.append("category", "692599bb49a323657a269f86"); // Default category for alerts
       submitData.append("location", formData.location);
       submitData.append("latitude", formData.latitude.toString());
       submitData.append("longitude", formData.longitude.toString());
 
       if (!page || page === "offer") {
-        submitData.append("isPaid", formData.isPaid ? "paid" : "free");
+        submitData.append("isPaid", formData.isPaid.toString());
         if (formData.isPaid) {
-          submitData.append("price", formData.price.toString());
+          submitData.append("price", (formData.price ?? 0).toString());
         }
       } else {
         submitData.append("rewardType", formData.rewardType);
@@ -224,23 +278,40 @@ const CreateCare = ({
         }
 
         if (formData.rewardType === "paid") {
-          submitData.append("price", formData.price.toString());
+          submitData.append("price", (formData.price ?? 0).toString());
         }
       }
 
-      // Add images
+      if (option === "edit" && item && item.images && item.images.length > 0) {
+        if (removedImagePublicIds.length > 0) {
+          removedImagePublicIds.forEach((publicId) => {
+            submitData.append("removedImages", publicId);
+          });
+
+          removedImageIndexes.forEach((indexId) => {
+            submitData.append("removedIndexes", indexId);
+          });
+        }
+      }
+
       for (const pair of submitData.entries()) {
         console.log(`${pair[0]}: ${pair[1]}`);
       }
-      console.log("Submitting data:", formData);
-
+      //console.log("Submitting data:", formData);
       // Make API request
       const url = page ? REQUEST_API_URL : OFFER_API_URL;
-
-      const response = await refreshUser(url, {
-        method: "POST",
-        body: submitData,
-      });
+      let response;
+      if (option === "edit" && item) {
+        response = await refreshUser(`${url}/${item._id}`, {
+          method: "PUT",
+          body: submitData,
+        });
+      } else {
+        response = await refreshUser(url, {
+          method: "POST",
+          body: submitData,
+        });
+      }
 
       const data = await response.json().catch(() => ({}));
 
@@ -259,12 +330,6 @@ const CreateCare = ({
         throw err;
       }
 
-      !page || page === "offer"
-        ? setSuccessMessage(t("dashboard.createOfferConfirm"))
-        : page === "request"
-        ? setSuccessMessage(t("dashboard.createRequestConfirm"))
-        : setSuccessMessage(t("dashboard.createAlertConfirm"));
-
       // Reset form
       setFormData({
         title: "",
@@ -275,7 +340,7 @@ const CreateCare = ({
         latitude: user?.latitude || 0,
         isPaid: false,
         price: 0,
-        images: [],
+        image: [],
         urgency: "normal",
         rewardType: "free",
         typeRequest: "request",
@@ -285,18 +350,11 @@ const CreateCare = ({
       setImageFiles([]);
       setPreviewUrls([]);
 
+      if (!page || page === "offer")
+        handleAction && handleAction(data.offer, option);
+      else handleAction && handleAction(data.request, option);
+
       closeModal();
-      navigate(
-        "/app/" +
-          (!page || page === "offer"
-            ? "offers"
-            : page === "request"
-            ? "requests"
-            : "alerts"),
-        {
-          state: { successMessage: successMessage },
-        }
-      );
     } catch (error: any) {
       if (typeof error === "object" && !("message" in error)) {
         setFieldErrors(error);
@@ -312,6 +370,7 @@ const CreateCare = ({
         setError(error.message);
       }
     } finally {
+      contentRef.current?.scrollTo(0, 0);
       setSubmitting(false);
     }
   };
@@ -322,13 +381,16 @@ const CreateCare = ({
     <Card className="flex-1 overflow-hidden flex flex-col p-4 gap-0">
       <div className="flex items-center justify-between p-2 border-b">
         <div className="flex flex-cols gap-3 items-center">
-          <PlusCircle className={`w-6 h-6 text-${colorSet}-600`} />
-
-          <h3 className="font-bold text-gray-800">{create}</h3>
+          {option === "edit" ? (
+            <Edit2 className={`w-6 h-6 text-${colorSet}-600`} />
+          ) : (
+            <Plus className={`w-6 h-6 text-${colorSet}-600`} />
+          )}
+          <h3 className="font-bold text-gray-800">{titleAction}</h3>
         </div>
         <button
           onClick={() => closeModal()}
-          className={`p-1 hover:bg-${colorSet}-800 cursor-pointer rounded-lg transition-all`}
+          className={`p-1 hover:bg-${colorSet}-700 cursor-pointer rounded-lg transition-all`}
         >
           <X className="w-6 h-6 text-gray-800 hover:text-white" />
         </button>
@@ -629,7 +691,7 @@ const CreateCare = ({
           {/* Request Type */}
 
           {/* Urgency */}
-          {(page === "request" || page === "offer") && (
+          {(page === "request" || page === "alert") && (
             <div>
               <label className="text-xs font-medium text-gray-700 mb-1 block">
                 {t("dashboard.urgency")}
@@ -682,7 +744,9 @@ const CreateCare = ({
                     />
                     <button
                       type="button"
-                      onClick={() => removeImage(i)}
+                      onClick={() =>
+                        option === "edit" ? removeImageCloud(i) : removeImage(i)
+                      }
                       className="absolute cursor-pointer -top-2 -right-2 bg-red-600 text-white rounded-full p-1 hover:bg-red-700"
                     >
                       <X className="w-3 h-3" />
@@ -700,7 +764,13 @@ const CreateCare = ({
               disabled={submitting}
               className={`flex-1 cursor-pointer py-2 px-4 bg-${colorSet}-600 text-white rounded-lg font-semibold hover:bg-${colorSet}-700 transition-all disabled:opacity-50 text-sm`}
             >
-              {submitting ? t("common.creating") : t("common.create")}
+              {option === "edit"
+                ? submitting
+                  ? t("common.updating")
+                  : t("common.update")
+                : submitting
+                ? t("common.creating")
+                : t("common.create")}
             </button>
 
             <button

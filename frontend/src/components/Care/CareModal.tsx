@@ -24,12 +24,17 @@ const CareModal: React.FC<CareModalProps> = ({
   dialogRef,
   selectedCare,
   option,
+  setOption,
   page,
   isModalOpen,
+  handleAction,
   closeModal,
 }: CareModalProps) => {
   const { t, language } = useLanguage();
   const { user } = useAuth();
+
+  console.log("CareModal rendered with option:", option);
+  console.log("set option function:", setOption);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const [isMobileLayout, setIsMobileLayout] = useState(window.innerWidth < 640);
@@ -77,8 +82,7 @@ const CareModal: React.FC<CareModalProps> = ({
       return "request";
   };
 
-  console.log("isModalOpen:", isModalOpen);
-  console.log("selectedCare:", selectedCare);
+  console.log("Selected Care in Modal:", selectedCare);
 
   return (
     <dialog
@@ -99,7 +103,7 @@ const CareModal: React.FC<CareModalProps> = ({
           transition={{ duration: 0.3 }}
           className={`lg:col-span-1 flex flex-col gap-4 min-h-0 ${modalMinLarge} max-h-[95vh] overflow-y-auto overflow-x-hidden p-6`}
         >
-          {isModalOpen && selectedCare && option === "show" && (
+          {option === "show" && selectedCare && (
             <>
               <Card className="flex-1 overflow-hidden flex flex-col p-4 gap-0">
                 <div className="flex items-center justify-between p-2 border-b">
@@ -146,7 +150,7 @@ const CareModal: React.FC<CareModalProps> = ({
                                 <img
                                   key={i}
                                   src={img}
-                                  alt={`Offer ${i + 1}`}
+                                  alt={selectedCare.title}
                                   className="max-h-full max-w-full object-contain rounded"
                                 />
                               </div>
@@ -303,7 +307,8 @@ const CareModal: React.FC<CareModalProps> = ({
                       </div>
 
                       {/* Status */}
-                      {user && user._id === selectedCare.userId._id ? (
+                      {user &&
+                      getAuthorId(selectedCare?.userId) === user._id ? (
                         <>
                           <div>
                             <p className="text-xs font-medium text-gray-600 mb-0">
@@ -333,7 +338,13 @@ const CareModal: React.FC<CareModalProps> = ({
                             <motion.button
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
-                              onClick={() => {}}
+                              onClick={() => {
+                                setOption && setOption("edit");
+                                console.log(
+                                  "Edit button clicked, option set to edit",
+                                  option
+                                );
+                              }}
                               className="flex-1 flex cursor-pointer items-center justify-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all text-sm font-semibold"
                               title="Edit"
                             >
@@ -412,17 +423,23 @@ const CareModal: React.FC<CareModalProps> = ({
             </>
           )}
 
-          {isModalOpen && selectedCare && option === "edit" && (
+          {option === "edit" && selectedCare && (
             <CreateCare
               item={selectedCare}
               option={option}
               page={page}
+              handleAction={handleAction}
               closeModal={closeModal}
             />
           )}
 
           {isModalOpen && !selectedCare && option === "create" && (
-            <CreateCare option={option} page={page} closeModal={closeModal} />
+            <CreateCare
+              option={option}
+              page={page}
+              closeModal={closeModal}
+              handleAction={handleAction}
+            />
           )}
         </motion.div>
       </div>

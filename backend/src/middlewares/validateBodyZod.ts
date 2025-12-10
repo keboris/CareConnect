@@ -4,7 +4,7 @@ import type { ZodObject } from "zod/v4";
 const validateBodyZod =
   (zodSchema: ZodObject): RequestHandler =>
   (req, res, next) => {
-    console.log(req.body);
+    console.log("Body :", req.body);
     const parsed = zodSchema.safeParse(req.body);
     console.log("Parsed result:", parsed);
     console.log(parsed?.error?.issues);

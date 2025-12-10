@@ -185,6 +185,8 @@ export const updateOffer: RequestHandler<
         longitude,
         latitude,
         status,
+        removedImages,
+        removedIndexes,
       },
       params: { id },
     } = req;
@@ -262,6 +264,31 @@ export const updateOffer: RequestHandler<
       });
     }
 
+    if (removedImages && removedImages.length > 0) {
+      const publicIds = Array.isArray(removedImages)
+        ? removedImages
+        : removedImages
+        ? [removedImages]
+        : [];
+
+      console.log("Removing images with public IDs:", publicIds);
+
+      for (const publicId of publicIds) {
+        console.log("Deleting image with public ID:", publicId);
+        const result = await cloudinary.uploader.destroy(publicId);
+        console.log("Cloudinary deletion result:", result);
+      }
+
+      if (removedIndexes && removedIndexes.length > 0) {
+        offer.images = offer.images.filter(
+          (_, i) => !removedIndexes.includes(String(i))
+        );
+        offer.imagesPublicIds = offer.imagesPublicIds.filter(
+          (_, i) => !removedIndexes.includes(String(i))
+        );
+        await offer.save();
+      }
+    }
     const priceToUpdate = isPaid ? price : 0;
 
     const updatedOffer = await Offer.findByIdAndUpdate(

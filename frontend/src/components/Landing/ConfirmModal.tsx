@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import type { ConfirmModalProps } from "../../types";
-import type { MouseEvent } from "react";
+import { type MouseEvent } from "react";
+import { useLanguage } from "../../contexts";
 
 export default function ConfirmModal({
   title = "Confirmation",
@@ -14,6 +15,8 @@ export default function ConfirmModal({
     e.preventDefault();
     (onConfirm as unknown as () => void)();
   };
+
+  const { t } = useLanguage();
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999]">
@@ -29,13 +32,13 @@ export default function ConfirmModal({
             onClick={onCancel}
             className="px-4 py-2 cursor-pointer rounded-xl border border-gray-300 hover:bg-gray-100 transition"
           >
-            Annuler
+            {t("common.cancel")}
           </button>
           <button
             onClick={handleConfirm}
             className="px-4 py-2 cursor-pointer rounded-xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white font-semibold hover:bg-gray-700 transition"
           >
-            Confirmer
+            {t("common.confirm")}
           </button>
         </div>
       </motion.div>

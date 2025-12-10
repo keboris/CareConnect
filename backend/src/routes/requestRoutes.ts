@@ -19,8 +19,8 @@ requestRoutes.get("/", getRequests);
 requestRoutes.post(
   "/",
   authenticate,
-  validateBodyZod(requestInputSchema),
   upload.array("image", 5),
+  validateBodyZod(requestInputSchema),
   createRequest
 );
 

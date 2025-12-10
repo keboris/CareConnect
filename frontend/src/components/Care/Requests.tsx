@@ -2,7 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth, useLanguage } from "../../contexts";
 import { CATEGORIE_API_URL, REQUEST_API_URL } from "../../config";
 import type { Category, RequestProps } from "../../types";
-import { Card, CardContent, CareModal, Loading } from "../../components";
+import {
+  Card,
+  CardContent,
+  CareModal,
+  ConfirmModal,
+  Loading,
+} from "../../components";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Trash2,
@@ -25,6 +31,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { timeAgo } from "../../lib";
+import { useLocation } from "react-router";
 
 /**
  * Requests Component
@@ -35,6 +42,10 @@ const Requests = ({ page }: { page: "request" | "alert" }) => {
   const { user, refreshUser, loading } = useAuth();
   const { t, language } = useLanguage();
 
+  const location = useLocation();
+  const [successMessage, setSuccessMessage] = useState<string | null>(
+    location.state?.successMessage
+  );
   const [selectedCare, setSelectedCare] = useState<RequestProps | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -62,6 +73,9 @@ const Requests = ({ page }: { page: "request" | "alert" }) => {
   );
   const [deleting, setDeleting] = useState<string | null>(null);
 
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState<string>("");
+  const [itemToAction, setItemToAction] = useState<RequestProps | null>(null);
   /**
    * Fetch all requests from the API
    * Called on component mount and when user data is loaded
@@ -129,6 +143,23 @@ const Requests = ({ page }: { page: "request" | "alert" }) => {
   // Filter offers
   useEffect(() => {
     let filtered = requests;
+    if (chooseRequests === "all") {
+      filtered = filtered.filter((request: RequestProps) => {
+        const requestUserId =
+          typeof request.userId === "string"
+            ? request.userId
+            : (request.userId as any)?._id;
+        return request.status === "active" && requestUserId !== user?._id;
+      });
+    } else {
+      filtered = filtered.filter((request: RequestProps) => {
+        const requestUserId =
+          typeof request.userId === "string"
+            ? request.userId
+            : (request.userId as any)?._id;
+        return requestUserId === user?._id;
+      });
+    }
 
     if (selectedCategory !== "all") {
       filtered = filtered.filter((request) => {
@@ -220,6 +251,46 @@ const Requests = ({ page }: { page: "request" | "alert" }) => {
     setSelectedCare(null);
   };
 
+  const handleAction = (
+    newCare: RequestProps | any,
+    option?: string | null
+  ) => {
+    if (option === "edit") {
+      setRequests((prev) =>
+        prev.map((request) => (request._id === newCare._id ? newCare : request))
+      );
+
+      if (page === "alert" && newCare.typeRequest === "alert")
+        setSuccessMessage(t("dashboard.editAlertConfirm"));
+      if (page === "request" && newCare.typeRequest === "request")
+        setSuccessMessage(t("dashboard.editRequestConfirm"));
+      setChooseRequests("my");
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    } else {
+      setRequests((prev) => [newCare, ...prev]);
+
+      if (page === "alert" && newCare.typeRequest === "alert")
+        setSuccessMessage(t("dashboard.createAlertConfirm"));
+      if (page === "request" && newCare.typeRequest === "request")
+        setSuccessMessage(t("dashboard.createRequestConfirm"));
+      setChooseRequests("my");
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+  };
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+      }, 10000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
   /**
    * Filter requests based on selected type and urgency
    * Returns filtered array of requests
@@ -242,10 +313,18 @@ const Requests = ({ page }: { page: "request" | "alert" }) => {
    * Delete a request by ID
    * Removes the request from the database and updates UI
    */
+
+  const getConfirmMsg = (action: string) => {
+    if (action === "delete") {
+      if (page === "request")
+        setConfirmMessage(t("alert.deleteRequestMessage"));
+      else if (page === "alert")
+        setConfirmMessage(t("alert.deleteAlertMessage"));
+    }
+  };
+
   const handleDeleteRequest = async (requestId: string) => {
     // Confirm deletion with user
-    if (!window.confirm("Are you sure you want to delete this request?"))
-      return;
 
     try {
       setDeleting(requestId);
@@ -265,14 +344,26 @@ const Requests = ({ page }: { page: "request" | "alert" }) => {
       );
       setSelectedRequest(null);
 
-      console.log("Request deleted successfully");
+      if (page === "request")
+        setSuccessMessage(t("dashboard.confirmDeleteRequest"));
+      else if (page === "alert")
+        setSuccessMessage(t("dashboard.confirmDeleteAlert"));
+
+      setChooseRequests("my");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
       console.error("Error deleting request:", error);
       alert("Failed to delete request. Please try again.");
     } finally {
       setDeleting(null);
+      setShowConfirm(false);
+      setConfirmMessage("");
+      setItemToAction(null);
     }
   };
+
+  const getAuthorId = (userField: any) =>
+    typeof userField === "string" ? userField : userField?._id;
 
   const getStatusProps = (status: string, isActive: boolean) => {
     switch (status) {
@@ -349,12 +440,76 @@ const Requests = ({ page }: { page: "request" | "alert" }) => {
   };
 
   const colorset = page === "alert" ? "red" : "green";
+  const setC = page === "alert" ? "error" : "success";
 
+  const getFarbe = (status: string) => {
+    switch (status) {
+      case "active":
+        return { icon: "🟢", color: "green", text: "Active" };
+      case "in_progress":
+        return { icon: "🟡", color: "yellow", text: "In Progress" };
+      case "completed":
+        return { icon: "🔵", color: "blue", text: "Completed" };
+      case "cancelled":
+        return { icon: "🔴", color: "red", text: "Cancelled" };
+      case "inactive":
+        return { icon: "⚪", color: "gray", text: "Inactive" };
+      case "archived":
+        return { icon: "🟣", color: "purple", text: "Archived" };
+      default:
+        return { icon: "⚪", color: "gray", text: "Unknown" };
+    }
+  };
+
+  console.log("Filtered Requests:", requests);
   // Show loading spinner while fetching data
   if (loading || loadingRequests) return <Loading />;
 
   return (
     <>
+      {successMessage && (
+        <div
+          role="alert"
+          className={`alert alert-${setC} cursor-pointer hover:opacity-80 mb-4 transition`}
+          onClick={() => setSuccessMessage(null)}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 shrink-0 stroke-current"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <span>{successMessage}</span>
+          <div>
+            <button
+              onClick={() => setSuccessMessage(null)}
+              className="btn btn-sm cursor-pointer btn-ghost btn-circle"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 shrink-0 stroke-current"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="min-h-screen bg-white p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header Section */}
@@ -402,7 +557,7 @@ const Requests = ({ page }: { page: "request" | "alert" }) => {
                     }}
                     className={`px-4 py-2 rounded-lg cursor-pointer font-medium transition-all flex items-center gap-2 text-sm ${
                       chooseRequests === "all"
-                        ? `bg-${colorset}-700 text-white shadow-xl`
+                        ? `bg-${colorset}-600 text-white shadow-xl`
                         : `bg-${colorset}-100 hover:shadow-xl`
                     }`}
                   >
@@ -426,7 +581,7 @@ const Requests = ({ page }: { page: "request" | "alert" }) => {
                     className={`px-4 py-2 rounded-lg cursor-pointer font-medium transition-all flex items-center gap-2 text-sm
             ${
               chooseRequests === "my"
-                ? `bg-${colorset}-700 text-white shadow-xl`
+                ? `bg-${colorset}-600 text-white shadow-xl`
                 : `bg-${colorset}-100 hover:shadow-xl`
             }
   `}
@@ -448,7 +603,7 @@ const Requests = ({ page }: { page: "request" | "alert" }) => {
                     setOption("create");
                   }}
                   className={`px-2 py-1 md:px-4 md:py-2 rounded-lg cursor-pointer font-medium transition-all flex items-center gap-2 text-sm md:text-md lg:text-lg
-                bg-${colorset}-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all`}
+                bg-${colorset}-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all`}
                 >
                   <Plus className="w-5 h-5" />
                   {page === "alert"
@@ -618,186 +773,214 @@ const Requests = ({ page }: { page: "request" | "alert" }) => {
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.5 }}
                     >
-                      <Card
-                        className="h-full cursor-pointer hover:shadow-lg transition-all pt-0 pb-6"
-                        onClick={() => openModal(request)}
-                      >
-                        {request.images && request.images.length > 0 ? (
-                          <div className="">
-                            <figure>
-                              <img
-                                src={request.images[0]}
-                                alt="Shoes"
-                                className="w-full h-48 overflow-hidden flex items-center justify-center bg-gray-100 object-cover rounded"
-                              />
-                            </figure>
-                          </div>
-                        ) : (
+                      <div className="relative">
+                        {getAuthorId(request?.userId) === user?._id && (
                           <>
-                            {/*<div className="mb-6"></div>*/}
+                            {/* BADGE STATUS */}
+                            <span
+                              className={`absolute top-2 right-2 z-20 px-2 py-1 bg-${
+                                getFarbe(request?.status).color
+                              }-600 text-white text-xs font-bold rounded shadow-md`}
+                            >
+                              {getFarbe(request?.status).icon}{" "}
+                              {getFarbe(request?.status).text}
+                            </span>
+                          </>
+                        )}
+                        <Card
+                          className="h-full cursor-pointer hover:shadow-lg transition-all pt-0 pb-6"
+                          onClick={() => openModal(request)}
+                        >
+                          {request.images && request.images.length > 0 ? (
                             <div className="">
                               <figure>
                                 <img
-                                  src="../logo.png"
-                                  alt="Shoes"
+                                  src={request.images[0]}
+                                  alt={request.title}
                                   className="w-full h-48 overflow-hidden flex items-center justify-center bg-gray-100 object-cover rounded"
                                 />
                               </figure>
                             </div>
-                          </>
-                        )}
-                        <div className="relative">
-                          {/* SOS BADGE ABSOLUTE */}
-                          {page === "alert" && (
-                            <span className="absolute top-2 right-2 z-20 px-2 py-1 bg-red-600 text-white text-xs font-bold rounded shadow-md">
-                              🚨 SOS
-                            </span>
-                          )}
-                          <CardContent className="px-4 md:px-6">
-                            <div className="flex flex-col md:flex-row items-start justify-between gap-4">
-                              <div className="flex-1 w-full">
-                                {/* Request Description */}
-                                <div className="flex flex-col md:flex-row items-start md:items-center gap-3 mb-2">
-                                  <h3 className="text-xl font-bold text-gray-900">
-                                    {request.title}
-                                  </h3>
-                                </div>
-                                <p className="text-gray-600 mb-3">
-                                  {request.description}
-                                </p>
-
-                                {/* Details Grid */}
-                                <div className="grid grid-cols-2 md:grid-cols-2 gap-3 mb-4">
-                                  {/* Category */}
-                                  <div className="flex items-center gap-2">
-                                    <div className="p-2 bg-blue-100 rounded">
-                                      <Folder className="w-4 h-4 text-blue-600" />
-                                    </div>
-                                    <div>
-                                      <p className="text-xs text-gray-500">
-                                        {t("dashboard.category")}
-                                      </p>
-                                      <p className="text-sm font-semibold text-gray-900">
-                                        {request.category
-                                          ? language === "de"
-                                            ? request.category.nameDE ||
-                                              request.category.name
-                                            : request.category.name ||
-                                              request.category.nameDE
-                                          : "-"}
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  {/* Price */}
-                                  <div className="flex items-center gap-2">
-                                    <div className="p-2 bg-green-100 rounded">
-                                      <DollarSign className="w-4 h-4 text-green-600" />
-                                    </div>
-                                    <div>
-                                      <p className="text-xs text-gray-500">
-                                        {t("dashboard.price")}
-                                      </p>
-                                      <p className="text-sm font-semibold text-gray-900">
-                                        {request.rewardType === "paid"
-                                          ? `$${request.price}`
-                                          : t("dashboard.free")}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-2 md:grid-cols-2 gap-3 mb-4">
-                                  {/* Location */}
-                                  <div className="flex items-center gap-2">
-                                    <div className="p-2 bg-red-100 rounded">
-                                      <MapPin className="w-4 h-4 text-red-600" />
-                                    </div>
-                                    <div>
-                                      <p className="text-xs text-gray-500">
-                                        {t("dashboard.location")}
-                                      </p>
-                                      <p className="text-sm font-semibold text-gray-900 truncate">
-                                        {request.location}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Time */}
-                                <div className="flex items-center gap-2 text-xs text-gray-500">
-                                  <Calendar
-                                    size={16}
-                                    className="text-gray-400"
+                          ) : (
+                            <>
+                              {/*<div className="mb-6"></div>*/}
+                              <div className="">
+                                <figure>
+                                  <img
+                                    src="../logo.png"
+                                    alt={request.title}
+                                    className="w-full h-48 overflow-hidden flex items-center justify-center bg-gray-100 object-cover rounded"
                                   />
-                                  <span>{timeAgo(request.createdAt)}</span>
-                                </div>
-
-                                {(() => {
-                                  const u = request.userId as any;
-                                  let name = "Unknown";
-                                  if (u && typeof u === "object") {
-                                    if (u._id === user?._id) name = "You";
-                                    else {
-                                      const first = u.firstName ?? name;
-                                      const last = u.lastName
-                                        ? ` ${u.lastName}`
-                                        : "";
-                                      name = `${first}${last}`;
-                                    }
-                                  }
-                                  if (name === "Unknown" || name === "You")
-                                    return null;
-                                  return (
-                                    <>
-                                      {/* Creator */}
-                                      <div className="flex items-center gap-2 text-gray-600 mt-2">
-                                        <User
-                                          size={16}
-                                          className="text-gray-400"
-                                        />
-                                        <span>{name}</span>
-                                      </div>
-                                    </>
-                                  );
-                                })()}
+                                </figure>
                               </div>
-                            </div>
+                            </>
+                          )}
+                          <div className="relative">
+                            {/* SOS BADGE ABSOLUTE */}
+                            {page === "alert" && (
+                              <span className="absolute top-2 right-2 z-20 px-2 py-1 bg-red-600 text-white text-xs font-bold rounded shadow-md">
+                                🚨 SOS
+                              </span>
+                            )}
+                            <CardContent className="px-4 md:px-6">
+                              <div className="flex flex-col md:flex-row items-start justify-between gap-4">
+                                <div className="flex-1 w-full">
+                                  {/* Request Description */}
+                                  <div className="flex flex-col md:flex-row items-start md:items-center gap-3 mb-2">
+                                    <h3 className="text-xl font-bold text-gray-900">
+                                      {request.title}
+                                    </h3>
+                                  </div>
+                                  <p className="text-gray-600 mb-3">
+                                    {request.description}
+                                  </p>
 
-                            {/* Action Buttons - Only show for user's own offers */}
-                            {typeof user?._id === "string" &&
-                              user._id ===
-                                (typeof request.userId === "string"
-                                  ? request.userId
-                                  : (request.userId as any) &&
-                                    (request.userId as any)._id) && (
-                                <div className="flex gap-2 mt-2 pt-2">
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                    }}
-                                    className="flex-1 flex cursor-pointer items-center justify-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all text-sm font-semibold"
-                                  >
-                                    <Edit2 size={16} />
-                                    {t("common.edit")}
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteRequest(request._id);
-                                    }}
-                                    disabled={deleting === request._id}
-                                    className="flex-1 flex cursor-pointer items-center justify-center gap-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all text-sm font-semibold disabled:opacity-50"
-                                  >
-                                    <Trash2 size={16} />
-                                    {deleting === request._id
-                                      ? t("common.deleting")
-                                      : t("common.delete")}
-                                  </button>
+                                  {/* Details Grid */}
+                                  <div className="grid grid-cols-2 md:grid-cols-2 gap-3 mb-4">
+                                    {/* Category */}
+                                    <div className="flex items-center gap-2">
+                                      <div className="p-2 bg-blue-100 rounded">
+                                        <Folder className="w-4 h-4 text-blue-600" />
+                                      </div>
+                                      <div>
+                                        <p className="text-xs text-gray-500">
+                                          {t("dashboard.category")}
+                                        </p>
+                                        <p className="text-sm font-semibold text-gray-900">
+                                          {request.category
+                                            ? language === "de"
+                                              ? request.category.nameDE ||
+                                                request.category.name
+                                              : request.category.name ||
+                                                request.category.nameDE
+                                            : "-"}
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    {/* Price */}
+                                    <div className="flex items-center gap-2">
+                                      <div className="p-2 bg-green-100 rounded">
+                                        <DollarSign className="w-4 h-4 text-green-600" />
+                                      </div>
+                                      <div>
+                                        <p className="text-xs text-gray-500">
+                                          {t("dashboard.price")}
+                                        </p>
+                                        <p className="text-sm font-semibold text-gray-900">
+                                          {request.rewardType === "paid"
+                                            ? `$${request.price}`
+                                            : t("dashboard.free")}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-2 md:grid-cols-2 gap-3 mb-4">
+                                    {/* Location */}
+                                    <div className="flex items-center gap-2">
+                                      <div className="p-2 bg-red-100 rounded">
+                                        <MapPin className="w-4 h-4 text-red-600" />
+                                      </div>
+                                      <div>
+                                        <p className="text-xs text-gray-500">
+                                          {t("dashboard.location")}
+                                        </p>
+                                        <p className="text-sm font-semibold text-gray-900 truncate">
+                                          {request.location}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Time */}
+                                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                                    <Calendar
+                                      size={16}
+                                      className="text-gray-400"
+                                    />
+                                    <span>{timeAgo(request.createdAt)}</span>
+                                  </div>
+
+                                  {(() => {
+                                    const u = request.userId as any;
+                                    let name = "Unknown";
+                                    if (u && typeof u === "object") {
+                                      if (u._id === user?._id) name = "You";
+                                      else {
+                                        const first = u.firstName ?? name;
+                                        const last = u.lastName
+                                          ? ` ${u.lastName}`
+                                          : "";
+                                        name = `${first}${last}`;
+                                      }
+                                    }
+                                    if (name === "Unknown" || name === "You")
+                                      return null;
+                                    return (
+                                      <>
+                                        {/* Creator */}
+                                        <div className="flex items-center gap-2 text-gray-600 mt-2">
+                                          <User
+                                            size={16}
+                                            className="text-gray-400"
+                                          />
+                                          <span>{name}</span>
+                                        </div>
+                                      </>
+                                    );
+                                  })()}
                                 </div>
-                              )}
-                          </CardContent>
-                        </div>
-                      </Card>
+                              </div>
+
+                              {/* Action Buttons - Only show for user's own offers */}
+                              {typeof user?._id === "string" &&
+                                user._id ===
+                                  (typeof request.userId === "string"
+                                    ? request.userId
+                                    : (request.userId as any) &&
+                                      (request.userId as any)._id) && (
+                                  <div className="flex gap-2 mt-2 pt-2">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openModal(request, "edit");
+                                      }}
+                                      className="flex-1 flex cursor-pointer items-center justify-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all text-sm font-semibold"
+                                    >
+                                      <Edit2 size={16} />
+                                      {t("common.edit")}
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setItemToAction(request);
+                                        getConfirmMsg("delete");
+                                        setShowConfirm(true);
+                                      }}
+                                      disabled={deleting === request._id}
+                                      className="flex-1 flex cursor-pointer items-center justify-center gap-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all text-sm font-semibold disabled:opacity-50"
+                                    >
+                                      <Trash2 size={16} />
+                                      {deleting === request._id
+                                        ? t("common.deleting")
+                                        : t("common.delete")}
+                                    </button>
+                                  </div>
+                                )}
+                            </CardContent>
+                          </div>
+                        </Card>
+                        {showConfirm && (
+                          <ConfirmModal
+                            title={t("dashboard.confirmTitle")}
+                            message={confirmMessage}
+                            onConfirm={() => {
+                              handleDeleteRequest(itemToAction?._id || "");
+                            }}
+                            onCancel={() => setShowConfirm(false)}
+                          />
+                        )}
+                      </div>
                     </motion.div>
                   ))
                 )}
@@ -993,7 +1176,9 @@ const Requests = ({ page }: { page: "request" | "alert" }) => {
         dialogRef={dialogRef}
         selectedCare={selectedCare}
         option={option}
+        setOption={setOption}
         page={page}
+        handleAction={handleAction}
         isModalOpen={isModalOpen}
         closeModal={closeModal}
       />

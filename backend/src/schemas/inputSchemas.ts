@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { boolean, z } from "zod";
 
 // User Schemas
 //----------------------------------------------------------------------------
@@ -204,7 +204,14 @@ export const offerInputSchema = z
     category: z
       .string({ error: "category must be a string" })
       .min(24, { message: "category must be a valid ID" }),
-    isPaid: z.boolean({ error: "isPaid must be a boolean" }).default(false),
+    isPaid: z
+      .preprocess((val) => {
+        console.log("Preprocessing isPaid value:", val);
+
+        //return boolean(val as string);
+        return val === "true";
+      }, z.boolean({ error: "isPaid must be a boolean" }))
+      .default(false),
     price: z
       .preprocess(
         (val) => parseFloat(val as string),
@@ -254,7 +261,12 @@ export const offerUpdateSchema = z
       .min(24, { message: "category must be a valid ID" })
       .optional(),
     isPaid: z
-      .boolean({ error: "isPaid must be a boolean" })
+      .preprocess((val) => {
+        console.log("Preprocessing isPaid value:", val);
+
+        //return boolean(val as string);
+        return val === "true";
+      }, z.boolean({ error: "isPaid must be a boolean" }))
       .default(false)
       .optional(),
     price: z
@@ -287,6 +299,14 @@ export const offerUpdateSchema = z
           .string({ error: "each image must be a string" })
           .url({ message: "each image must be a valid URL" })
       )
+      .optional(),
+    removedImages: z
+      .union([z.array(z.string()), z.string()])
+      .transform((val) => (Array.isArray(val) ? val : [val]))
+      .optional(),
+    removedIndexes: z
+      .union([z.array(z.string()), z.string()])
+      .transform((val) => (Array.isArray(val) ? val : [val]))
       .optional(),
     status: z
       .enum(["active", "in_progress", "completed", "inactive", "archived"], {
@@ -466,6 +486,14 @@ export const requestUpdateSchema = z
           .string({ error: "each image must be a string" })
           .url({ message: "each image must be a valid URL" })
       )
+      .optional(),
+    removedImages: z
+      .union([z.array(z.string()), z.string()])
+      .transform((val) => (Array.isArray(val) ? val : [val]))
+      .optional(),
+    removedIndexes: z
+      .union([z.array(z.string()), z.string()])
+      .transform((val) => (Array.isArray(val) ? val : [val]))
       .optional(),
     status: z
       .enum(["active", "in_progress", "completed", "inactive", "cancelled"], {

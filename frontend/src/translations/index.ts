@@ -240,6 +240,7 @@ export const translationsMap: Translations = {
   "common.close": { en: "Close", de: "Schließen" },
   "common.save": { en: "Save", de: "Speichern" },
   "common.cancel": { en: "Cancel", de: "Abbrechen" },
+  "common.confirm": { en: "Confirm", de: "Bestätigen" },
   "common.edit": { en: "Edit", de: "Bearbeiten" },
   "common.delete": { en: "Delete", de: "Löschen" },
   "common.deleting": { en: "Deleting...", de: "Löschen..." },
@@ -249,6 +250,8 @@ export const translationsMap: Translations = {
   "common.viewDetails": { en: "View Details", de: "Details anzeigen" },
   "common.create": { en: "Create", de: "Erstellen" },
   "common.creating": { en: "Creating...", de: "Wird erstellt..." },
+  "common.update": { en: "Edit", de: "Bearbeiten" },
+  "common.updating": { en: "Editing...", de: "Wird bearbeitet..." },
   "common.error": { en: "Error", de: "Fehler" },
   "common.success": { en: "Success", de: "Erfolg" },
 
@@ -316,6 +319,20 @@ export const translationsMap: Translations = {
   "dashboard.postRequest": {
     en: "Post a Request",
     de: "Anfrage posten",
+  },
+
+  "dashboard.editOffer": {
+    en: "Edit Offer",
+    de: "Angebot bearbeiten",
+  },
+  "dashboard.editRequest": {
+    en: "Edit Request",
+    de: "Anfrage bearbeiten",
+  },
+
+  "dashboard.editAlert": {
+    en: "Edit Alert",
+    de: "Warnung bearbeiten",
   },
 
   "dashboard.isPaid": {
@@ -615,6 +632,19 @@ export const translationsMap: Translations = {
     de: "Warnung erfolgreich erstellt!",
   },
 
+  "dashboard.editOfferConfirm": {
+    en: "Offer updated successfully!",
+    de: "Angebot erfolgreich aktualisiert!",
+  },
+  "dashboard.editRequestConfirm": {
+    en: "Request updated successfully!",
+    de: "Anfrage erfolgreich aktualisiert!",
+  },
+  "dashboard.editAlertConfirm": {
+    en: "Alert updated successfully!",
+    de: "Warnung erfolgreich aktualisiert!",
+  },
+
   "dashboard.confirmTitle": { en: "Confirm Action", de: "Aktion bestätigen" },
   "dashboard.yourLocation": { en: "Your Location", de: "Ihr Standort" },
 
@@ -629,6 +659,51 @@ export const translationsMap: Translations = {
   "alert.confirmMessage": {
     en: "Are you sure you want to respond to this alert?",
     de: "Sind Sie sicher, dass Sie auf diese Warnung reagieren möchten?",
+  },
+
+  "alert.deleteOfferMessage": {
+    en: "Are you sure you want to delete this offer? This action cannot be undone.",
+    de: "Sind Sie sicher, dass Sie dieses Angebot löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+  },
+  "alert.deleteRequestMessage": {
+    en: "Are you sure you want to delete this request? This action cannot be undone.",
+    de: "Sind Sie sicher, dass Sie diese Anfrage löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+  },
+  "alert.deleteAlertMessage": {
+    en: "Are you sure you want to delete this alert? This action cannot be undone.",
+    de: "Sind Sie sicher, dass Sie diese Warnung löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+  },
+
+  "confirm.completedSession": {
+    en: "Are you sure you want to mark this session as completed?",
+    de: "Sind Sie sicher, dass Sie diese Sitzung als abgeschlossen markieren möchten?",
+  },
+
+  "confirm.cancelledSession": {
+    en: "Are you sure you want to mark this session as cancelled?",
+    de: "Sind Sie sicher, dass Sie diese Sitzung als abgebrochen markieren möchten?",
+  },
+
+  "dashboard.sessionCompleted": {
+    en: "Session marked as completed.",
+    de: "Sitzung als abgeschlossen markiert.",
+  },
+  "dashboard.sessionCancelled": {
+    en: "Session marked as cancelled.",
+    de: "Sitzung als abgebrochen markiert.",
+  },
+
+  "dashboard.confirmDeleteOffer": {
+    en: "Offer deleted successfully.",
+    de: "Angebot erfolgreich gelöscht.",
+  },
+  "dashboard.confirmDeleteRequest": {
+    en: "Request deleted successfully.",
+    de: "Anfrage erfolgreich gelöscht.",
+  },
+  "dashboard.confirmDeleteAlert": {
+    en: "Alert deleted successfully.",
+    de: "Warnung erfolgreich gelöscht.",
   },
 
   "dashboard.map": { en: "Available Offers and Requests", de: "Karte" },
@@ -651,9 +726,7 @@ export const translationsMap: Translations = {
   "dashboard.reportRequest": { en: "Report Request", de: "Anfrage melden" },
   "dashboard.acceptAlert": { en: "Handle", de: "Übernehmen" },
   "dashboard.reportAlert": { en: "Report Alert", de: "Warnung melden" },
-  "dashboard.editOffer": { en: "Edit Offer", de: "Angebot bearbeiten" },
-  "dashboard.editRequest": { en: "Edit Request", de: "Anfrage bearbeiten" },
-  "dashboard.editAlert": { en: "Edit Alert", de: "Warnung bearbeiten" },
+
   "dashboard.deleteOffer": { en: "Delete Offer", de: "Angebot löschen" },
   "dashboard.deleteRequest": { en: "Delete Request", de: "Anfrage löschen" },
   "dashboard.deleteAlert": { en: "Delete Alert", de: "Warnung löschen" },

@@ -12,7 +12,7 @@ authRoutes.post(
   register
 );
 authRoutes.post("/login", validateBodyZod(authLoginSchema), login);
-authRoutes.post("/refresh", authenticate, refresh);
+authRoutes.post("/refresh", refresh);
 
 authRoutes.get("/me", authenticate, me);
 

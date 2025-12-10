@@ -19,8 +19,8 @@ offerRoutes.get("/", getOffers);
 offerRoutes.post(
   "/",
   authenticate,
-  validateBodyZod(offerInputSchema),
   upload.array("image", 5),
+  validateBodyZod(offerInputSchema),
   createOffer
 );
 

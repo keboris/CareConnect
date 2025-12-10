@@ -63,13 +63,11 @@ export const register: RequestHandler<
     const regex = /^.+\s\d+\s*,?\s*\d{3,}\s+[A-Za-zÀ-ÖØ-öø-ÿ\s-]+$/;
 
     if (!regex.test(location)) {
-      return res
-        .status(400)
-        .json({
-          field: "location",
-          message:
-            "Address must contain a street with number, a postal code, and a city",
-        });
+      return res.status(400).json({
+        field: "location",
+        message:
+          "Address must contain a street with number, a postal code, and a city",
+      });
     }
 
     const hash = await bcrypt.hash(password, 10);
@@ -166,52 +164,54 @@ export const login: RequestHandler<
 /*------------------------------- REFRESH TOKEN ------------------------------*/
 export const refresh: RequestHandler<
   unknown,
-  { message: string; accessToken: string; refreshToken: string }
+  { message: string; accessToken?: string; refreshToken?: string }
 > = async (req, res, next) => {
-  const token = req.cookies?.refreshToken;
-
-  if (!token) {
-    throw new Error("No refresh token provided", { cause: { status: 401 } });
-  }
-
-  console.log("🔄 Refreshing tokens with token:", token);
-  let payload: jwt.JwtPayload & { jti: string; ver?: number };
   try {
-    payload = jwt.verify(token, process.env.REFRESH_JWT_SECRET!) as any;
-  } catch (err) {
-    throw new Error("Invalid refresh token", { cause: { status: 401 } });
-  }
+    const token = req.cookies?.refreshToken;
 
-  const user = await User.findById(payload.jti).select("+tokenVersion");
-  if (!user) {
-    throw new Error("User not found", { cause: { status: 404 } });
-  }
+    if (!token) {
+      return res.status(401).json({ message: "No refresh token provided" });
+    }
 
-  if (payload.ver !== undefined && payload.ver !== user.tokenVersion) {
-    return next(
-      new Error("Refresh token has been revoked", { cause: { status: 401 } })
-    );
-  }
+    console.log("🔄 Refreshing tokens with token:", token);
+    let payload: jwt.JwtPayload & { jti: string; ver?: number };
 
-  const newAccess = signAccessToken({
-    jti: user._id.toString(),
-    roles: user.role,
-    ver: user.tokenVersion,
-  });
+    try {
+      payload = jwt.verify(token, process.env.REFRESH_JWT_SECRET!) as any;
+    } catch (err) {
+      return res.status(401).json({ message: "Invalid refresh token" });
+    }
 
-  const newRefresh = signAccessToken({
-    jti: user._id.toString(),
-    roles: user.role,
-  });
+    const user = await User.findById(payload.jti).select("+tokenVersion");
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
 
-  res
-    .cookie("accessToken", newAccess, accessCookieOpts)
-    .cookie("refreshToken", newRefresh, refreshCookieOpts)
-    .json({
-      message: "Tokens refreshed successfully",
-      accessToken: newAccess,
-      refreshToken: newRefresh,
+    if (payload.ver !== undefined && payload.ver !== user.tokenVersion) {
+      return res.status(401).json({ message: "Refresh token revoked" });
+    }
+
+    const newAccess = signAccessToken({
+      jti: user._id.toString(),
+      roles: user.role,
+      ver: user.tokenVersion,
     });
+
+    const newRefresh = signAccessToken({
+      jti: user._id.toString(),
+      roles: user.role,
+    });
+
+    res
+      .cookie("accessToken", newAccess, accessCookieOpts)
+      .cookie("refreshToken", newRefresh, refreshCookieOpts)
+      .json({
+        message: "Tokens refreshed successfully",
+        accessToken: newAccess,
+      });
+  } catch (error) {
+    next(error);
+  }
 };
 
 /*------------------------------- LOGOUT & ME ------------------------------*/
