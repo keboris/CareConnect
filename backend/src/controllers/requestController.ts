@@ -64,7 +64,7 @@ export const createRequest: RequestHandler<
       });
     }
 
-    if (typeRequest === "alert") {
+    /*if (typeRequest === "alert") {
       const existingActiveAlert = await Request.findOne({
         userId: userId,
         typeRequest: "alert",
@@ -82,7 +82,7 @@ export const createRequest: RequestHandler<
             "You already have an active alert. Please resolve it before creating a new one.",
         });
       }
-    }
+    }*/
 
     if (location !== undefined) {
       const regex = /^.+\s\d+\s*,?\s*\d{3,}\s+[A-Za-zÀ-ÖØ-öø-ÿ\s-]+$/;
@@ -172,7 +172,7 @@ export const getRequestById: RequestHandler = async (req, res) => {
     } = req;
     const request = await Request.findById(id)
       .sort({ createdAt: -1 })
-      .populate("category", "name");
+      .populate("category", "name nameDE");
 
     if (!request) {
       return res.status(404).json({ error: `Request with id:${id} not found` });
@@ -202,14 +202,14 @@ export const myRequests: RequestHandler = async (req, res) => {
       nameReq = "Alerts";
       requests = await Request.find({ userId, typeRequest: "alert" }).populate(
         "category",
-        "name"
+        "name nameDE"
       );
       total = await Request.countDocuments({ userId, typeRequest: "alert" });
     } else {
       nameReq = "Requests";
       requests = await Request.find({ userId })
         .sort({ createdAt: -1 })
-        .populate("category", "name");
+        .populate("category", "name nameDE");
 
       total = await Request.countDocuments({ userId });
     }
@@ -251,6 +251,8 @@ export const updateRequest: RequestHandler<
         longitude,
         latitude,
         status,
+        removedImages,
+        removedIndexes,
       },
       params: { id },
     } = req;
@@ -313,13 +315,11 @@ export const updateRequest: RequestHandler<
           }
         }
 
-        return res
-          .status(404)
-          .json({
-            field: "category",
-            message: "Category not found",
-            request: undefined,
-          });
+        return res.status(404).json({
+          field: "category",
+          message: "Category not found",
+          request: undefined,
+        });
       }
     }
 
@@ -329,6 +329,32 @@ export const updateRequest: RequestHandler<
         message: "Cannot update a completed or cancelled request",
         request: undefined,
       });
+    }
+
+    if (removedImages && removedImages.length > 0) {
+      const publicIds = Array.isArray(removedImages)
+        ? removedImages
+        : removedImages
+        ? [removedImages]
+        : [];
+
+      console.log("Removing images with public IDs:", publicIds);
+
+      for (const publicId of publicIds) {
+        console.log("Deleting image with public ID:", publicId);
+        const result = await cloudinary.uploader.destroy(publicId);
+        console.log("Cloudinary deletion result:", result);
+      }
+
+      if (removedIndexes && removedIndexes.length > 0) {
+        request.images = request.images.filter(
+          (_, i) => !removedIndexes.includes(String(i))
+        );
+        request.imagesPublicIds = request.imagesPublicIds.filter(
+          (_, i) => !removedIndexes.includes(String(i))
+        );
+        await request.save();
+      }
     }
 
     const priceToUpdate = rewardType === "paid" ? price : 0;

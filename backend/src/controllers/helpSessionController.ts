@@ -256,8 +256,10 @@ export const updateHelpSession: RequestHandler<
     const {
       params: { id },
     } = req;
+    console.log("Help Session ID to update:", id);
     const { status, result, notes, rating } = req.body;
 
+    console.log("Updating help session with data:", req.body);
     const helpSession = await HelpSession.findById(id);
     if (!helpSession) {
       return res.status(404).json({ message: "Help session not found" });
@@ -322,7 +324,7 @@ export const updateHelpSession: RequestHandler<
     } else if (status === "cancelled") {
       message = "You have cancelled the help session.";
     }
-
+    console.log("Help session updated:", helpSession);
     res.status(200).json({ message, helpSession });
   } catch (error: any) {
     res.status(500).json({

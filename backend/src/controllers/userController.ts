@@ -71,9 +71,15 @@ export const getUserStatsById: RequestHandler = async (req, res) => {
 
     const [offersCount, requestsCount, alertsCount, notificationsCount] =
       await Promise.all([
-        Offer.countDocuments({ userId }),
-        Request.countDocuments({ userId }).where("typeRequest", "request"),
-        Request.countDocuments({ userId }).where("typeRequest", "alert"),
+        Offer.countDocuments({ userId: { $ne: userId } }),
+        Request.countDocuments({ userId: { $ne: userId } }).where(
+          "typeRequest",
+          "request"
+        ),
+        Request.countDocuments({ userId: { $ne: userId } }).where(
+          "typeRequest",
+          "alert"
+        ),
         Notification.countDocuments({ userId }),
       ]);
 
