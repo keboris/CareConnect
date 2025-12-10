@@ -77,20 +77,6 @@ const Dashboard = () => {
   //const { sendNotification } = UseNotifications();
 
   useEffect(() => {
-    if (id) {
-      console.log("✅ ID reçu:", id);
-      setReadyId(id);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    // ✅ navigation dans useEffect
-    if (id) {
-      navigate("/app/offers", { state: { selectedOfferId: id } });
-    }
-  }, [id, navigate]);
-
-  useEffect(() => {
     if (loading) return;
 
     const fetchStats = async () => {
